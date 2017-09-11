@@ -7,12 +7,12 @@
     tools:context="com.code4africa.customcamera.customcameraapp.CameraActivity"
     >
     <TextureView
-        android:id="@+id/textureView"
+        android:id="@+id/tv_camera"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         />
   <ImageView
-      android:id="@+id/imageView2"
+      android:id="@+id/img_capture"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
       android:layout_alignParentBottom="true"
