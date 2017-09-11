@@ -5,8 +5,10 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.os.Build;
 import android.os.Handler;
@@ -24,6 +26,7 @@ import android.view.View;
 import android.hardware.camera2.CameraDevice;
 import android.widget.Toast;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -45,6 +48,7 @@ public class CameraActivity extends AppCompatActivity {
 		ORIENTATIONS.append(Surface.ROTATION_270, 270);
 	}
 	private Size previewSize;
+	private CaptureRequest.Builder captureRequestBuilder;
 
 	private TextureView.SurfaceTextureListener surfaceTextureListener = new TextureView.SurfaceTextureListener() {
 		@Override public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int width, int height) {
@@ -69,7 +73,7 @@ public class CameraActivity extends AppCompatActivity {
 	private CameraDevice.StateCallback cameraDeviceStateCallback = new CameraDevice.StateCallback() {
 		@Override public void onOpened(@NonNull CameraDevice camera) {
 			cameraDevice = camera;
-			Toast.makeText(getApplicationContext(), "Camera connection successful!", Toast.LENGTH_SHORT).show();
+			startPreview();
 		}
 
 		@Override public void onDisconnected(@NonNull CameraDevice camera) {
@@ -183,6 +187,35 @@ public class CameraActivity extends AppCompatActivity {
 			} else {
 				cameraManager.openCamera(cameraID, cameraDeviceStateCallback, backgroundHandler);
 			}
+		} catch (CameraAccessException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void startPreview() {
+		SurfaceTexture surfaceTexture = textureView.getSurfaceTexture();
+		surfaceTexture.setDefaultBufferSize(previewSize.getWidth(), previewSize.getHeight());
+		Surface previewSurface = new Surface(surfaceTexture);
+
+		try {
+			captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+			captureRequestBuilder.addTarget(previewSurface);
+
+			cameraDevice.createCaptureSession(Arrays.asList(previewSurface),
+					new CameraCaptureSession.StateCallback() {
+						@Override public void onConfigured(@NonNull CameraCaptureSession cameraCaptureSession) {
+							try {
+								cameraCaptureSession.setRepeatingRequest(captureRequestBuilder.build(), null, backgroundHandler);
+							} catch (CameraAccessException e) {
+								e.printStackTrace();
+							}
+						}
+
+						@Override
+						public void onConfigureFailed(@NonNull CameraCaptureSession cameraCaptureSession) {
+							Toast.makeText(getApplicationContext(), "Unable to setup camera preview!", Toast.LENGTH_SHORT).show();
+						}
+					}, null);
 		} catch (CameraAccessException e) {
 			e.printStackTrace();
 		}
