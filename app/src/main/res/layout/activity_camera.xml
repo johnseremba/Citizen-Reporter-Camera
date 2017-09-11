@@ -15,7 +15,7 @@
       android:layout_height="match_parent"
       android:gravity="center"
       android:keepScreenOn="true"
-      android:text="@string/dummy_content"
+      android:text="@string/camera_content"
       android:textColor="#33b5e5"
       android:textSize="50sp"
       android:textStyle="bold"
@@ -41,12 +41,13 @@
         >
 
       <Button
-          android:id="@+id/dummy_button"
+          android:id="@+id/cam_capture"
           android:layout_width="0dp"
           android:layout_height="wrap_content"
           android:layout_weight="1"
-          android:text="@string/dummy_button"
+          android:text="@string/camera_button"
           style="?metaButtonBarButtonStyle"
+          android:textColor="#fff"
           />
 
     </LinearLayout>
