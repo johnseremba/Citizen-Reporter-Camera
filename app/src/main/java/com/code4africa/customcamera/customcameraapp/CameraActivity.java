@@ -1,5 +1,6 @@
 package com.code4africa.customcamera.customcameraapp;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.SurfaceTexture;
@@ -7,9 +8,11 @@ import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.params.StreamConfigurationMap;
+import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.NonNull;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -28,6 +31,7 @@ import java.util.List;
 
 public class CameraActivity extends AppCompatActivity {
 	private static final String TAG = CameraActivity.class.getSimpleName();
+	private static final int REQUEST_PERMISSION_RESULT = 200;
 	private TextureView textureView;
 	private CameraDevice cameraDevice;
 	private String cameraID;
@@ -45,6 +49,7 @@ public class CameraActivity extends AppCompatActivity {
 	private TextureView.SurfaceTextureListener surfaceTextureListener = new TextureView.SurfaceTextureListener() {
 		@Override public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int width, int height) {
 			setUpCamera(width, height);
+			connectCamera();
 		}
 
 		@Override
@@ -64,6 +69,7 @@ public class CameraActivity extends AppCompatActivity {
 	private CameraDevice.StateCallback cameraDeviceStateCallback = new CameraDevice.StateCallback() {
 		@Override public void onOpened(@NonNull CameraDevice camera) {
 			cameraDevice = camera;
+			Toast.makeText(getApplicationContext(), "Camera connection successful!", Toast.LENGTH_SHORT).show();
 		}
 
 		@Override public void onDisconnected(@NonNull CameraDevice camera) {
@@ -162,6 +168,36 @@ public class CameraActivity extends AppCompatActivity {
 
 	}
 
+	private void connectCamera() {
+		CameraManager cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+		try {
+			if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+				if(ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED){
+					cameraManager.openCamera(cameraID, cameraDeviceStateCallback, backgroundHandler);
+				} else {
+					if(shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
+						Toast.makeText(this, "Code4Africa custom camera required access to the camera.", Toast.LENGTH_SHORT).show();
+					}
+					requestPermissions(new String[] {Manifest.permission.CAMERA}, REQUEST_PERMISSION_RESULT);
+				}
+			} else {
+				cameraManager.openCamera(cameraID, cameraDeviceStateCallback, backgroundHandler);
+			}
+		} catch (CameraAccessException e) {
+			e.printStackTrace();
+		}
+	}
+
+	@Override public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+			@NonNull int[] grantResults) {
+		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+		if(requestCode == REQUEST_PERMISSION_RESULT){
+			if(grantResults[0] != PackageManager.PERMISSION_GRANTED){
+				Toast.makeText(getApplicationContext(), "App can't run without camera permissions.", Toast.LENGTH_SHORT).show();
+			}
+		}
+	}
+
 	@Override protected void onPause() {
 		closeCamera();
 		stopBackgroundThread();
@@ -203,6 +239,7 @@ public class CameraActivity extends AppCompatActivity {
 
 		if(textureView.isAvailable()) {
 			setUpCamera(textureView.getWidth(), textureView.getHeight());
+			connectCamera();
 		} else {
 			textureView.setSurfaceTextureListener(surfaceTextureListener);
 		}
