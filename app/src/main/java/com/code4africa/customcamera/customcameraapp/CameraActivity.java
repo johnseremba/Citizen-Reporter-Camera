@@ -6,6 +6,8 @@ import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -21,6 +23,8 @@ public class CameraActivity extends AppCompatActivity {
 	private TextureView textureView;
 	private CameraDevice cameraDevice;
 	private String cameraID;
+	private HandlerThread backgroundHandlerThread;
+	private Handler backgroundHandler;
 
 	private TextureView.SurfaceTextureListener surfaceTextureListener = new TextureView.SurfaceTextureListener() {
 		@Override public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int width, int height) {
@@ -81,6 +85,23 @@ public class CameraActivity extends AppCompatActivity {
 			e.printStackTrace();
 		}
 
+	}
+
+	private void startBackgroundThread() {
+		backgroundHandlerThread = new HandlerThread("Code4AfricaCustomCamera");
+		backgroundHandlerThread.start();
+		backgroundHandler = new Handler(backgroundHandlerThread.getLooper());
+	}
+
+	private void stopBackgroundThread() {
+		backgroundHandlerThread.quitSafely();
+
+		try {
+			backgroundHandlerThread.join();
+			backgroundHandler = null;
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override protected void onPause() {
