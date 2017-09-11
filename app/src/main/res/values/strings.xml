@@ -3,4 +3,5 @@
 
   <string name="camera_button">Testing Button</string>
   <string name="camera_content">Custom camera app</string>
+  <string name="desc_take_picture">Button to take a picture</string>
 </resources>
