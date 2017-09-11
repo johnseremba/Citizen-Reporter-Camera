@@ -6,6 +6,7 @@ import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.params.StreamConfigurationMap;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.NonNull;
@@ -19,7 +20,11 @@ import android.view.TextureView;
 import android.view.View;
 import android.hardware.camera2.CameraDevice;
 import android.widget.Toast;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 
 public class CameraActivity extends AppCompatActivity {
 	private static final String TAG = CameraActivity.class.getSimpleName();
@@ -35,6 +40,7 @@ public class CameraActivity extends AppCompatActivity {
 		ORIENTATIONS.append(Surface.ROTATION_180, 180);
 		ORIENTATIONS.append(Surface.ROTATION_270, 270);
 	}
+	private Size previewSize;
 
 	private TextureView.SurfaceTextureListener surfaceTextureListener = new TextureView.SurfaceTextureListener() {
 		@Override public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int width, int height) {
@@ -92,10 +98,14 @@ public class CameraActivity extends AppCompatActivity {
 					int rotatedWidth = width;
 					int rotatedHeight = height;
 					boolean swapRotation = totalRotation == 90 || totalRotation == 270;
+
 					if(swapRotation) {
 						rotatedWidth = height;
 						rotatedHeight = width;
 					}
+
+					StreamConfigurationMap map = cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+					previewSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture.class), rotatedWidth, rotatedHeight);
 					cameraID = camID;
 					return;
 				}
@@ -133,6 +143,23 @@ public class CameraActivity extends AppCompatActivity {
 		@Override public int compare(Size lhs, Size rhs) {
 			return Long.signum((long) lhs.getWidth() * lhs.getHeight() / (long) rhs.getWidth() * rhs.getHeight());
 		}
+	}
+
+	public static Size chooseOptimalSize(Size[] choices, int width, int height) {
+		List<Size> optimal = new ArrayList<Size>();
+		for(Size option : choices) {
+			if(option.getHeight() == option.getWidth() * height / width
+					&& option.getWidth() >= width && option.getHeight() >= height) {
+				optimal.add(option);
+			}
+		}
+
+		if(optimal.size() > 0) {
+			return Collections.min(optimal, new CompareSizeByArea());
+		} else {
+			return choices[0];
+		}
+
 	}
 
 	@Override protected void onPause() {
