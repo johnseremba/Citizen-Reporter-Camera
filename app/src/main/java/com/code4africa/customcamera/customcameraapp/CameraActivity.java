@@ -11,6 +11,7 @@ import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.os.Build;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.NonNull;
@@ -25,6 +26,7 @@ import android.view.TextureView;
 import android.view.View;
 import android.hardware.camera2.CameraDevice;
 import android.widget.Toast;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -49,6 +51,9 @@ public class CameraActivity extends AppCompatActivity {
 	}
 	private Size previewSize;
 	private CaptureRequest.Builder captureRequestBuilder;
+
+	private File picturesFolder;
+	private String pictureName;
 
 	private TextureView.SurfaceTextureListener surfaceTextureListener = new TextureView.SurfaceTextureListener() {
 		@Override public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int width, int height) {
@@ -221,6 +226,14 @@ public class CameraActivity extends AppCompatActivity {
 		}
 	}
 
+	public void createImageFoler() {
+		File pictureFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+		picturesFolder = new File(pictureFile, "Code4Africa");
+		if(!picturesFolder.exists()) {
+			picturesFolder.mkdirs();
+		}
+	}
+
 	@Override public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
 			@NonNull int[] grantResults) {
 		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -276,10 +289,6 @@ public class CameraActivity extends AppCompatActivity {
 		} else {
 			textureView.setSurfaceTextureListener(surfaceTextureListener);
 		}
-	}
-
-	private boolean checkCameraHardware(Context context) {
-		return context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA);
 	}
 
 }
