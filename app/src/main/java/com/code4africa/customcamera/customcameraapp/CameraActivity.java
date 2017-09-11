@@ -3,6 +3,9 @@ package com.code4africa.customcamera.customcameraapp;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.SurfaceTexture;
+import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraManager;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -17,14 +20,15 @@ public class CameraActivity extends AppCompatActivity {
 	private static final String TAG = CameraActivity.class.getSimpleName();
 	private TextureView textureView;
 	private CameraDevice cameraDevice;
+	private String cameraID;
 
 	private TextureView.SurfaceTextureListener surfaceTextureListener = new TextureView.SurfaceTextureListener() {
-		@Override public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int i, int i1) {
-			Toast.makeText(getApplicationContext(), "Surface texture is available", Toast.LENGTH_SHORT).show();
+		@Override public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int width, int height) {
+			setUpCamera(width, height);
 		}
 
 		@Override
-		public void onSurfaceTextureSizeChanged(SurfaceTexture surfaceTexture, int i, int i1) {
+		public void onSurfaceTextureSizeChanged(SurfaceTexture surfaceTexture, int width, int height) {
 
 		}
 
@@ -59,6 +63,24 @@ public class CameraActivity extends AppCompatActivity {
 			cameraDevice.close();
 			cameraDevice = null;
 		}
+	}
+
+	private void setUpCamera(int width, int height) {
+		CameraManager cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+
+		try{
+			for(String camID: cameraManager.getCameraIdList()){
+				CameraCharacteristics cameraCharacteristics = cameraManager.getCameraCharacteristics(camID);
+				if(cameraCharacteristics.get(CameraCharacteristics.LENS_FACING) ==
+						CameraCharacteristics.LENS_FACING_BACK) {
+					cameraID = camID;
+					return;
+				}
+			}
+		} catch (CameraAccessException e) {
+			e.printStackTrace();
+		}
+
 	}
 
 	@Override protected void onPause() {
@@ -98,7 +120,7 @@ public class CameraActivity extends AppCompatActivity {
 		super.onResume();
 
 		if(textureView.isAvailable()) {
-
+			setUpCamera(textureView.getWidth(), textureView.getHeight());
 		} else {
 			textureView.setSurfaceTextureListener(surfaceTextureListener);
 		}
@@ -108,13 +130,4 @@ public class CameraActivity extends AppCompatActivity {
 		return context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA);
 	}
 
-	public static CameraDevice getCameraInstance() {
-		CameraDevice camera = null;
-		try {
-			//camera = CameraDevice;
-		} catch (Exception e) {
-			Log.d(TAG, "Camera not available: " + e);
-		}
-		return camera;
-	}
 }
