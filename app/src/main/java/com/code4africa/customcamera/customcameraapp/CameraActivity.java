@@ -12,13 +12,14 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.hardware.camera2.CameraDevice;
 import android.widget.Toast;
-
+import java.util.Comparator;
 
 public class CameraActivity extends AppCompatActivity {
 	private static final String TAG = CameraActivity.class.getSimpleName();
@@ -122,10 +123,16 @@ public class CameraActivity extends AppCompatActivity {
 		}
 	}
 
-	private static int sensorToDeviceOrientation(CameraCharacteristics cameraCharacteristics, int deviceOrientation) {
+	private static int sensorToDeviceOrientation(CameraCharacteristics cameraCharacteristics,int deviceOrientation) {
 		int sensorOrientation = cameraCharacteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
 		deviceOrientation = ORIENTATIONS.get(deviceOrientation);
 		return (sensorOrientation + deviceOrientation + 360) % 360;
+	}
+
+	public static class CompareSizeByArea implements Comparator<Size> {
+		@Override public int compare(Size lhs, Size rhs) {
+			return Long.signum((long) lhs.getWidth() * lhs.getHeight() / (long) rhs.getWidth() * rhs.getHeight());
+		}
 	}
 
 	@Override protected void onPause() {
