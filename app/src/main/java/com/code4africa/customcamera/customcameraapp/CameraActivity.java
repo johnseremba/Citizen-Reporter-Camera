@@ -332,11 +332,11 @@ public class CameraActivity extends AppCompatActivity {
 
 	public File createImageFileName() throws IOException{
 		String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-		String prepend = "IMG_" + timestamp + "_";
+		String prepend = "IMG_" + timestamp;
 		File imageFile = File.createTempFile(prepend, ".jpg", imageFolder);
 		imageFileName = imageFile.getAbsolutePath();
-		Log.d(TAG, "Picture Name: " + imageFileName);
-		Log.d(TAG, "Picutres folder: " + imageFolder);
+		Log.d(TAG, "Image Name: " + imageFileName);
+		Log.d(TAG, "Image folder: " + imageFolder);
 		return imageFile;
 	}
 
@@ -344,24 +344,17 @@ public class CameraActivity extends AppCompatActivity {
 		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
 			if(ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
 					== PackageManager.PERMISSION_GRANTED){
-				try {
-					createImageFileName();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-				Log.d(TAG, "Storage Permissions granted");
+				Log.d(TAG, "External storage permissions granted");
+				lockFocus();
 			} else {
 					if(shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
 						Toast.makeText(this, "App needs to store pictures", Toast.LENGTH_SHORT);
 					}
+					Log.d(TAG, "No external storage permissions");
 					requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_STORAGE_PERMISSION);
 			}
 		} else {
-			try {
-				createImageFileName();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+				lockFocus();
 		}
 	}
 
@@ -462,7 +455,7 @@ public class CameraActivity extends AppCompatActivity {
 			@Override
 			public void onClick(View view) {
 				checkWriteStoragePermission();
-				lockFocus();
+				//lockFocus();
 			}
 		});
 
