@@ -69,10 +69,10 @@ public class CameraActivity extends AppCompatActivity {
 
 	private File imageFolder;
 	private String imageFileName;
-	private Size pictureSize;
+	private Size imageSize;
 	private ImageReader imageReader;
 	private CameraCaptureSession previewCaptureSession;
-	int totalRotation;
+	private int totalRotation;
 
 	private final ImageReader.OnImageAvailableListener onImageAvailableListener = new ImageReader.OnImageAvailableListener() {
 		@Override
@@ -101,7 +101,6 @@ public class CameraActivity extends AppCompatActivity {
 				e.printStackTrace();
 			} finally {
 				image.close();
-
 				if(fileOutputStream != null) {
 					try {
 						fileOutputStream.close();
@@ -129,8 +128,8 @@ public class CameraActivity extends AppCompatActivity {
 				case STATE_WAIT_LOCK:
 					captureState = STATE_PREVIEW;
 					Integer afState = captureResult.get(CaptureResult.CONTROL_AF_STATE);
-					if (afState == CaptureResult.CONTROL_AF_STATE_FOCUSED_LOCKED
-							|| afState == CaptureResult.CONTROL_AF_STATE_NOT_FOCUSED_LOCKED) {
+					if (afState == CaptureResult.CONTROL_AF_STATE_FOCUSED_LOCKED ||
+								afState == CaptureResult.CONTROL_AF_STATE_NOT_FOCUSED_LOCKED) {
 						Toast.makeText(getApplicationContext(), "AF Locked", Toast.LENGTH_SHORT).show();
 						 startStillCapture();
 					}
@@ -205,8 +204,8 @@ public class CameraActivity extends AppCompatActivity {
 
 					StreamConfigurationMap map = cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
 					previewSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture.class), rotatedWidth, rotatedHeight);
-					pictureSize = chooseOptimalSize(map.getOutputSizes(ImageFormat.JPEG), rotatedWidth, rotatedHeight);
-					imageReader = ImageReader.newInstance(pictureSize.getWidth(), pictureSize.getHeight(), ImageFormat.JPEG, 1);
+					imageSize = chooseOptimalSize(map.getOutputSizes(ImageFormat.JPEG), rotatedWidth, rotatedHeight);
+					imageReader = ImageReader.newInstance(imageSize.getWidth(), imageSize.getHeight(), ImageFormat.JPEG, 1);
 					imageReader.setOnImageAvailableListener(onImageAvailableListener, backgroundHandler);
 
 					cameraID = camID;
@@ -296,8 +295,9 @@ public class CameraActivity extends AppCompatActivity {
 
 			cameraDevice.createCaptureSession(Arrays.asList(previewSurface, imageReader.getSurface()),
 					new CameraCaptureSession.StateCallback() {
-						@Override public void onConfigured(@NonNull CameraCaptureSession cameraCaptureSession) {
-							previewCaptureSession = cameraCaptureSession;
+						@Override
+						public void onConfigured(@NonNull CameraCaptureSession session) {
+							previewCaptureSession = session;
 							try {
 								previewCaptureSession.setRepeatingRequest(captureRequestBuilder.build(), null, backgroundHandler);
 							} catch (CameraAccessException e) {
@@ -316,7 +316,7 @@ public class CameraActivity extends AppCompatActivity {
 	}
 
 	public void createImageFolder() {
-		File imageFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+		File imageFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
 		imageFolder = new File(imageFile, "Code4Africa");
 		if(!imageFolder.exists()) {
 			boolean result = imageFolder.mkdirs();
@@ -330,15 +330,14 @@ public class CameraActivity extends AppCompatActivity {
 		}
 	}
 
-	public File createPictureName() throws IOException{
-		createImageFolder();
+	public File createImageFileName() throws IOException{
 		String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
 		String prepend = "IMG_" + timestamp + "_";
-		File pictureFile = File.createTempFile(prepend, ".jpg", imageFolder);
-		imageFileName = pictureFile.getAbsolutePath();
+		File imageFile = File.createTempFile(prepend, ".jpg", imageFolder);
+		imageFileName = imageFile.getAbsolutePath();
 		Log.d(TAG, "Picture Name: " + imageFileName);
 		Log.d(TAG, "Picutres folder: " + imageFolder);
-		return pictureFile;
+		return imageFile;
 	}
 
 	private void checkWriteStoragePermission() {
@@ -346,7 +345,7 @@ public class CameraActivity extends AppCompatActivity {
 			if(ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
 					== PackageManager.PERMISSION_GRANTED){
 				try {
-					createPictureName();
+					createImageFileName();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -359,7 +358,7 @@ public class CameraActivity extends AppCompatActivity {
 			}
 		} else {
 			try {
-				createPictureName();
+				createImageFileName();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -391,7 +390,7 @@ public class CameraActivity extends AppCompatActivity {
 			case REQUEST_STORAGE_PERMISSION:
 				if(grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 					try {
-						createPictureName();
+						createImageFileName();
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
@@ -417,7 +416,7 @@ public class CameraActivity extends AppCompatActivity {
 						@NonNull CaptureRequest request, long timestamp, long frameNumber) {
 					super.onCaptureStarted(session, request, timestamp, frameNumber);
 					try {
-						createPictureName();
+						createImageFileName();
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
@@ -453,6 +452,8 @@ public class CameraActivity extends AppCompatActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_camera);
+
+		createImageFolder();
 
 		textureView = (TextureView) findViewById(R.id.tv_camera);
 		capturePictureBtn = (ImageView) findViewById(R.id.img_capture);
