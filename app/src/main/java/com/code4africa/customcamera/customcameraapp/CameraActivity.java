@@ -280,7 +280,13 @@ public class CameraActivity extends AppCompatActivity {
 				}
 				break;
 			case REQUEST_STORAGE_PERMISSION:
-				if(grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+				if(grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+					try {
+						createPictureName();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				} else {
 					Toast.makeText(getApplicationContext(), "App can't run without storage permissions.", Toast.LENGTH_SHORT).show();
 				}
 				break;
