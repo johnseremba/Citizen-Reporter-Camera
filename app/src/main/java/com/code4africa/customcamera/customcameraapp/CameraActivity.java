@@ -29,6 +29,7 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.hardware.camera2.CameraDevice;
+import android.widget.ImageView;
 import android.widget.Toast;
 import java.io.File;
 import java.io.IOException;
@@ -48,6 +49,7 @@ public class CameraActivity extends AppCompatActivity {
 	private static final int STATE_WAIT_LOCK = 1;
 	private int captureState = STATE_PREVIEW;
 	private TextureView textureView;
+	private ImageView capturePictureBtn;
 	private CameraDevice cameraDevice;
 	private String cameraID;
 	private HandlerThread backgroundHandlerThread;
@@ -383,6 +385,14 @@ public class CameraActivity extends AppCompatActivity {
 
 		createPicturesFolder();
 		textureView = (TextureView) findViewById(R.id.tv_camera);
+		capturePictureBtn = (ImageView) findViewById(R.id.img_capture);
+
+		capturePictureBtn.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				lockFocus();
+			}
+		});
 
 	}
 
