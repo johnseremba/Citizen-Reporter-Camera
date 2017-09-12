@@ -3,13 +3,16 @@ package com.code4africa.customcamera.customcameraapp;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CaptureRequest;
+import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
+import android.media.ImageReader;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
@@ -57,6 +60,25 @@ public class CameraActivity extends AppCompatActivity {
 
 	private File picturesFolder;
 	private String pictureName;
+	private Size pictureSize;
+	private ImageReader imageReader;
+	private CameraCaptureSession previewCaptureSession;
+
+	private final ImageReader.OnImageAvailableListener onImageAvailableListener = new ImageReader.OnImageAvailableListener() {
+		@Override
+		public void onImageAvailable(ImageReader reader) {
+
+		}
+	};
+
+	private CameraCaptureSession.CaptureCallback previewCaptureCallback = new CameraCaptureSession.CaptureCallback() {
+		@Override
+		public void onCaptureCompleted(@NonNull CameraCaptureSession session,
+				@NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
+			super.onCaptureCompleted(session, request, result);
+
+		}
+	};
 
 	private TextureView.SurfaceTextureListener surfaceTextureListener = new TextureView.SurfaceTextureListener() {
 		@Override public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int width, int height) {
@@ -124,6 +146,10 @@ public class CameraActivity extends AppCompatActivity {
 
 					StreamConfigurationMap map = cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
 					previewSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture.class), rotatedWidth, rotatedHeight);
+					pictureSize = chooseOptimalSize(map.getOutputSizes(ImageFormat.JPEG), rotatedWidth, rotatedHeight);
+					imageReader = ImageReader.newInstance(pictureSize.getWidth(), pictureSize.getHeight(), ImageFormat.JPEG, 1);
+					imageReader.setOnImageAvailableListener(onImageAvailableListener, backgroundHandler);
+
 					cameraID = camID;
 					return;
 				}
