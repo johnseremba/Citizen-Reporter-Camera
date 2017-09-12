@@ -13,6 +13,7 @@ import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
+import android.media.Image;
 import android.media.ImageReader;
 import android.os.Build;
 import android.os.Environment;
@@ -32,7 +33,10 @@ import android.hardware.camera2.CameraDevice;
 import android.widget.ImageView;
 import android.widget.Toast;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -74,9 +78,41 @@ public class CameraActivity extends AppCompatActivity {
 	private final ImageReader.OnImageAvailableListener onImageAvailableListener = new ImageReader.OnImageAvailableListener() {
 		@Override
 		public void onImageAvailable(ImageReader reader) {
-
+			backgroundHandler.post(new ImageSaver(reader.acquireLatestImage()));
 		}
 	};
+
+	private class ImageSaver implements Runnable {
+		private final Image image;
+
+		public ImageSaver(Image image) {
+			this.image = image;
+		}
+
+		@Override public void run() {
+			ByteBuffer byteBuffer = this.image.getPlanes()[0].getBuffer();
+			byte[] bytes = new byte[byteBuffer.remaining()];
+			byteBuffer.get(bytes);
+
+			FileOutputStream fileOutputStream = null;
+			try {
+				fileOutputStream = new FileOutputStream(pictureName);
+				fileOutputStream.write(bytes);
+			} catch (IOException e) {
+				e.printStackTrace();
+			} finally {
+				this.image.close();
+
+				if(fileOutputStream != null) {
+					try {
+						fileOutputStream.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		}
+	}
 
 	private CameraCaptureSession.CaptureCallback previewCaptureCallback = new CameraCaptureSession.CaptureCallback() {
 		@Override
