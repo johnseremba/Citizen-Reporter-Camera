@@ -38,7 +38,7 @@ import java.util.List;
 
 public class CameraActivity extends AppCompatActivity {
 	private static final String TAG = CameraActivity.class.getSimpleName();
-	private static final int REQUEST_PERMISSION_RESULT = 1;
+	private static final int REQUEST_CAMERA_PERMISSION = 1;
 	private static final int REQUEST_STORAGE_PERMISSION = 2;
 	private TextureView textureView;
 	private CameraDevice cameraDevice;
@@ -190,7 +190,7 @@ public class CameraActivity extends AppCompatActivity {
 					if(shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
 						Toast.makeText(this, "Code4Africa custom camera required access to the camera.", Toast.LENGTH_SHORT).show();
 					}
-					requestPermissions(new String[] {Manifest.permission.CAMERA}, REQUEST_PERMISSION_RESULT);
+					requestPermissions(new String[] {Manifest.permission.CAMERA}, REQUEST_CAMERA_PERMISSION);
 				}
 			} else {
 				cameraManager.openCamera(cameraID, cameraDeviceStateCallback, backgroundHandler);
@@ -272,10 +272,20 @@ public class CameraActivity extends AppCompatActivity {
 	@Override public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
 			@NonNull int[] grantResults) {
 		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-		if(requestCode == REQUEST_PERMISSION_RESULT){
-			if(grantResults[0] != PackageManager.PERMISSION_GRANTED){
-				Toast.makeText(getApplicationContext(), "App can't run without camera permissions.", Toast.LENGTH_SHORT).show();
-			}
+
+		switch (requestCode) {
+			case REQUEST_CAMERA_PERMISSION:
+				if(grantResults[0] != PackageManager.PERMISSION_GRANTED){
+					Toast.makeText(getApplicationContext(), "App can't run without camera permissions.", Toast.LENGTH_SHORT).show();
+				}
+				break;
+			case REQUEST_STORAGE_PERMISSION:
+				if(grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+					Toast.makeText(getApplicationContext(), "App can't run without storage permissions.", Toast.LENGTH_SHORT).show();
+				}
+				break;
+			default:
+				break;
 		}
 	}
 
