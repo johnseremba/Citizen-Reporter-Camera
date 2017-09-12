@@ -69,6 +69,7 @@ public class CameraActivity extends AppCompatActivity {
 	private Size pictureSize;
 	private ImageReader imageReader;
 	private CameraCaptureSession previewCaptureSession;
+	int totalRotation;
 
 	private final ImageReader.OnImageAvailableListener onImageAvailableListener = new ImageReader.OnImageAvailableListener() {
 		@Override
@@ -96,6 +97,7 @@ public class CameraActivity extends AppCompatActivity {
 					if (afState == CaptureResult.CONTROL_AF_STATE_FOCUSED_LOCKED
 							|| afState == CaptureResult.CONTROL_AF_STATE_NOT_FOCUSED_LOCKED) {
 						Toast.makeText(getApplicationContext(), "AF Locked", Toast.LENGTH_SHORT).show();
+						startStillCapture();
 					}
 					break;
 
@@ -157,7 +159,7 @@ public class CameraActivity extends AppCompatActivity {
 				if(cameraCharacteristics.get(CameraCharacteristics.LENS_FACING) ==
 						CameraCharacteristics.LENS_FACING_BACK) {
 					int deviceOrientation = getWindowManager().getDefaultDisplay().getRotation();
-					int totalRotation = sensorToDeviceOrientation(cameraCharacteristics, deviceOrientation);
+					totalRotation = sensorToDeviceOrientation(cameraCharacteristics, deviceOrientation);
 					int rotatedWidth = width;
 					int rotatedHeight = height;
 					boolean swapRotation = totalRotation == 90 || totalRotation == 270;
@@ -358,6 +360,30 @@ public class CameraActivity extends AppCompatActivity {
 		}
 	}
 
+	private void startStillCapture(){
+		try {
+			captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
+			captureRequestBuilder.addTarget(imageReader.getSurface());
+			captureRequestBuilder.set(CaptureRequest.JPEG_ORIENTATION, totalRotation); // Fix orientation skews
+
+			CameraCaptureSession.CaptureCallback stillCaptureCallback = new CameraCaptureSession.CaptureCallback() {
+				@Override
+				public void onCaptureStarted(@NonNull CameraCaptureSession session,
+						@NonNull CaptureRequest request, long timestamp, long frameNumber) {
+					super.onCaptureStarted(session, request, timestamp, frameNumber);
+					try {
+						createPictureName();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+			};
+			previewCaptureSession.capture(captureRequestBuilder.build(), stillCaptureCallback, null);
+		} catch (CameraAccessException e) {
+			e.printStackTrace();
+		}
+	}
+
 	@Override protected void onPause() {
 		closeCamera();
 		stopBackgroundThread();
@@ -382,6 +408,8 @@ public class CameraActivity extends AppCompatActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_camera);
+
+		createPicturesFolder();
 
 		createPicturesFolder();
 		textureView = (TextureView) findViewById(R.id.tv_camera);
