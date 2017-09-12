@@ -10,6 +10,7 @@ import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CaptureRequest;
+import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.ImageReader;
@@ -43,6 +44,9 @@ public class CameraActivity extends AppCompatActivity {
 	private static final String TAG = CameraActivity.class.getSimpleName();
 	private static final int REQUEST_CAMERA_PERMISSION = 1;
 	private static final int REQUEST_STORAGE_PERMISSION = 2;
+	private static final int STATE_PREVIEW = 0;
+	private static final int STATE_WAIT_LOCK = 1;
+	private int captureState = STATE_PREVIEW;
 	private TextureView textureView;
 	private CameraDevice cameraDevice;
 	private String cameraID;
@@ -77,6 +81,23 @@ public class CameraActivity extends AppCompatActivity {
 				@NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
 			super.onCaptureCompleted(session, request, result);
 
+		}
+
+		private void process(CaptureResult captureResult) {
+			switch (captureState) {
+				case STATE_PREVIEW:
+					//
+					break;
+				case STATE_WAIT_LOCK:
+					captureState = STATE_PREVIEW;
+					Integer afState = captureResult.get(CaptureResult.CONTROL_AF_STATE);
+					if (afState == CaptureResult.CONTROL_AF_STATE_FOCUSED_LOCKED
+							|| afState == CaptureResult.CONTROL_AF_STATE_NOT_FOCUSED_LOCKED) {
+						Toast.makeText(getApplicationContext(), "AF Locked", Toast.LENGTH_SHORT).show();
+					}
+					break;
+
+			}
 		}
 	};
 
@@ -238,8 +259,9 @@ public class CameraActivity extends AppCompatActivity {
 			cameraDevice.createCaptureSession(Arrays.asList(previewSurface),
 					new CameraCaptureSession.StateCallback() {
 						@Override public void onConfigured(@NonNull CameraCaptureSession cameraCaptureSession) {
+							previewCaptureSession = cameraCaptureSession;
 							try {
-								cameraCaptureSession.setRepeatingRequest(captureRequestBuilder.build(), null, backgroundHandler);
+								previewCaptureSession.setRepeatingRequest(captureRequestBuilder.build(), null, backgroundHandler);
 							} catch (CameraAccessException e) {
 								e.printStackTrace();
 							}
@@ -292,6 +314,16 @@ public class CameraActivity extends AppCompatActivity {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+		}
+	}
+
+	private void lockFocus() {
+		captureState = STATE_WAIT_LOCK;
+		captureRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER, CaptureRequest.CONTROL_AF_TRIGGER_START);
+		try {
+			previewCaptureSession.capture(captureRequestBuilder.build(), previewCaptureCallback, backgroundHandler);
+		} catch (CameraAccessException e) {
+			e.printStackTrace();
 		}
 	}
 
