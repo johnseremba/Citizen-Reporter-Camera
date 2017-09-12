@@ -27,16 +27,19 @@ import android.view.View;
 import android.hardware.camera2.CameraDevice;
 import android.widget.Toast;
 import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 
 public class CameraActivity extends AppCompatActivity {
 	private static final String TAG = CameraActivity.class.getSimpleName();
-	private static final int REQUEST_PERMISSION_RESULT = 200;
+	private static final int REQUEST_PERMISSION_RESULT = 1;
+	private static final int REQUEST_STORAGE_PERMISSION = 2;
 	private TextureView textureView;
 	private CameraDevice cameraDevice;
 	private String cameraID;
@@ -226,11 +229,43 @@ public class CameraActivity extends AppCompatActivity {
 		}
 	}
 
-	public void createImageFoler() {
+	public void createPicturesFolder() {
 		File pictureFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
 		picturesFolder = new File(pictureFile, "Code4Africa");
 		if(!picturesFolder.exists()) {
 			picturesFolder.mkdirs();
+		}
+	}
+
+	public File createPictureName() throws IOException{
+		String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+		String prepend = "IMG_" + timestamp + "_";
+		File pictureFile = File.createTempFile(prepend, ".jpg", picturesFolder);
+		pictureName = pictureFile.getAbsolutePath();
+		return pictureFile;
+	}
+
+	private void checkWriteStoragePermission(){
+		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
+			if(ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+					== PackageManager.PERMISSION_GRANTED){
+				try {
+					createPictureName();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			} else {
+					if(shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+						Toast.makeText(this, "App needs to store pictures", Toast.LENGTH_SHORT);
+					}
+					requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_STORAGE_PERMISSION);
+			}
+		} else {
+			try {
+				createPictureName();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -269,6 +304,7 @@ public class CameraActivity extends AppCompatActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_camera);
 
+		createPicturesFolder();
 		textureView = (TextureView) findViewById(R.id.tv_camera);
 
 	}
