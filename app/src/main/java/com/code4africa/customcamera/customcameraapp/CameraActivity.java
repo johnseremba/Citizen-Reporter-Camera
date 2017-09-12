@@ -33,7 +33,6 @@ import android.hardware.camera2.CameraDevice;
 import android.widget.ImageView;
 import android.widget.Toast;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -68,8 +67,8 @@ public class CameraActivity extends AppCompatActivity {
 	private Size previewSize;
 	private CaptureRequest.Builder captureRequestBuilder;
 
-	private File picturesFolder;
-	private String pictureName;
+	private File imageFolder;
+	private String imageFileName;
 	private Size pictureSize;
 	private ImageReader imageReader;
 	private CameraCaptureSession previewCaptureSession;
@@ -90,18 +89,18 @@ public class CameraActivity extends AppCompatActivity {
 		}
 
 		@Override public void run() {
-			ByteBuffer byteBuffer = this.image.getPlanes()[0].getBuffer();
+			ByteBuffer byteBuffer = image.getPlanes()[0].getBuffer();
 			byte[] bytes = new byte[byteBuffer.remaining()];
 			byteBuffer.get(bytes);
 
 			FileOutputStream fileOutputStream = null;
 			try {
-				fileOutputStream = new FileOutputStream(pictureName);
+				fileOutputStream = new FileOutputStream(imageFileName);
 				fileOutputStream.write(bytes);
 			} catch (IOException e) {
 				e.printStackTrace();
 			} finally {
-				this.image.close();
+				image.close();
 
 				if(fileOutputStream != null) {
 					try {
@@ -119,7 +118,7 @@ public class CameraActivity extends AppCompatActivity {
 		public void onCaptureCompleted(@NonNull CameraCaptureSession session,
 				@NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
 			super.onCaptureCompleted(session, request, result);
-
+			process(result);
 		}
 
 		private void process(CaptureResult captureResult) {
@@ -133,10 +132,9 @@ public class CameraActivity extends AppCompatActivity {
 					if (afState == CaptureResult.CONTROL_AF_STATE_FOCUSED_LOCKED
 							|| afState == CaptureResult.CONTROL_AF_STATE_NOT_FOCUSED_LOCKED) {
 						Toast.makeText(getApplicationContext(), "AF Locked", Toast.LENGTH_SHORT).show();
-						startStillCapture();
+						 startStillCapture();
 					}
 					break;
-
 			}
 		}
 	};
@@ -296,7 +294,7 @@ public class CameraActivity extends AppCompatActivity {
 			captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
 			captureRequestBuilder.addTarget(previewSurface);
 
-			cameraDevice.createCaptureSession(Arrays.asList(previewSurface),
+			cameraDevice.createCaptureSession(Arrays.asList(previewSurface, imageReader.getSurface()),
 					new CameraCaptureSession.StateCallback() {
 						@Override public void onConfigured(@NonNull CameraCaptureSession cameraCaptureSession) {
 							previewCaptureSession = cameraCaptureSession;
@@ -317,23 +315,33 @@ public class CameraActivity extends AppCompatActivity {
 		}
 	}
 
-	public void createPicturesFolder() {
-		File pictureFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
-		picturesFolder = new File(pictureFile, "Code4Africa");
-		if(!picturesFolder.exists()) {
-			picturesFolder.mkdirs();
+	public void createImageFolder() {
+		File imageFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+		imageFolder = new File(imageFile, "Code4Africa");
+		if(!imageFolder.exists()) {
+			boolean result = imageFolder.mkdirs();
+			if(result) {
+				Log.d(TAG, "C4A images folder created successfully!");
+			} else {
+				Log.d(TAG, "Oops, C4A images folder not created!!");
+			}
+		} else {
+				Log.d(TAG, "Image directory already exists!");
 		}
 	}
 
 	public File createPictureName() throws IOException{
+		createImageFolder();
 		String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
 		String prepend = "IMG_" + timestamp + "_";
-		File pictureFile = File.createTempFile(prepend, ".jpg", picturesFolder);
-		pictureName = pictureFile.getAbsolutePath();
+		File pictureFile = File.createTempFile(prepend, ".jpg", imageFolder);
+		imageFileName = pictureFile.getAbsolutePath();
+		Log.d(TAG, "Picture Name: " + imageFileName);
+		Log.d(TAG, "Picutres folder: " + imageFolder);
 		return pictureFile;
 	}
 
-	private void checkWriteStoragePermission(){
+	private void checkWriteStoragePermission() {
 		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
 			if(ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
 					== PackageManager.PERMISSION_GRANTED){
@@ -342,6 +350,7 @@ public class CameraActivity extends AppCompatActivity {
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
+				Log.d(TAG, "Storage Permissions granted");
 			} else {
 					if(shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
 						Toast.makeText(this, "App needs to store pictures", Toast.LENGTH_SHORT);
@@ -445,15 +454,13 @@ public class CameraActivity extends AppCompatActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_camera);
 
-		createPicturesFolder();
-
-		createPicturesFolder();
 		textureView = (TextureView) findViewById(R.id.tv_camera);
 		capturePictureBtn = (ImageView) findViewById(R.id.img_capture);
 
 		capturePictureBtn.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
+				checkWriteStoragePermission();
 				lockFocus();
 			}
 		});
