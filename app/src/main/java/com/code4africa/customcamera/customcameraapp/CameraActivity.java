@@ -277,6 +277,8 @@ public class CameraActivity extends AppCompatActivity {
 			case REQUEST_CAMERA_PERMISSION:
 				if(grantResults[0] != PackageManager.PERMISSION_GRANTED){
 					Toast.makeText(getApplicationContext(), "App can't run without camera permissions.", Toast.LENGTH_SHORT).show();
+				} else {
+					Toast.makeText(getApplicationContext(), "Permission granted successfully", Toast.LENGTH_SHORT).show();
 				}
 				break;
 			case REQUEST_STORAGE_PERMISSION:
@@ -286,6 +288,7 @@ public class CameraActivity extends AppCompatActivity {
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
+					Toast.makeText(getApplicationContext(), "Permission granted successfully", Toast.LENGTH_SHORT).show();
 				} else {
 					Toast.makeText(getApplicationContext(), "App can't run without storage permissions.", Toast.LENGTH_SHORT).show();
 				}
