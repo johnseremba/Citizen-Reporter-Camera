@@ -85,6 +85,8 @@ public class CameraActivity extends AppCompatActivity {
 	private HashMap<String, ArrayList<String>> overlayScenes;
 	private ArrayList<String> portrait, signature, interaction, candid, environment;
 	private GestureDetectorCompat gestureObject;
+	private Integer selectedScene = 2;
+	private Integer prevScene = 2;
 
 	private final ImageReader.OnImageAvailableListener onImageAvailableListener = new ImageReader.OnImageAvailableListener() {
 		@Override
@@ -537,7 +539,7 @@ public class CameraActivity extends AppCompatActivity {
 		switcher5 = (ImageSwitcher)findViewById(R.id.sw_swipe_5);
 		imgOverlay = (ImageSwitcher) findViewById(R.id.img_overlay);
 
-		// Intitializes the scenes with the relevant scene images
+		// Initializes the scenes with the relevant scene images
 		initializeScenes();
 
 		// Creates the swipe buttons and initializes the initial overlay image
@@ -602,16 +604,63 @@ public class CameraActivity extends AppCompatActivity {
 
 			@Override
 			public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-
+				prevScene = selectedScene;
 				if (e2.getX() > e1.getX()) {
 					// Left to Right swipe
-					Toast.makeText(getApplicationContext(), "Swiped Left to Right", Toast.LENGTH_SHORT).show();
+					selectedScene += 1;
+					swipeScenes(selectedScene, prevScene);
 				} else if (e2.getX() < e1.getX()) {
 					// Right to Left swipe
-					Toast.makeText(getApplicationContext(), "Swiped Right to Left", Toast.LENGTH_SHORT).show();
+					selectedScene -= 1;
+					swipeScenes(selectedScene, prevScene);
 				}
 				return super.onFling(e1, e2, velocityX, velocityY);
 			}
 		}
 
+		public void swipeScenes(Integer nextScene, Integer prevScene) {
+			switch (prevScene) {
+				case 0:
+					switcher1.setImageResource(R.drawable.ic_circular);
+					break;
+				case 1:
+					switcher2.setImageResource(R.drawable.ic_circular);
+					break;
+				case 2:
+					switcher3.setImageResource(R.drawable.ic_circular);
+					break;
+				case 3:
+					switcher4.setImageResource(R.drawable.ic_circular);
+					break;
+				case 4:
+					switcher5.setImageResource(R.drawable.ic_circular);
+					break;
+				default:
+					selectedScene = 0;
+					switcher1.setImageResource(R.drawable.ic_circular);
+					break;
+			}
+
+			switch(nextScene) {
+				case 0:
+					switcher1.setImageResource(R.drawable.ic_selected_circular);
+					break;
+				case 1:
+					switcher2.setImageResource(R.drawable.ic_selected_circular);
+					break;
+				case 2:
+					switcher3.setImageResource(R.drawable.ic_selected_circular);
+					break;
+				case 3:
+					switcher4.setImageResource(R.drawable.ic_selected_circular);
+					break;
+				case 4:
+					switcher5.setImageResource(R.drawable.ic_selected_circular);
+					break;
+				default:
+					selectedScene = 0;
+					switcher1.setImageResource(R.drawable.ic_selected_circular);
+					break;
+			}
+		}
 	}
