@@ -36,6 +36,7 @@ import android.view.View;
 import android.hardware.camera2.CameraDevice;
 import android.widget.ImageSwitcher;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewSwitcher;
 import java.io.File;
@@ -60,6 +61,7 @@ public class CameraActivity extends AppCompatActivity {
 	private int captureState = STATE_PREVIEW;
 	private TextureView textureView;
 	private ImageView capturePictureBtn;
+	private TextView swipeText;
 	private CameraDevice cameraDevice;
 	private String cameraID;
 	private HandlerThread backgroundHandlerThread;
@@ -531,6 +533,7 @@ public class CameraActivity extends AppCompatActivity {
 
 		textureView = (TextureView) findViewById(R.id.tv_camera);
 		capturePictureBtn = (ImageView) findViewById(R.id.img_capture);
+		swipeText = (TextView) findViewById(R.id.txt_swipe_caption);
 
 		switcher1 = (ImageSwitcher)findViewById(R.id.sw_swipe_1);
 		switcher2 = (ImageSwitcher)findViewById(R.id.sw_swipe_2);
@@ -541,6 +544,8 @@ public class CameraActivity extends AppCompatActivity {
 
 		// Initializes the scenes with the relevant scene images
 		initializeScenes();
+
+		Toast.makeText(getApplicationContext(), "Interaction Scene", Toast.LENGTH_SHORT).show();
 
 		// Creates the swipe buttons and initializes the initial overlay image
 		initializeCameraInterface();
@@ -644,23 +649,29 @@ public class CameraActivity extends AppCompatActivity {
 			switch(nextScene) {
 				case 0:
 					switcher1.setImageResource(R.drawable.ic_selected_circular);
+					swipeText.setText("Portrait");
 					break;
 				case 1:
 					switcher2.setImageResource(R.drawable.ic_selected_circular);
+					swipeText.setText("Signature");
 					break;
 				case 2:
 					switcher3.setImageResource(R.drawable.ic_selected_circular);
+					swipeText.setText("Interaction");
 					break;
 				case 3:
 					switcher4.setImageResource(R.drawable.ic_selected_circular);
+					swipeText.setText("Candid");
 					break;
 				case 4:
 					switcher5.setImageResource(R.drawable.ic_selected_circular);
+					swipeText.setText("Environment");
 					break;
 				default:
 					selectedScene = 0;
 					switcher1.setImageResource(R.drawable.ic_selected_circular);
+					swipeText.setText("Portrait");
 					break;
 			}
 		}
-	}
+}
