@@ -2,6 +2,7 @@ package com.code4africa.customcamera.customcameraapp;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.ImageFormat;
@@ -16,10 +17,12 @@ import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
 import android.media.ImageReader;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GestureDetectorCompat;
@@ -61,6 +64,7 @@ public class CameraActivity extends AppCompatActivity {
 	private int captureState = STATE_PREVIEW;
 	private TextureView textureView;
 	private ImageView capturePictureBtn;
+	private ImageView openGalleryBtn;
 	private TextView swipeText;
 	private CameraDevice cameraDevice;
 	private String cameraID;
@@ -533,14 +537,15 @@ public class CameraActivity extends AppCompatActivity {
 
 		textureView = (TextureView) findViewById(R.id.tv_camera);
 		capturePictureBtn = (ImageView) findViewById(R.id.img_capture);
+		openGalleryBtn = (ImageView) findViewById(R.id.img_gallery);
 		swipeText = (TextView) findViewById(R.id.txt_swipe_caption);
 
-		switcher1 = (ImageSwitcher)findViewById(R.id.sw_swipe_1);
-		switcher2 = (ImageSwitcher)findViewById(R.id.sw_swipe_2);
-		switcher3 = (ImageSwitcher)findViewById(R.id.sw_swipe_3);
-		switcher4 = (ImageSwitcher)findViewById(R.id.sw_swipe_4);
-		switcher5 = (ImageSwitcher)findViewById(R.id.sw_swipe_5);
-		imgOverlay = (ImageView)findViewById(R.id.img_overlay);
+		switcher1 = (ImageSwitcher) findViewById(R.id.sw_swipe_1);
+		switcher2 = (ImageSwitcher) findViewById(R.id.sw_swipe_2);
+		switcher3 = (ImageSwitcher) findViewById(R.id.sw_swipe_3);
+		switcher4 = (ImageSwitcher) findViewById(R.id.sw_swipe_4);
+		switcher5 = (ImageSwitcher) findViewById(R.id.sw_swipe_5);
+		imgOverlay = (ImageView) findViewById(R.id.img_overlay);
 
 		// Initializes the scenes with the relevant scene images
 		initializeScenes();
@@ -554,6 +559,13 @@ public class CameraActivity extends AppCompatActivity {
 			@Override
 			public void onClick(View view) {
 				checkWriteStoragePermission();
+			}
+		});
+
+		openGalleryBtn.setOnClickListener(new View.OnClickListener(){
+			@Override public void onClick(View view) {
+				Intent galleryIntent = new Intent(Intent.ACTION_VIEW, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+				startActivity(galleryIntent);
 			}
 		});
 
