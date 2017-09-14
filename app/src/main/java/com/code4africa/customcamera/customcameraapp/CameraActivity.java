@@ -3,7 +3,9 @@ package com.code4africa.customcamera.customcameraapp;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.graphics.ImageFormat;
+import android.graphics.PorterDuff;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
@@ -460,6 +462,19 @@ public class CameraActivity extends AppCompatActivity {
 		switcher3 = (ImageSwitcher)findViewById(R.id.sw_swipe_3);
 		switcher4 = (ImageSwitcher)findViewById(R.id.sw_swipe_4);
 		switcher5 = (ImageSwitcher)findViewById(R.id.sw_swipe_5);
+
+		ImageSwitcher imgOverlay = (ImageSwitcher) findViewById(R.id.img_overlay);
+
+		imgOverlay.setFactory(new ViewSwitcher.ViewFactory() {
+			@Override public View makeView() {
+				ImageView imageView = new ImageView((getApplicationContext()));
+				imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+				imageView.setColorFilter(Color.argb(255, 255, 255, 255));
+				return imageView;
+			}
+		});
+
+		imgOverlay.setImageResource(R.drawable.ic_overlay_01);
 
 		switcher1.setFactory(new ViewSwitcher.ViewFactory() {
 			@Override public View makeView() {
