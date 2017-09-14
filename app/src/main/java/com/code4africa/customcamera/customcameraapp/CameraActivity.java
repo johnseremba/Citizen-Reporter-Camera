@@ -28,6 +28,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
+import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.TextureView;
@@ -571,4 +572,20 @@ public class CameraActivity extends AppCompatActivity {
 		}
 	}
 
-}
+		public class LearnGesture extends GestureDetector.SimpleOnGestureListener {
+
+			@Override
+			public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+
+				if (e2.getX() > e1.getX()) {
+					// Left to Right swipe
+					Toast.makeText(getApplicationContext(), "Swiped Left to Right", Toast.LENGTH_SHORT).show();
+				} else if (e2.getX() < e1.getX()) {
+					// Right to Left swipe
+					Toast.makeText(getApplicationContext(), "Swiped Right to Left", Toast.LENGTH_SHORT).show();
+				}
+				return super.onFling(e1, e2, velocityX, velocityY);
+			}
+		}
+
+	}
