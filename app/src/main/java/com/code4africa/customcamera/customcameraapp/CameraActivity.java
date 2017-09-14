@@ -91,8 +91,8 @@ public class CameraActivity extends AppCompatActivity {
 
 	private ImageSwitcher switcher1, switcher2, switcher3, switcher4, switcher5;
 	private ImageView imgOverlay;
-	private HashMap<String, ArrayList<String>> overlayScenes;
-	private ArrayList<String> portrait, signature, interaction, candid, environment;
+	private HashMap<String, ArrayList<Integer>> overlayScenes;
+	private ArrayList<Integer> portrait, signature, interaction, candid, environment;
 	private GestureDetectorCompat gestureObject;
 	private Integer selectedScene = 2;
 	private Integer prevScene = 2;
@@ -587,7 +587,6 @@ public class CameraActivity extends AppCompatActivity {
 
 		swapCameraBtn.setOnClickListener(new View.OnClickListener() {
 			@Override public void onClick(View view) {
-				Toast.makeText(getApplicationContext(), "Swapping Camera", Toast.LENGTH_SHORT).show();
 				swapCamID();
 			}
 		});
@@ -596,18 +595,38 @@ public class CameraActivity extends AppCompatActivity {
 
 
 	private void initializeScenes() {
-		overlayScenes = new HashMap<String, ArrayList<String>>();
-		portrait = new ArrayList<String>();
-		signature = new ArrayList<String>();
-		interaction = new ArrayList<String>();
-		candid = new ArrayList<String>();
-		environment = new ArrayList<String>();
+		overlayScenes = new HashMap<String, ArrayList<Integer>>();
+		portrait = new ArrayList<Integer>();
+		signature = new ArrayList<Integer>();
+		interaction = new ArrayList<Integer>();
+		candid = new ArrayList<Integer>();
+		environment = new ArrayList<Integer>();
 
-		addScenes(portrait, "portrait_00", 7);
-		addScenes(signature, "signature_00", 5);
-		addScenes(interaction, "interaction_00", 3);
-		addScenes(candid, "candid_00", 3);
-		addScenes(environment, "environment_00", 3);
+		portrait.add(R.drawable.portrait_001);
+		portrait.add(R.drawable.portrait_002);
+		portrait.add(R.drawable.portrait_003);
+		portrait.add(R.drawable.portrait_004);
+		portrait.add(R.drawable.portrait_005);
+		portrait.add(R.drawable.portrait_006);
+		portrait.add(R.drawable.portrait_007);
+
+		signature.add(R.drawable.signature_001);
+		signature.add(R.drawable.signature_002);
+		signature.add(R.drawable.signature_003);
+		signature.add(R.drawable.signature_004);
+		signature.add(R.drawable.signature_005);
+
+		interaction.add(R.drawable.interaction_001);
+		interaction.add(R.drawable.interaction_002);
+		interaction.add(R.drawable.interaction_003);
+
+		candid.add(R.drawable.candid_001);
+		candid.add(R.drawable.candid_002);
+		candid.add(R.drawable.candid_003);
+
+		environment.add(R.drawable.environment_001);
+		environment.add(R.drawable.environment_002);
+		environment.add(R.drawable.environment_003);
 
 		overlayScenes.put("Portrait", portrait);
 		overlayScenes.put("Signature", signature);
@@ -617,11 +636,11 @@ public class CameraActivity extends AppCompatActivity {
 	}
 
 	// Method to populate scene images
-	private void addScenes(ArrayList<String> scene, String prefix, Integer count) {
-		for(Integer i=0; i<count; i++) {
-			scene.add(prefix + i.toString());
-		}
-	}
+	//private void addScenes(ArrayList<String> scene, String prefix, Integer count) {
+	//	for(Integer i=0; i<count; i++) {
+	//		scene.add(prefix + i.toString());
+	//	}
+	//}
 
 	@Override
 	protected void onPostCreate(Bundle savedInstanceState) {
@@ -697,7 +716,7 @@ public class CameraActivity extends AppCompatActivity {
 					swipeText.setText("Signature");
 					break;
 				case 2:
-					imgOverlay.setImageResource(R.drawable.portrait_001);
+					imgOverlay.setImageResource(R.drawable.interaction_001);
 					switcher3.setImageResource(R.drawable.ic_selected_circular);
 					swipeText.setText("Interaction");
 					break;
@@ -713,6 +732,7 @@ public class CameraActivity extends AppCompatActivity {
 					break;
 				default:
 					selectedScene = 0;
+					imgOverlay.setImageResource(R.drawable.portrait_001);
 					switcher1.setImageResource(R.drawable.ic_selected_circular);
 					swipeText.setText("Portrait");
 					break;
