@@ -34,7 +34,7 @@
       android:baselineAlignBottom="false"
       android:cropToPadding="false"
       android:rotation="180"
-      android:scaleType="centerCrop"
+      android:scaleType="fitXY"
       android:tint="#ffffff"
       app:layout_constraintEnd_toEndOf="parent"
       app:layout_constraintHorizontal_bias="0.0"
