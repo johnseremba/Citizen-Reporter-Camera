@@ -30,8 +30,10 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.hardware.camera2.CameraDevice;
+import android.widget.ImageSwitcher;
 import android.widget.ImageView;
 import android.widget.Toast;
+import android.widget.ViewSwitcher;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -73,6 +75,8 @@ public class CameraActivity extends AppCompatActivity {
 	private ImageReader imageReader;
 	private CameraCaptureSession previewCaptureSession;
 	private int totalRotation;
+
+	private ImageSwitcher switcher1, switcher2, switcher3, switcher4, switcher5;
 
 	private final ImageReader.OnImageAvailableListener onImageAvailableListener = new ImageReader.OnImageAvailableListener() {
 		@Override
@@ -450,6 +454,58 @@ public class CameraActivity extends AppCompatActivity {
 
 		textureView = (TextureView) findViewById(R.id.tv_camera);
 		capturePictureBtn = (ImageView) findViewById(R.id.img_capture);
+
+		switcher1 = (ImageSwitcher)findViewById(R.id.sw_swipe_1);
+		switcher2 = (ImageSwitcher)findViewById(R.id.sw_swipe_2);
+		switcher3 = (ImageSwitcher)findViewById(R.id.sw_swipe_3);
+		switcher4 = (ImageSwitcher)findViewById(R.id.sw_swipe_4);
+		switcher5 = (ImageSwitcher)findViewById(R.id.sw_swipe_5);
+
+		switcher1.setFactory(new ViewSwitcher.ViewFactory() {
+			@Override public View makeView() {
+				ImageView imageView = new ImageView(getApplicationContext());
+				imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+				return  imageView;
+			}
+		});
+
+		switcher2.setFactory(new ViewSwitcher.ViewFactory() {
+			@Override public View makeView() {
+				ImageView imageView = new ImageView(getApplicationContext());
+				imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+				return  imageView;
+			}
+		});
+
+		switcher3.setFactory(new ViewSwitcher.ViewFactory() {
+			@Override public View makeView() {
+				ImageView imageView = new ImageView(getApplicationContext());
+				imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+				return  imageView;
+			}
+		});
+
+		switcher4.setFactory(new ViewSwitcher.ViewFactory() {
+			@Override public View makeView() {
+				ImageView imageView = new ImageView(getApplicationContext());
+				imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+				return  imageView;
+			}
+		});
+
+		switcher5.setFactory(new ViewSwitcher.ViewFactory() {
+			@Override public View makeView() {
+				ImageView imageView = new ImageView(getApplicationContext());
+				imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+				return  imageView;
+			}
+		});
+
+		switcher1.setImageResource(R.drawable.ic_circular);
+		switcher2.setImageResource(R.drawable.ic_circular);
+		switcher3.setImageResource(R.drawable.ic_selected_circular);
+		switcher4.setImageResource(R.drawable.ic_circular);
+		switcher5.setImageResource(R.drawable.ic_circular);
 
 		capturePictureBtn.setOnClickListener(new View.OnClickListener() {
 			@Override
