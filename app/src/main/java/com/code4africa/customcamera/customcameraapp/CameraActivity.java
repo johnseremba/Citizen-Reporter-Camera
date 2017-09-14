@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.ImageFormat;
-import android.graphics.PorterDuff;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
@@ -78,7 +77,7 @@ public class CameraActivity extends AppCompatActivity {
 	private CameraCaptureSession previewCaptureSession;
 	private int totalRotation;
 
-	private ImageSwitcher switcher1, switcher2, switcher3, switcher4, switcher5;
+	private ImageSwitcher imgOverlay, switcher1, switcher2, switcher3, switcher4, switcher5;
 
 	private final ImageReader.OnImageAvailableListener onImageAvailableListener = new ImageReader.OnImageAvailableListener() {
 		@Override
@@ -462,8 +461,7 @@ public class CameraActivity extends AppCompatActivity {
 		switcher3 = (ImageSwitcher)findViewById(R.id.sw_swipe_3);
 		switcher4 = (ImageSwitcher)findViewById(R.id.sw_swipe_4);
 		switcher5 = (ImageSwitcher)findViewById(R.id.sw_swipe_5);
-
-		ImageSwitcher imgOverlay = (ImageSwitcher) findViewById(R.id.img_overlay);
+		imgOverlay = (ImageSwitcher) findViewById(R.id.img_overlay);
 
 		imgOverlay.setFactory(new ViewSwitcher.ViewFactory() {
 			@Override public View makeView() {
