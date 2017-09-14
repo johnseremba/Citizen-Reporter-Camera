@@ -1,3 +1,4 @@
+
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -5,21 +6,53 @@
     android:layout_height="match_parent"
     android:background="#0099cc"
     tools:context="com.code4africa.customcamera.customcameraapp.CameraActivity"
+    android:id="@+id/root_container"
+    android:orientation="vertical"
     >
-    <TextureView
-        android:id="@+id/tv_camera"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        />
+  <TextureView
+      android:id="@+id/tv_camera"
+      android:layout_width="wrap_content"
+      android:layout_height="match_parent"
+      android:layout_alignParentBottom="true"
+      android:layout_alignParentStart="true"
+      />
   <ImageView
       android:id="@+id/img_capture"
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
+      android:layout_width="50dp"
+      android:layout_height="50dp"
       android:layout_alignParentBottom="true"
       android:layout_centerHorizontal="true"
-      android:layout_marginBottom="14dp"
-      android:minHeight="50dp"
-      android:minWidth="50dp"
+      android:layout_marginBottom="5dp"
+      android:contentDescription="@string/desc_take_picture"
       app:srcCompat="@drawable/camera_capture"
-      android:contentDescription="@string/desc_take_picture"/>
+      />
+  <ImageView
+      android:id="@+id/img_overlay"
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:layout_above="@+id/img_capture"
+      android:layout_alignParentStart="true"
+      android:adjustViewBounds="false"
+      android:alpha="0.2"
+      android:baselineAlignBottom="false"
+      android:contentDescription="@string/overlay_img_desc"
+      android:cropToPadding="false"
+      android:scaleType="centerCrop"
+      android:src="@drawable/ic_overlay_01"
+      android:tint="#fff"
+      />
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="20dp"
+      android:layout_above="@+id/img_capture"
+      android:layout_alignParentStart="true"
+      android:paddingLeft="60dp"
+      android:paddingRight="60dp"
+      >
+    <ImageView
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:src="@drawable/gear"
+        />
+  </LinearLayout>
 </RelativeLayout>
