@@ -51,6 +51,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 
 public class CameraActivity extends AppCompatActivity {
 	private static final String TAG = CameraActivity.class.getSimpleName();
@@ -61,6 +62,7 @@ public class CameraActivity extends AppCompatActivity {
 	private int captureState = STATE_PREVIEW;
 	private TextureView textureView;
 	private ImageView capturePictureBtn;
+	private ImageView swapCameraBtn;
 	private TextView swipeText;
 	private CameraDevice cameraDevice;
 	private String cameraID;
@@ -90,6 +92,7 @@ public class CameraActivity extends AppCompatActivity {
 	private GestureDetectorCompat gestureObject;
 	private Integer selectedScene = 2;
 	private Integer prevScene = 2;
+	String camLensFacing = "Back";
 
 	private final ImageReader.OnImageAvailableListener onImageAvailableListener = new ImageReader.OnImageAvailableListener() {
 		@Override
@@ -444,6 +447,35 @@ public class CameraActivity extends AppCompatActivity {
 		super.onPause();
 	}
 
+	private void swapCamID(){
+		if(camLensFacing.equals("Back")) {
+			camLensFacing = "Front";
+		} else {
+			camLensFacing = "Back";
+		}
+		CameraManager cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+		try {
+			for(String camID: cameraManager.getCameraIdList()) {
+				CameraCharacteristics cameraCharacteristics = cameraManager.getCameraCharacteristics(camID);
+				if(Objects.equals(camLensFacing, "Front")) {
+					if (cameraCharacteristics.get(CameraCharacteristics.LENS_FACING) !=
+							CameraCharacteristics.LENS_FACING_BACK) {
+							cameraID = camID;
+							return;
+					}
+				} else {
+						if (cameraCharacteristics.get(CameraCharacteristics.LENS_FACING) ==
+								CameraCharacteristics.LENS_FACING_BACK) {
+							cameraID = camID;
+							return;
+						}
+				}
+			}
+		} catch (CameraAccessException e) {
+			e.printStackTrace();
+		}
+	}
+
 	private void initializeCameraInterface() {
 		//imgOverlay.setFactory(new ViewSwitcher.ViewFactory() {
 		//	@Override public View makeView() {
@@ -533,6 +565,7 @@ public class CameraActivity extends AppCompatActivity {
 
 		textureView = (TextureView) findViewById(R.id.tv_camera);
 		capturePictureBtn = (ImageView) findViewById(R.id.img_capture);
+		swapCameraBtn = (ImageView) findViewById(R.id.img_switch_camera);
 		swipeText = (TextView) findViewById(R.id.txt_swipe_caption);
 
 		switcher1 = (ImageSwitcher)findViewById(R.id.sw_swipe_1);
@@ -554,6 +587,12 @@ public class CameraActivity extends AppCompatActivity {
 			@Override
 			public void onClick(View view) {
 				checkWriteStoragePermission();
+			}
+		});
+
+		swapCameraBtn.setOnClickListener(new View.OnClickListener() {
+			@Override public void onClick(View view) {
+				swapCamID();
 			}
 		});
 
