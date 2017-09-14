@@ -54,6 +54,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 
 public class CameraActivity extends AppCompatActivity {
 	private static final String TAG = CameraActivity.class.getSimpleName();
@@ -65,6 +66,7 @@ public class CameraActivity extends AppCompatActivity {
 	private TextureView textureView;
 	private ImageView capturePictureBtn;
 	private ImageView openGalleryBtn;
+	private ImageView swapCameraBtn;
 	private TextView swipeText;
 	private CameraDevice cameraDevice;
 	private String cameraID;
@@ -94,6 +96,7 @@ public class CameraActivity extends AppCompatActivity {
 	private GestureDetectorCompat gestureObject;
 	private Integer selectedScene = 2;
 	private Integer prevScene = 2;
+	int camLensFacing = CameraCharacteristics.LENS_FACING_BACK;
 
 	private final ImageReader.OnImageAvailableListener onImageAvailableListener = new ImageReader.OnImageAvailableListener() {
 		@Override
@@ -211,7 +214,7 @@ public class CameraActivity extends AppCompatActivity {
 			for(String camID: cameraManager.getCameraIdList()){
 				CameraCharacteristics cameraCharacteristics = cameraManager.getCameraCharacteristics(camID);
 				if(cameraCharacteristics.get(CameraCharacteristics.LENS_FACING) ==
-						CameraCharacteristics.LENS_FACING_BACK) {
+						camLensFacing) {
 					int deviceOrientation = getWindowManager().getDefaultDisplay().getRotation();
 					totalRotation = sensorToDeviceOrientation(cameraCharacteristics, deviceOrientation);
 					int rotatedWidth = width;
@@ -448,6 +451,19 @@ public class CameraActivity extends AppCompatActivity {
 		super.onPause();
 	}
 
+	private void swapCamID(){
+		if(camLensFacing == CameraCharacteristics.LENS_FACING_BACK) {
+			camLensFacing = CameraCharacteristics.LENS_FACING_FRONT;
+		} else {
+			camLensFacing = CameraCharacteristics.LENS_FACING_BACK;
+		}
+		closeCamera();
+		stopBackgroundThread();
+		startBackgroundThread();
+		setUpCamera(textureView.getWidth(), textureView.getHeight());
+		connectCamera();
+	}
+
 	private void initializeCameraInterface() {
 		//imgOverlay.setFactory(new ViewSwitcher.ViewFactory() {
 		//	@Override public View makeView() {
@@ -538,6 +554,7 @@ public class CameraActivity extends AppCompatActivity {
 		textureView = (TextureView) findViewById(R.id.tv_camera);
 		capturePictureBtn = (ImageView) findViewById(R.id.img_capture);
 		openGalleryBtn = (ImageView) findViewById(R.id.img_gallery);
+		swapCameraBtn = (ImageView) findViewById(R.id.img_switch_camera);
 		swipeText = (TextView) findViewById(R.id.txt_swipe_caption);
 
 		switcher1 = (ImageSwitcher) findViewById(R.id.sw_swipe_1);
@@ -562,14 +579,23 @@ public class CameraActivity extends AppCompatActivity {
 			}
 		});
 
-		openGalleryBtn.setOnClickListener(new View.OnClickListener(){
+		openGalleryBtn.setOnClickListener(new View.OnClickListener() {
 			@Override public void onClick(View view) {
-				Intent galleryIntent = new Intent(Intent.ACTION_VIEW, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+				Intent galleryIntent =
+						new Intent(Intent.ACTION_VIEW, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
 				startActivity(galleryIntent);
 			}
 		});
 
+		swapCameraBtn.setOnClickListener(new View.OnClickListener() {
+			@Override public void onClick(View view) {
+				Toast.makeText(getApplicationContext(), "Swapping Camera", Toast.LENGTH_SHORT).show();
+				swapCamID();
+			}
+		});
+
 	}
+
 
 	private void initializeScenes() {
 		overlayScenes = new HashMap<String, ArrayList<String>>();
