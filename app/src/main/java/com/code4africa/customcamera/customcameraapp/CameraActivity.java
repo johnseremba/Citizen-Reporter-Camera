@@ -718,33 +718,33 @@ public class CameraActivity extends AppCompatActivity {
 				case 0:
 					switcher1.setImageResource(R.drawable.ic_selected_circular);
 					swipeText.setText("Portrait");
-					imgOverlay.setImageResource(R.drawable.portrait_001);
+					imgOverlay.setImageResource(overlayScenes.get("Portrait").get(0));
 					break;
 				case 1:
-					imgOverlay.setImageResource(R.drawable.signature_001);
 					switcher2.setImageResource(R.drawable.ic_selected_circular);
 					swipeText.setText("Signature");
+					imgOverlay.setImageResource(overlayScenes.get("Signature").get(0));
 					break;
 				case 2:
-					imgOverlay.setImageResource(R.drawable.interaction_001);
 					switcher3.setImageResource(R.drawable.ic_selected_circular);
 					swipeText.setText("Interaction");
+					imgOverlay.setImageResource(overlayScenes.get("Interaction").get(0));
 					break;
 				case 3:
-					imgOverlay.setImageResource(R.drawable.candid_001);
 					switcher4.setImageResource(R.drawable.ic_selected_circular);
 					swipeText.setText("Candid");
+					imgOverlay.setImageResource(overlayScenes.get("Candid").get(0));
 					break;
 				case 4:
-					imgOverlay.setImageResource(R.drawable.environment_001);
 					switcher5.setImageResource(R.drawable.ic_selected_circular);
 					swipeText.setText("Environment");
+					imgOverlay.setImageResource(overlayScenes.get("Environment").get(0));
 					break;
 				default:
 					selectedScene = 0;
-					imgOverlay.setImageResource(R.drawable.portrait_001);
 					switcher1.setImageResource(R.drawable.ic_selected_circular);
 					swipeText.setText("Portrait");
+					imgOverlay.setImageResource(overlayScenes.get("Portrait").get(0));
 					break;
 			}
 		}
