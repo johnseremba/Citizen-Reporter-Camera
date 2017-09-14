@@ -83,7 +83,8 @@ public class CameraActivity extends AppCompatActivity {
 	private CameraCaptureSession previewCaptureSession;
 	private int totalRotation;
 
-	private ImageSwitcher imgOverlay, switcher1, switcher2, switcher3, switcher4, switcher5;
+	private ImageSwitcher switcher1, switcher2, switcher3, switcher4, switcher5;
+	private ImageView imgOverlay;
 	private HashMap<String, ArrayList<String>> overlayScenes;
 	private ArrayList<String> portrait, signature, interaction, candid, environment;
 	private GestureDetectorCompat gestureObject;
@@ -444,16 +445,14 @@ public class CameraActivity extends AppCompatActivity {
 	}
 
 	private void initializeCameraInterface() {
-		imgOverlay.setFactory(new ViewSwitcher.ViewFactory() {
-			@Override public View makeView() {
-				ImageView imageView = new ImageView((getApplicationContext()));
-				imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-				imageView.setColorFilter(Color.argb(255, 255, 255, 255));
-				return imageView;
-			}
-		});
-
-		imgOverlay.setImageResource(R.drawable.ic_overlay_01);
+		//imgOverlay.setFactory(new ViewSwitcher.ViewFactory() {
+		//	@Override public View makeView() {
+		//		ImageView imageView = new ImageView((getApplicationContext()));
+		//		imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+		//		imageView.setColorFilter(Color.argb(255, 255, 255, 255));
+		//		return imageView;
+		//	}
+		//});
 
 		switcher1.setFactory(new ViewSwitcher.ViewFactory() {
 			@Override public View makeView() {
@@ -500,6 +499,7 @@ public class CameraActivity extends AppCompatActivity {
 		switcher3.setImageResource(R.drawable.ic_selected_circular);
 		switcher4.setImageResource(R.drawable.ic_circular);
 		switcher5.setImageResource(R.drawable.ic_circular);
+		imgOverlay.setImageResource(R.drawable.interaction_001);
 
 	}
 
@@ -540,7 +540,7 @@ public class CameraActivity extends AppCompatActivity {
 		switcher3 = (ImageSwitcher)findViewById(R.id.sw_swipe_3);
 		switcher4 = (ImageSwitcher)findViewById(R.id.sw_swipe_4);
 		switcher5 = (ImageSwitcher)findViewById(R.id.sw_swipe_5);
-		imgOverlay = (ImageSwitcher) findViewById(R.id.img_overlay);
+		imgOverlay = (ImageView)findViewById(R.id.img_overlay);
 
 		// Initializes the scenes with the relevant scene images
 		initializeScenes();
@@ -653,20 +653,25 @@ public class CameraActivity extends AppCompatActivity {
 				case 0:
 					switcher1.setImageResource(R.drawable.ic_selected_circular);
 					swipeText.setText("Portrait");
+					imgOverlay.setImageResource(R.drawable.portrait_001);
 					break;
 				case 1:
+					imgOverlay.setImageResource(R.drawable.signature_001);
 					switcher2.setImageResource(R.drawable.ic_selected_circular);
 					swipeText.setText("Signature");
 					break;
 				case 2:
+					imgOverlay.setImageResource(R.drawable.portrait_001);
 					switcher3.setImageResource(R.drawable.ic_selected_circular);
 					swipeText.setText("Interaction");
 					break;
 				case 3:
+					imgOverlay.setImageResource(R.drawable.candid_001);
 					switcher4.setImageResource(R.drawable.ic_selected_circular);
 					swipeText.setText("Candid");
 					break;
 				case 4:
+					imgOverlay.setImageResource(R.drawable.environment_001);
 					switcher5.setImageResource(R.drawable.ic_selected_circular);
 					swipeText.setText("Environment");
 					break;
