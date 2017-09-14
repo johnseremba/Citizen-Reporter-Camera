@@ -595,52 +595,62 @@ public class CameraActivity extends AppCompatActivity {
 
 
 	private void initializeScenes() {
-		overlayScenes = new HashMap<String, ArrayList<Integer>>();
-		portrait = new ArrayList<Integer>();
-		signature = new ArrayList<Integer>();
-		interaction = new ArrayList<Integer>();
-		candid = new ArrayList<Integer>();
-		environment = new ArrayList<Integer>();
+		portrait = new ArrayList<Integer>() {
+			{
+				add(R.drawable.portrait_001);
+				add(R.drawable.portrait_002);
+				add(R.drawable.portrait_003);
+				add(R.drawable.portrait_004);
+				add(R.drawable.portrait_005);
+				add(R.drawable.portrait_006);
+				add(R.drawable.portrait_007);
+			}
+		};
 
-		portrait.add(R.drawable.portrait_001);
-		portrait.add(R.drawable.portrait_002);
-		portrait.add(R.drawable.portrait_003);
-		portrait.add(R.drawable.portrait_004);
-		portrait.add(R.drawable.portrait_005);
-		portrait.add(R.drawable.portrait_006);
-		portrait.add(R.drawable.portrait_007);
+		signature = new ArrayList<Integer>() {
+			{
+				add(R.drawable.signature_001);
+				add(R.drawable.signature_002);
+				add(R.drawable.signature_003);
+				add(R.drawable.signature_004);
+				add(R.drawable.signature_005);
+			}
+		};
 
-		signature.add(R.drawable.signature_001);
-		signature.add(R.drawable.signature_002);
-		signature.add(R.drawable.signature_003);
-		signature.add(R.drawable.signature_004);
-		signature.add(R.drawable.signature_005);
+		interaction = new ArrayList<Integer>() {
+			{
+				add(R.drawable.interaction_001);
+				add(R.drawable.interaction_002);
+				add(R.drawable.interaction_003);
+			}
+		};
 
-		interaction.add(R.drawable.interaction_001);
-		interaction.add(R.drawable.interaction_002);
-		interaction.add(R.drawable.interaction_003);
+		candid = new ArrayList<Integer>() {
+			{
+				add(R.drawable.candid_001);
+				add(R.drawable.candid_002);
+				add(R.drawable.candid_003);
+			}
+		};
 
-		candid.add(R.drawable.candid_001);
-		candid.add(R.drawable.candid_002);
-		candid.add(R.drawable.candid_003);
+		environment = new ArrayList<Integer>() {
+			{
+				add(R.drawable.environment_001);
+				add(R.drawable.environment_002);
+				add(R.drawable.environment_003);
+			}
+		};
 
-		environment.add(R.drawable.environment_001);
-		environment.add(R.drawable.environment_002);
-		environment.add(R.drawable.environment_003);
-
-		overlayScenes.put("Portrait", portrait);
-		overlayScenes.put("Signature", signature);
-		overlayScenes.put("Interaction", interaction);
-		overlayScenes.put("Candid", candid);
-		overlayScenes.put("Environment", environment);
+		overlayScenes = new HashMap<String, ArrayList<Integer>>(){
+			{
+				put("Portrait", portrait);
+				put("Signature", signature);
+				put("Interaction", interaction);
+				put("Candid", candid);
+				put("Environment", environment);
+			}
+		};
 	}
-
-	// Method to populate scene images
-	//private void addScenes(ArrayList<String> scene, String prefix, Integer count) {
-	//	for(Integer i=0; i<count; i++) {
-	//		scene.add(prefix + i.toString());
-	//	}
-	//}
 
 	@Override
 	protected void onPostCreate(Bundle savedInstanceState) {
