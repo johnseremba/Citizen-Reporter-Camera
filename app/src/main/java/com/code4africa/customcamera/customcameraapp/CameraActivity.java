@@ -48,6 +48,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 public class CameraActivity extends AppCompatActivity {
@@ -81,7 +82,8 @@ public class CameraActivity extends AppCompatActivity {
 	private int totalRotation;
 
 	private ImageSwitcher imgOverlay, switcher1, switcher2, switcher3, switcher4, switcher5;
-	private ArrayList<String> overlayScenes;
+	private HashMap<String, ArrayList<String>> overlayScenes;
+	private ArrayList<String> portrait, signature, interaction, candid, environment;
 	private GestureDetectorCompat gestureObject;
 
 	private final ImageReader.OnImageAvailableListener onImageAvailableListener = new ImageReader.OnImageAvailableListener() {
@@ -535,12 +537,8 @@ public class CameraActivity extends AppCompatActivity {
 		switcher5 = (ImageSwitcher)findViewById(R.id.sw_swipe_5);
 		imgOverlay = (ImageSwitcher) findViewById(R.id.img_overlay);
 
-		overlayScenes = new ArrayList<String>();
-		overlayScenes.add("Portrait");
-		overlayScenes.add("Signature");
-		overlayScenes.add("Interaction");
-		overlayScenes.add("Candid");
-		overlayScenes.add("Environment");
+		// Intitializes the scenes with the relevant scene images
+		initializeScenes();
 
 		// Creates the swipe buttons and initializes the initial overlay image
 		initializeCameraInterface();
@@ -552,6 +550,34 @@ public class CameraActivity extends AppCompatActivity {
 			}
 		});
 
+	}
+
+	private void initializeScenes() {
+		overlayScenes = new HashMap<String, ArrayList<String>>();
+		portrait = new ArrayList<String>();
+		signature = new ArrayList<String>();
+		interaction = new ArrayList<String>();
+		candid = new ArrayList<String>();
+		environment = new ArrayList<String>();
+
+		addScenes(portrait, "portrait_00", 7);
+		addScenes(signature, "signature_00", 5);
+		addScenes(interaction, "interaction_00", 3);
+		addScenes(candid, "candid_00", 3);
+		addScenes(environment, "environment_00", 3);
+
+		overlayScenes.put("Portrait", portrait);
+		overlayScenes.put("Signature", signature);
+		overlayScenes.put("Interaction", interaction);
+		overlayScenes.put("Candid", candid);
+		overlayScenes.put("Environment", environment);
+	}
+
+	// Method to populate scene images
+	private void addScenes(ArrayList<String> scene, String prefix, Integer count) {
+		for(Integer i=0; i<count; i++) {
+			scene.add(prefix + i.toString());
+		}
 	}
 
 	@Override
