@@ -617,6 +617,9 @@ public class CameraActivity extends AppCompatActivity {
 				} else if (e2.getX() < e1.getX()) {
 					// Right to Left swipe
 					selectedScene -= 1;
+					if(selectedScene < 0) {
+						selectedScene = 4;
+					}
 					swipeScenes(selectedScene, prevScene);
 				}
 				return super.onFling(e1, e2, velocityX, velocityY);
