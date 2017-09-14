@@ -22,11 +22,13 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.view.GestureDetectorCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
+import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
@@ -78,6 +80,8 @@ public class CameraActivity extends AppCompatActivity {
 	private int totalRotation;
 
 	private ImageSwitcher imgOverlay, switcher1, switcher2, switcher3, switcher4, switcher5;
+	private ArrayList<String> overlayScenes;
+	private GestureDetectorCompat gestureObject;
 
 	private final ImageReader.OnImageAvailableListener onImageAvailableListener = new ImageReader.OnImageAvailableListener() {
 		@Override
@@ -432,37 +436,7 @@ public class CameraActivity extends AppCompatActivity {
 		super.onPause();
 	}
 
-	@Override
-	public void onWindowFocusChanged(boolean hasFocus) {
-		super.onWindowFocusChanged(hasFocus);
-		View decorView = getWindow().getDecorView();
-		if(hasFocus){
-			decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-			| View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-			| View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-			| View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-			| View.SYSTEM_UI_FLAG_FULLSCREEN
-			| View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
-		}
-	}
-
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_camera);
-
-		createImageFolder();
-
-		textureView = (TextureView) findViewById(R.id.tv_camera);
-		capturePictureBtn = (ImageView) findViewById(R.id.img_capture);
-
-		switcher1 = (ImageSwitcher)findViewById(R.id.sw_swipe_1);
-		switcher2 = (ImageSwitcher)findViewById(R.id.sw_swipe_2);
-		switcher3 = (ImageSwitcher)findViewById(R.id.sw_swipe_3);
-		switcher4 = (ImageSwitcher)findViewById(R.id.sw_swipe_4);
-		switcher5 = (ImageSwitcher)findViewById(R.id.sw_swipe_5);
-		imgOverlay = (ImageSwitcher) findViewById(R.id.img_overlay);
-
+	private void initializeCameraInterface() {
 		imgOverlay.setFactory(new ViewSwitcher.ViewFactory() {
 			@Override public View makeView() {
 				ImageView imageView = new ImageView((getApplicationContext()));
@@ -519,6 +493,56 @@ public class CameraActivity extends AppCompatActivity {
 		switcher3.setImageResource(R.drawable.ic_selected_circular);
 		switcher4.setImageResource(R.drawable.ic_circular);
 		switcher5.setImageResource(R.drawable.ic_circular);
+
+	}
+
+	@Override
+	public void onWindowFocusChanged(boolean hasFocus) {
+		super.onWindowFocusChanged(hasFocus);
+		View decorView = getWindow().getDecorView();
+		if(hasFocus){
+			decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+			| View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+			| View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+			| View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+			| View.SYSTEM_UI_FLAG_FULLSCREEN
+			| View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+		}
+	}
+
+	@Override public boolean onTouchEvent(MotionEvent event) {
+		this.gestureObject.onTouchEvent(event);
+		return super.onTouchEvent(event);
+	}
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_camera);
+
+		gestureObject = new GestureDetectorCompat(this, new LearnGesture());
+
+		createImageFolder();
+
+		textureView = (TextureView) findViewById(R.id.tv_camera);
+		capturePictureBtn = (ImageView) findViewById(R.id.img_capture);
+
+		switcher1 = (ImageSwitcher)findViewById(R.id.sw_swipe_1);
+		switcher2 = (ImageSwitcher)findViewById(R.id.sw_swipe_2);
+		switcher3 = (ImageSwitcher)findViewById(R.id.sw_swipe_3);
+		switcher4 = (ImageSwitcher)findViewById(R.id.sw_swipe_4);
+		switcher5 = (ImageSwitcher)findViewById(R.id.sw_swipe_5);
+		imgOverlay = (ImageSwitcher) findViewById(R.id.img_overlay);
+
+		overlayScenes = new ArrayList<String>();
+		overlayScenes.add("Portrait");
+		overlayScenes.add("Signature");
+		overlayScenes.add("Interaction");
+		overlayScenes.add("Candid");
+		overlayScenes.add("Environment");
+
+		// Creates the swipe buttons and initializes the initial overlay image
+		initializeCameraInterface();
 
 		capturePictureBtn.setOnClickListener(new View.OnClickListener() {
 			@Override
