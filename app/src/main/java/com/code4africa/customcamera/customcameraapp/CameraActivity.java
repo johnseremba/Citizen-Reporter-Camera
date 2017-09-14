@@ -458,8 +458,6 @@ public class CameraActivity extends AppCompatActivity {
 			camLensFacing = CameraCharacteristics.LENS_FACING_BACK;
 		}
 		closeCamera();
-		stopBackgroundThread();
-		startBackgroundThread();
 		setUpCamera(textureView.getWidth(), textureView.getHeight());
 		connectCamera();
 	}
