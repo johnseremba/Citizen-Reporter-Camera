@@ -1,10 +1,10 @@
 package com.code4africa.customcamera.customcameraapp;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
@@ -17,7 +17,6 @@ import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
 import android.media.ImageReader;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
@@ -32,6 +31,7 @@ import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.GestureDetector;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.TextureView;
@@ -54,7 +54,6 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Objects;
 
 public class CameraActivity extends AppCompatActivity {
 	private static final String TAG = CameraActivity.class.getSimpleName();
@@ -463,14 +462,6 @@ public class CameraActivity extends AppCompatActivity {
 	}
 
 	private void initializeCameraInterface() {
-		//imgOverlay.setFactory(new ViewSwitcher.ViewFactory() {
-		//	@Override public View makeView() {
-		//		ImageView imageView = new ImageView((getApplicationContext()));
-		//		imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-		//		imageView.setColorFilter(Color.argb(255, 255, 255, 255));
-		//		return imageView;
-		//	}
-		//});
 
 		switcher1.setFactory(new ViewSwitcher.ViewFactory() {
 			@Override public View makeView() {
@@ -540,7 +531,7 @@ public class CameraActivity extends AppCompatActivity {
 		return super.onTouchEvent(event);
 	}
 
-	@Override
+	@SuppressLint("ClickableViewAccessibility") @Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_camera);
@@ -575,6 +566,37 @@ public class CameraActivity extends AppCompatActivity {
 			public void onClick(View view) {
 				checkWriteStoragePermission();
 			}
+		});
+
+		capturePictureBtn.setOnTouchListener(new View.OnTouchListener() {
+			Float x1, x2, y1, y2;
+			Long t1, t2;
+			private long CLICK_DURATION = 400;
+
+			@Override
+			public boolean onTouch(View view, MotionEvent motionEvent) {
+				switch (motionEvent.getAction()){
+					case MotionEvent.ACTION_DOWN:
+						x1 = motionEvent.getX();
+						y1 = motionEvent.getY();
+						t1 = System.currentTimeMillis();
+						//Toast.makeText(getApplicationContext(), "RELEASED", Toast.LENGTH_SHORT).show();
+						return true;
+					case MotionEvent.ACTION_UP:
+						x2 = motionEvent.getX();
+						y2 = motionEvent.getY();
+						t2 = System.currentTimeMillis();
+
+						if ((t2 - t1) >= CLICK_DURATION) {
+							capturePictureBtn.setImageResource(R.drawable.ic_video_record);
+						} else {
+							checkWriteStoragePermission();
+						}
+						return true;
+				}
+				return false;
+			}
+
 		});
 
 		openGalleryBtn.setOnClickListener(new View.OnClickListener() {

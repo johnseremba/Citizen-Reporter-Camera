@@ -30,7 +30,6 @@
       android:layout_above="@+id/img_capture"
       android:layout_alignParentStart="true"
       android:adjustViewBounds="false"
-      android:alpha="0.2"
       android:baselineAlignBottom="false"
       android:cropToPadding="false"
       android:rotation="180"
