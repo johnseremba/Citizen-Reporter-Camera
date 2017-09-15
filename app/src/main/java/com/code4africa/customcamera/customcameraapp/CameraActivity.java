@@ -89,6 +89,7 @@ public class CameraActivity extends AppCompatActivity {
 	private Size videoSize;
 	private Size previewSize;
 	private ImageReader imageReader;
+	private MediaRecorder mediaRecorder;
 	private CameraCaptureSession previewCaptureSession;
 	private int totalRotation;
 
@@ -359,7 +360,30 @@ public class CameraActivity extends AppCompatActivity {
 		}
 	}
 
-	public File createImageFileName() throws IOException{
+	public void createVideoFolder() {
+		File videoFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES);
+		videoFolder = new File(videoFile, "Code4Africa");
+		if(!videoFolder.exists()) {
+			boolean result = videoFolder.mkdir();
+			if(result){
+				Log.d(TAG, "C4A video folder created successfully!");
+			} else {
+				Log.d(TAG, "C4A video directory already exists");
+			}
+		}
+	}
+
+	public File createVideoFileName() throws IOException {
+		String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+		String prepend = "VID_" + timestamp;
+		File videoFile = File.createTempFile(prepend, ".mp4", imageFolder);
+		videoFileName = videoFile.getAbsolutePath();
+		Log.d(TAG, "Video Name: " + videoFileName);
+		Log.d(TAG, "Video folder: " + videoFolder);
+		return videoFile;
+	}
+
+	public File createImageFileName() throws IOException {
 		String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
 		String prepend = "IMG_" + timestamp;
 		File imageFile = File.createTempFile(prepend, ".jpg", imageFolder);
