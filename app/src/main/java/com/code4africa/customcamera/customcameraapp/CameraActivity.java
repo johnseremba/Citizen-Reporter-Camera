@@ -96,6 +96,7 @@ public class CameraActivity extends AppCompatActivity {
 	private Integer selectedScene = 2;
 	private Integer prevScene = 2;
 	int camLensFacing = CameraCharacteristics.LENS_FACING_BACK;
+	private boolean isRecording = false;
 
 	private final ImageReader.OnImageAvailableListener onImageAvailableListener = new ImageReader.OnImageAvailableListener() {
 		@Override
@@ -587,10 +588,19 @@ public class CameraActivity extends AppCompatActivity {
 						y2 = motionEvent.getY();
 						t2 = System.currentTimeMillis();
 
-						if ((t2 - t1) >= CLICK_DURATION) {
-							capturePictureBtn.setImageResource(R.drawable.ic_video_record);
+						if(!isRecording){
+							if((t2 - t1) >= CLICK_DURATION) {
+								// Record a video for long press
+								capturePictureBtn.setImageResource(R.drawable.ic_video_record);
+								isRecording = true;
+							} else {
+								// Take a picture if the user just clicks
+								checkWriteStoragePermission();
+							}
 						} else {
-							checkWriteStoragePermission();
+							// Stop video recording, set back the capture icon
+							isRecording = false;
+							capturePictureBtn.setImageResource(R.drawable.camera_capture);
 						}
 						return true;
 				}
