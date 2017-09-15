@@ -480,6 +480,18 @@ public class CameraActivity extends AppCompatActivity {
 		super.onPause();
 	}
 
+	private void setUpMediaRecorder() throws IOException {
+		mediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
+		mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+		mediaRecorder.setOutputFile(videoFileName);
+		mediaRecorder.setVideoEncodingBitRate(1000000);
+		mediaRecorder.setVideoFrameRate(30);
+		mediaRecorder.setVideoSize(videoSize.getWidth(), videoSize.getHeight());
+		mediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
+		mediaRecorder.setOrientationHint(totalRotation);
+		mediaRecorder.prepare();
+	}
+
 	private void swapCamID(){
 		if(camLensFacing == CameraCharacteristics.LENS_FACING_BACK) {
 			camLensFacing = CameraCharacteristics.LENS_FACING_FRONT;
@@ -561,7 +573,7 @@ public class CameraActivity extends AppCompatActivity {
 		return super.onTouchEvent(event);
 	}
 
-	@SuppressLint("ClickableViewAccessibility") @Override
+	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_camera);
@@ -569,6 +581,9 @@ public class CameraActivity extends AppCompatActivity {
 		gestureObject = new GestureDetectorCompat(this, new LearnGesture());
 
 		createImageFolder();
+		createVideoFolder();
+
+		mediaRecorder = new MediaRecorder();
 
 		textureView = (TextureView) findViewById(R.id.tv_camera);
 		capturePictureBtn = (ImageView) findViewById(R.id.img_capture);
