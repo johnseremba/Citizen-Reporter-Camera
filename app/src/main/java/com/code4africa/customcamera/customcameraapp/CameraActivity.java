@@ -746,12 +746,12 @@ public class CameraActivity extends AppCompatActivity {
 						if(!isRecording){
 							if((t2 - t1) >= CLICK_DURATION) {
 								// Record a video for long press
+								MediaActionSound sound = new MediaActionSound();
+								sound.play(MediaActionSound.START_VIDEO_RECORDING);
+
 								isRecording = true;
 								imgOverlay.setImageDrawable(null);
 								swipeText.setText("Recording video");
-
-								MediaActionSound sound = new MediaActionSound();
-								sound.play(MediaActionSound.START_VIDEO_RECORDING);
 
 								capturePictureBtn.setImageResource(R.drawable.ic_video_record);
 								checkWriteStoragePermission();
