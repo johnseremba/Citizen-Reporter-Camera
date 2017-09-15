@@ -22,6 +22,7 @@ import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.SystemClock;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
@@ -38,6 +39,7 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.hardware.camera2.CameraDevice;
+import android.widget.Chronometer;
 import android.widget.ImageSwitcher;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -102,6 +104,7 @@ public class CameraActivity extends AppCompatActivity {
 	private Integer prevScene = 2;
 	int camLensFacing = CameraCharacteristics.LENS_FACING_BACK;
 	private boolean isRecording = false;
+	private Chronometer chronometer;
 
 	private final ImageReader.OnImageAvailableListener onImageAvailableListener = new ImageReader.OnImageAvailableListener() {
 		@Override
@@ -198,6 +201,9 @@ public class CameraActivity extends AppCompatActivity {
 				}
 				startRecord();
 				mediaRecorder.start();
+				chronometer.setBase(SystemClock.elapsedRealtime());
+				chronometer.setVisibility(View.VISIBLE);
+				chronometer.start();
 			} else {
 				startPreview();
 			}
@@ -458,6 +464,9 @@ public class CameraActivity extends AppCompatActivity {
 					}
 					startRecord();
 					mediaRecorder.start();
+					chronometer.setBase(SystemClock.elapsedRealtime());
+					chronometer.setVisibility(View.VISIBLE);
+					chronometer.start();
 				}
 			} else {
 					if(shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
@@ -472,6 +481,9 @@ public class CameraActivity extends AppCompatActivity {
 			} else {
 				startRecord();
 				mediaRecorder.start();
+				chronometer.setBase(SystemClock.elapsedRealtime());
+				chronometer.setVisibility(View.VISIBLE);
+				chronometer.start();
 			}
 		}
 	}
@@ -653,6 +665,7 @@ public class CameraActivity extends AppCompatActivity {
 
 		mediaRecorder = new MediaRecorder();
 
+		chronometer = (Chronometer) findViewById(R.id.chronometer2);
 		textureView = (TextureView) findViewById(R.id.tv_camera);
 		capturePictureBtn = (ImageView) findViewById(R.id.img_capture);
 		openGalleryBtn = (ImageView) findViewById(R.id.img_gallery);
@@ -713,6 +726,8 @@ public class CameraActivity extends AppCompatActivity {
 							// Stop video recording, set back the capture icon
 							isRecording = false;
 							capturePictureBtn.setImageResource(R.drawable.camera_capture);
+							chronometer.stop();
+							chronometer.setVisibility(View.INVISIBLE);
 							mediaRecorder.stop();
 							mediaRecorder.reset();
 							startPreview();
