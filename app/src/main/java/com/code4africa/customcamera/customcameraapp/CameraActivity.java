@@ -17,6 +17,7 @@ import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
 import android.media.ImageReader;
+import android.media.MediaRecorder;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
@@ -78,12 +79,15 @@ public class CameraActivity extends AppCompatActivity {
 		ORIENTATIONS.append(Surface.ROTATION_180, 180);
 		ORIENTATIONS.append(Surface.ROTATION_270, 270);
 	}
-	private Size previewSize;
 	private CaptureRequest.Builder captureRequestBuilder;
 
 	private File imageFolder;
+	private File videoFolder;
 	private String imageFileName;
+	private String videoFileName;
 	private Size imageSize;
+	private Size videoSize;
+	private Size previewSize;
 	private ImageReader imageReader;
 	private CameraCaptureSession previewCaptureSession;
 	private int totalRotation;
@@ -228,6 +232,7 @@ public class CameraActivity extends AppCompatActivity {
 
 					StreamConfigurationMap map = cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
 					previewSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture.class), rotatedWidth, rotatedHeight);
+					videoSize = chooseOptimalSize(map.getOutputSizes(MediaRecorder.class), rotatedWidth, rotatedHeight);
 					imageSize = chooseOptimalSize(map.getOutputSizes(ImageFormat.JPEG), rotatedWidth, rotatedHeight);
 					imageReader = ImageReader.newInstance(imageSize.getWidth(), imageSize.getHeight(), ImageFormat.JPEG, 1);
 					imageReader.setOnImageAvailableListener(onImageAvailableListener, backgroundHandler);
