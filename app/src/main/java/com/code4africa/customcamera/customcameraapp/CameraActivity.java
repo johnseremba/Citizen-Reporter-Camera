@@ -169,7 +169,6 @@ public class CameraActivity extends AppCompatActivity {
 					Integer afState = captureResult.get(CaptureResult.CONTROL_AF_STATE);
 					if (afState == CaptureResult.CONTROL_AF_STATE_FOCUSED_LOCKED ||
 								afState == CaptureResult.CONTROL_AF_STATE_NOT_FOCUSED_LOCKED) {
-						Toast.makeText(getApplicationContext(), "AF Locked", Toast.LENGTH_SHORT).show();
 						MediaActionSound sound = new MediaActionSound();
 						sound.play(MediaActionSound.SHUTTER_CLICK);
 						 startStillCapture();
@@ -733,6 +732,8 @@ public class CameraActivity extends AppCompatActivity {
 						if(!isRecording){
 							if((t2 - t1) >= CLICK_DURATION) {
 								// Record a video for long press
+								imgOverlay.setImageDrawable(null);
+
 								MediaActionSound sound = new MediaActionSound();
 								sound.play(MediaActionSound.START_VIDEO_RECORDING);
 
@@ -741,6 +742,7 @@ public class CameraActivity extends AppCompatActivity {
 								checkWriteStoragePermission();
 							} else {
 								// Take a picture if the user just clicks
+								isRecording = false;
 								checkWriteStoragePermission();
 							}
 						} else {
