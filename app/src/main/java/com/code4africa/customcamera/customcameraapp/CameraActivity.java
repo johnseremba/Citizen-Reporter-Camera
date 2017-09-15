@@ -1,7 +1,6 @@
 package com.code4africa.customcamera.customcameraapp;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -107,6 +106,7 @@ public class CameraActivity extends AppCompatActivity {
 	int camLensFacing = CameraCharacteristics.LENS_FACING_BACK;
 	private boolean isRecording = false;
 	private Chronometer chronometer;
+	private static final String IMAGE_FILE_LOCATION = "image_file_location";
 
 	private final ImageReader.OnImageAvailableListener onImageAvailableListener = new ImageReader.OnImageAvailableListener() {
 		@Override
@@ -147,6 +147,7 @@ public class CameraActivity extends AppCompatActivity {
 						e.printStackTrace();
 					}
 				}
+				openImage();
 			}
 		}
 	}
@@ -681,6 +682,12 @@ public class CameraActivity extends AppCompatActivity {
 	@Override public boolean onTouchEvent(MotionEvent event) {
 		this.gestureObject.onTouchEvent(event);
 		return super.onTouchEvent(event);
+	}
+
+	public void openImage(){
+		Intent sendFileAddressIntent = new Intent(this, ViewImageActivity.class);
+		sendFileAddressIntent.putExtra(IMAGE_FILE_LOCATION, imageFileName);
+		startActivity(sendFileAddressIntent);
 	}
 
 	@Override
