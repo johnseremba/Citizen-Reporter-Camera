@@ -748,6 +748,7 @@ public class CameraActivity extends AppCompatActivity {
 								// Record a video for long press
 								isRecording = true;
 								imgOverlay.setImageDrawable(null);
+								swipeText.setText("Recording video");
 
 								MediaActionSound sound = new MediaActionSound();
 								sound.play(MediaActionSound.START_VIDEO_RECORDING);
@@ -763,6 +764,7 @@ public class CameraActivity extends AppCompatActivity {
 							// Stop video recording, set back the capture icon
 							MediaActionSound sound = new MediaActionSound();
 							sound.play(MediaActionSound.STOP_VIDEO_RECORDING);
+							swipeText.setText("Swipe to change scenes");
 
 							chronometer.stop();
 							chronometer.setVisibility(View.INVISIBLE);
