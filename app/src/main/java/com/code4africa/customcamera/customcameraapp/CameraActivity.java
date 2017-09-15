@@ -220,6 +220,10 @@ public class CameraActivity extends AppCompatActivity {
 			cameraDevice.close();
 			cameraDevice = null;
 		}
+		if(mediaRecorder != null) {
+			mediaRecorder.release();
+			mediaRecorder = null;
+		}
 	}
 
 	private void setUpCamera(int width, int height) {
@@ -548,7 +552,7 @@ public class CameraActivity extends AppCompatActivity {
 		mediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
 		mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
 		mediaRecorder.setOutputFile(videoFileName);
-		mediaRecorder.setVideoEncodingBitRate(1000000);
+		mediaRecorder.setVideoEncodingBitRate(10000000);
 		mediaRecorder.setVideoFrameRate(30);
 		mediaRecorder.setVideoSize(videoSize.getWidth(), videoSize.getHeight());
 		mediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
@@ -717,7 +721,6 @@ public class CameraActivity extends AppCompatActivity {
 				}
 				return false;
 			}
-
 		});
 
 		openGalleryBtn.setOnClickListener(new View.OnClickListener() {
