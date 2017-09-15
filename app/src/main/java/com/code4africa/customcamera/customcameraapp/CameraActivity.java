@@ -324,7 +324,7 @@ public class CameraActivity extends AppCompatActivity {
 					if(shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
 						Toast.makeText(this, "Code4Africa custom camera required access to the camera.", Toast.LENGTH_SHORT).show();
 					}
-					requestPermissions(new String[] {Manifest.permission.CAMERA}, REQUEST_CAMERA_PERMISSION);
+					requestPermissions(new String[] {Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO}, REQUEST_CAMERA_PERMISSION);
 				}
 			} else {
 				cameraManager.openCamera(cameraID, cameraDeviceStateCallback, backgroundHandler);
@@ -507,8 +507,15 @@ public class CameraActivity extends AppCompatActivity {
 				if(grantResults[0] != PackageManager.PERMISSION_GRANTED){
 					Toast.makeText(getApplicationContext(), "App can't run without camera permissions.", Toast.LENGTH_SHORT).show();
 				} else {
-					Toast.makeText(getApplicationContext(), "Permission granted successfully", Toast.LENGTH_SHORT).show();
+					Toast.makeText(getApplicationContext(), "Camera permission granted successfully", Toast.LENGTH_SHORT).show();
 				}
+
+				if(grantResults[1] != PackageManager.PERMISSION_GRANTED){
+					Toast.makeText(getApplicationContext(), "App can't run without audio permissions.", Toast.LENGTH_SHORT).show();
+				} else {
+					Toast.makeText(getApplicationContext(), "Audio permission granted successfully", Toast.LENGTH_SHORT).show();
+				}
+
 				break;
 			case REQUEST_STORAGE_PERMISSION:
 				if(grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -520,7 +527,7 @@ public class CameraActivity extends AppCompatActivity {
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
-					Toast.makeText(getApplicationContext(), "Permission granted successfully", Toast.LENGTH_SHORT).show();
+					Toast.makeText(getApplicationContext(), "Storage permission granted successfully", Toast.LENGTH_SHORT).show();
 				} else {
 					Toast.makeText(getApplicationContext(), "App can't run without storage permissions.", Toast.LENGTH_SHORT).show();
 				}
@@ -562,12 +569,14 @@ public class CameraActivity extends AppCompatActivity {
 
 	private void setUpMediaRecorder() throws IOException {
 		mediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
+		mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
 		mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
 		mediaRecorder.setOutputFile(videoFileName);
 		mediaRecorder.setVideoEncodingBitRate(10000000);
 		mediaRecorder.setVideoFrameRate(30);
 		mediaRecorder.setVideoSize(videoSize.getWidth(), videoSize.getHeight());
 		mediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
+		mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
 		mediaRecorder.setOrientationHint(totalRotation);
 		mediaRecorder.prepare();
 	}
