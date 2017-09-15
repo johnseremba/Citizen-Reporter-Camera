@@ -6,4 +6,8 @@
   <string name="desc_take_picture">Button to take a picture</string>
   <string name="overlay_img_desc">This is the overlay image</string>
   <string name="swipe_text">Swipe to change scenes</string>
+
+  <string name="title_activity_view_image">ViewImageActivity</string>
+  <string name="dummy_button">Dummy Button</string>
+  <string name="dummy_content">DUMMY\nCONTENT</string>
 </resources>
