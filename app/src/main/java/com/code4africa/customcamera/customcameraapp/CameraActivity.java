@@ -18,6 +18,7 @@ import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
 import android.media.ImageReader;
 import android.media.MediaRecorder;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
@@ -133,6 +134,11 @@ public class CameraActivity extends AppCompatActivity {
 				e.printStackTrace();
 			} finally {
 				image.close();
+
+				Intent mediaStoreUpdateIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+				mediaStoreUpdateIntent.setData(Uri.fromFile(new File(imageFileName)));
+				sendBroadcast(mediaStoreUpdateIntent);
+
 				if(fileOutputStream != null) {
 					try {
 						fileOutputStream.close();
