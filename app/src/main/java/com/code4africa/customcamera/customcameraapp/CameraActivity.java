@@ -671,7 +671,6 @@ public class CameraActivity extends AppCompatActivity {
 						x1 = motionEvent.getX();
 						y1 = motionEvent.getY();
 						t1 = System.currentTimeMillis();
-						//Toast.makeText(getApplicationContext(), "RELEASED", Toast.LENGTH_SHORT).show();
 						return true;
 					case MotionEvent.ACTION_UP:
 						x2 = motionEvent.getX();
@@ -691,6 +690,9 @@ public class CameraActivity extends AppCompatActivity {
 							// Stop video recording, set back the capture icon
 							isRecording = false;
 							capturePictureBtn.setImageResource(R.drawable.camera_capture);
+							mediaRecorder.stop();
+							mediaRecorder.reset();
+							startPreview();
 						}
 						return true;
 				}
