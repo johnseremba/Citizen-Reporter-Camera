@@ -314,6 +314,42 @@ public class CameraActivity extends AppCompatActivity {
 		}
 	}
 
+	private void startRecord() {
+		try {
+			setUpMediaRecorder();
+			SurfaceTexture surfaceTexture = textureView.getSurfaceTexture();
+			surfaceTexture.setDefaultBufferSize(previewSize.getWidth(), previewSize.getHeight());
+			Surface previewSurface = new Surface(surfaceTexture);
+			Surface recordSurface = mediaRecorder.getSurface();
+			try {
+				captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);
+				captureRequestBuilder.addTarget(previewSurface);
+				captureRequestBuilder.addTarget(recordSurface);
+
+				cameraDevice.createCaptureSession(Arrays.asList(previewSurface, recordSurface),
+						new CameraCaptureSession.StateCallback() {
+							@Override
+							public void onConfigured(@NonNull CameraCaptureSession cameraCaptureSession) {
+								try {
+									cameraCaptureSession.setRepeatingRequest(captureRequestBuilder.build(), null, null);
+								} catch (CameraAccessException e) {
+									e.printStackTrace();
+								}
+							}
+
+							@Override
+							public void onConfigureFailed(@NonNull CameraCaptureSession cameraCaptureSession) {
+
+							}
+						}, null);
+			} catch (CameraAccessException e) {
+				e.printStackTrace();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 	private void startPreview() {
 		SurfaceTexture surfaceTexture = textureView.getSurfaceTexture();
 		surfaceTexture.setDefaultBufferSize(previewSize.getWidth(), previewSize.getHeight());
@@ -398,16 +434,26 @@ public class CameraActivity extends AppCompatActivity {
 			if(ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
 					== PackageManager.PERMISSION_GRANTED){
 				Log.d(TAG, "External storage permissions granted");
-				lockFocus();
+				if(!isRecording) {
+					lockFocus();
+				} else {
+					startRecord();
+					mediaRecorder.start();
+				}
 			} else {
 					if(shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-						Toast.makeText(this, "App needs to store pictures", Toast.LENGTH_SHORT);
+						Toast.makeText(this, "App needs to store pictures & videos", Toast.LENGTH_SHORT);
 					}
 					Log.d(TAG, "No external storage permissions");
 					requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_STORAGE_PERMISSION);
 			}
 		} else {
+			if(!isRecording) {
 				lockFocus();
+			} else {
+				startRecord();
+				mediaRecorder.start();
+			}
 		}
 	}
 
