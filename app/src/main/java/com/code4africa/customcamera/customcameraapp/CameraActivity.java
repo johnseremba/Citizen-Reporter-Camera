@@ -745,6 +745,11 @@ public class CameraActivity extends AppCompatActivity {
 							chronometer.setVisibility(View.INVISIBLE);
 							mediaRecorder.stop();
 							mediaRecorder.reset();
+
+							Intent mediaStoreUpdateIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+							mediaStoreUpdateIntent.setData(Uri.fromFile(new File(videoFileName)));
+							sendBroadcast(mediaStoreUpdateIntent);
+
 							startPreview();
 						}
 						return true;
