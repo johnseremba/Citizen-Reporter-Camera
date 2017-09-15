@@ -422,7 +422,7 @@ public class CameraActivity extends AppCompatActivity {
 	public File createVideoFileName() throws IOException {
 		String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
 		String prepend = "VID_" + timestamp;
-		File videoFile = File.createTempFile(prepend, ".mp4", imageFolder);
+		File videoFile = File.createTempFile(prepend, ".mp4", videoFolder);
 		videoFileName = videoFile.getAbsolutePath();
 		Log.d(TAG, "Video Name: " + videoFileName);
 		Log.d(TAG, "Video folder: " + videoFolder);
@@ -447,6 +447,11 @@ public class CameraActivity extends AppCompatActivity {
 				if(!isRecording) {
 					lockFocus();
 				} else {
+					try {
+						createVideoFileName();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
 					startRecord();
 					mediaRecorder.start();
 				}
@@ -492,7 +497,10 @@ public class CameraActivity extends AppCompatActivity {
 			case REQUEST_STORAGE_PERMISSION:
 				if(grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 					try {
-						createImageFileName();
+						if(!isRecording)
+							createImageFileName();
+						else
+							createVideoFileName();
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
@@ -692,6 +700,7 @@ public class CameraActivity extends AppCompatActivity {
 								// Record a video for long press
 								capturePictureBtn.setImageResource(R.drawable.ic_video_record);
 								isRecording = true;
+								checkWriteStoragePermission();
 							} else {
 								// Take a picture if the user just clicks
 								checkWriteStoragePermission();
