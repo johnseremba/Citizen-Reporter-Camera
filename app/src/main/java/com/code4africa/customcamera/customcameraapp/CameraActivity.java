@@ -190,7 +190,17 @@ public class CameraActivity extends AppCompatActivity {
 	private CameraDevice.StateCallback cameraDeviceStateCallback = new CameraDevice.StateCallback() {
 		@Override public void onOpened(@NonNull CameraDevice camera) {
 			cameraDevice = camera;
-			startPreview();
+			if(isRecording) {
+				try {
+					createVideoFileName();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				startRecord();
+				mediaRecorder.start();
+			} else {
+				startPreview();
+			}
 		}
 
 		@Override public void onDisconnected(@NonNull CameraDevice camera) {
