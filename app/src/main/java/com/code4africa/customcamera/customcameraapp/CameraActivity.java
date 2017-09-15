@@ -17,6 +17,7 @@ import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
 import android.media.ImageReader;
+import android.media.MediaActionSound;
 import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Build;
@@ -169,6 +170,8 @@ public class CameraActivity extends AppCompatActivity {
 					if (afState == CaptureResult.CONTROL_AF_STATE_FOCUSED_LOCKED ||
 								afState == CaptureResult.CONTROL_AF_STATE_NOT_FOCUSED_LOCKED) {
 						Toast.makeText(getApplicationContext(), "AF Locked", Toast.LENGTH_SHORT).show();
+						MediaActionSound sound = new MediaActionSound();
+						sound.play(MediaActionSound.SHUTTER_CLICK);
 						 startStillCapture();
 					}
 					break;
@@ -730,6 +733,9 @@ public class CameraActivity extends AppCompatActivity {
 						if(!isRecording){
 							if((t2 - t1) >= CLICK_DURATION) {
 								// Record a video for long press
+								MediaActionSound sound = new MediaActionSound();
+								sound.play(MediaActionSound.START_VIDEO_RECORDING);
+
 								capturePictureBtn.setImageResource(R.drawable.ic_video_record);
 								isRecording = true;
 								checkWriteStoragePermission();
@@ -739,6 +745,9 @@ public class CameraActivity extends AppCompatActivity {
 							}
 						} else {
 							// Stop video recording, set back the capture icon
+							MediaActionSound sound = new MediaActionSound();
+							sound.play(MediaActionSound.STOP_VIDEO_RECORDING);
+
 							isRecording = false;
 							capturePictureBtn.setImageResource(R.drawable.camera_capture);
 							chronometer.stop();
