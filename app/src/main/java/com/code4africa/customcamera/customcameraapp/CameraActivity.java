@@ -720,7 +720,7 @@ public class CameraActivity extends AppCompatActivity {
 		switcher3.setImageResource(R.drawable.ic_selected_circular);
 		switcher4.setImageResource(R.drawable.ic_circular);
 		switcher5.setImageResource(R.drawable.ic_circular);
-		imgOverlay.setImageResource(R.drawable.interaction_001);
+		swipeScenes(selectedScene, prevScene);
 
 	}
 
@@ -832,6 +832,7 @@ public class CameraActivity extends AppCompatActivity {
 
 							isRecording = false;
 							capturePictureBtn.setImageResource(R.drawable.camera_capture);
+							swipeScenes(selectedScene, prevScene);
 
 							startPreview();
 							mediaRecorder.stop();
