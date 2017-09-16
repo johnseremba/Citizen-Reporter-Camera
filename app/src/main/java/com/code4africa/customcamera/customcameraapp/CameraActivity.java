@@ -74,6 +74,7 @@ public class CameraActivity extends AppCompatActivity {
 	private ImageView capturePictureBtn;
 	private ImageView openGalleryBtn;
 	private ImageView swapCameraBtn;
+	private ImageView flashModeBtn;
 	private TextView swipeText;
 	private CameraDevice cameraDevice;
 	private String cameraID;
@@ -111,6 +112,7 @@ public class CameraActivity extends AppCompatActivity {
 	private boolean isRecording = false;
 	private Chronometer chronometer;
 	private String cameraPreviewResult;
+	private Integer flashStatus = 0;
 
 	private final ImageReader.OnImageAvailableListener onImageAvailableListener = new ImageReader.OnImageAvailableListener() {
 		@Override
@@ -331,6 +333,27 @@ public class CameraActivity extends AppCompatActivity {
 			return Collections.min(optimal, new CompareSizeByArea());
 		} else {
 			return choices[0];
+		}
+
+	}
+
+	private void swapFlashMode() {
+		flashStatus += 1;
+
+		if(flashStatus > 2) {
+			flashStatus = 0;
+		}
+
+		switch(flashStatus) {
+			case 0:
+				flashModeBtn.setImageResource(R.drawable.ic_flash_off);
+				break;
+			case 1:
+				flashModeBtn.setImageResource(R.drawable.ic_flash_on);
+				break;
+			case 2:
+				flashModeBtn.setImageResource(R.drawable.ic_flash_auto);
+				break;
 		}
 
 	}
@@ -742,6 +765,7 @@ public class CameraActivity extends AppCompatActivity {
 		capturePictureBtn = (ImageView) findViewById(R.id.img_capture);
 		openGalleryBtn = (ImageView) findViewById(R.id.img_gallery);
 		swapCameraBtn = (ImageView) findViewById(R.id.img_switch_camera);
+		flashModeBtn = (ImageView) findViewById(R.id.img_flash_btn);
 		swipeText = (TextView) findViewById(R.id.txt_swipe_caption);
 
 		switcher1 = (ImageSwitcher) findViewById(R.id.sw_swipe_1);
@@ -841,6 +865,12 @@ public class CameraActivity extends AppCompatActivity {
 		swapCameraBtn.setOnClickListener(new View.OnClickListener() {
 			@Override public void onClick(View view) {
 				swapCamID();
+			}
+		});
+
+		flashModeBtn.setOnClickListener(new View.OnClickListener() {
+			@Override public void onClick(View view) {
+				swapFlashMode();
 			}
 		});
 
