@@ -65,6 +65,7 @@ public class CameraActivity extends AppCompatActivity {
 	private static final int REQUEST_STORAGE_PERMISSION = 2;
 	private static final int STATE_PREVIEW = 0;
 	private static final int STATE_WAIT_LOCK = 1;
+	private static final int PREVIEW_IMAGE_RESULT = 3;
 	private int captureState = STATE_PREVIEW;
 	private TextureView textureView;
 	private ImageView capturePictureBtn;
@@ -520,6 +521,22 @@ public class CameraActivity extends AppCompatActivity {
 		}
 	}
 
+	@Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		switch(requestCode) {
+			case PREVIEW_IMAGE_RESULT:
+				if(resultCode == -1) {
+
+				} else if(resultCode == -1) {
+					Log.d(TAG, "Image deleted by user!");
+				}
+				break;
+			default:
+				Log.d(TAG, "Other returned: " + resultCode);
+				break;
+		}
+	}
+
 	@Override public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
 			@NonNull int[] grantResults) {
 		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -553,8 +570,6 @@ public class CameraActivity extends AppCompatActivity {
 				} else {
 					Toast.makeText(getApplicationContext(), "App can't run without storage permissions.", Toast.LENGTH_SHORT).show();
 				}
-				break;
-			default:
 				break;
 		}
 	}
@@ -687,7 +702,7 @@ public class CameraActivity extends AppCompatActivity {
 	public void openImage(){
 		Intent sendFileAddressIntent = new Intent(this, ViewImageActivity.class);
 		sendFileAddressIntent.putExtra(IMAGE_FILE_LOCATION, imageFileName);
-		startActivity(sendFileAddressIntent);
+		startActivityForResult(sendFileAddressIntent, PREVIEW_IMAGE_RESULT);
 	}
 
 	@Override

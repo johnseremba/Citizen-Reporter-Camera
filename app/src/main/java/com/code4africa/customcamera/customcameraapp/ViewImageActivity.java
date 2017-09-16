@@ -64,18 +64,16 @@ public class ViewImageActivity extends AppCompatActivity {
 				if(deleted){
 					MediaScannerConnection.scanFile(getApplicationContext(),
 							new String[]{getIntent().getStringExtra(IMAGE_FILE_LOCATION)}, null, null);
-					setResult(Activity.RESULT_OK);
+					setResult(Activity.RESULT_CANCELED);
 					ViewImageActivity.super.finish();
-				} else {
-					Toast.makeText(getApplicationContext(), "Not deleted", Toast.LENGTH_SHORT);
-					Log.d(TAG, "Image not deleted!");
 				}
 			}
 		});
 
 		saveBtn.setOnClickListener(new View.OnClickListener() {
 			@Override public void onClick(View view) {
-
+				setResult(Activity.RESULT_OK);
+				ViewImageActivity.super.finish();
 			}
 		});
 	}
