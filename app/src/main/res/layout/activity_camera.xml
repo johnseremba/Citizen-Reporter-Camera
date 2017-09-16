@@ -4,7 +4,6 @@
     android:id="@+id/root_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0099cc"
     android:orientation="vertical"
     tools:context="com.code4africa.customcamera.customcameraapp.CameraActivity"
     tools:layout_editor_absoluteX="0dp"

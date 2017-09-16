@@ -1,7 +1,7 @@
 package com.code4africa.customcamera.customcameraapp;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -62,10 +62,13 @@ import java.util.List;
 
 public class CameraActivity extends AppCompatActivity {
 	private static final String TAG = CameraActivity.class.getSimpleName();
+	private static final String IMAGE_FILE_LOCATION = "image_file_location";
+	private static final String IMAGE_SAVED_PATH = "Path";
 	private static final int REQUEST_CAMERA_PERMISSION = 1;
 	private static final int REQUEST_STORAGE_PERMISSION = 2;
 	private static final int STATE_PREVIEW = 0;
 	private static final int STATE_WAIT_LOCK = 1;
+	private static final int PREVIEW_IMAGE_RESULT = 3;
 	private int captureState = STATE_PREVIEW;
 	private TextureView textureView;
 	private ImageView capturePictureBtn;
@@ -107,6 +110,7 @@ public class CameraActivity extends AppCompatActivity {
 	int camLensFacing = CameraCharacteristics.LENS_FACING_BACK;
 	private boolean isRecording = false;
 	private Chronometer chronometer;
+	private String cameraPreviewResult;
 
 	private final ImageReader.OnImageAvailableListener onImageAvailableListener = new ImageReader.OnImageAvailableListener() {
 		@Override
@@ -147,6 +151,7 @@ public class CameraActivity extends AppCompatActivity {
 						e.printStackTrace();
 					}
 				}
+				openImage();
 			}
 		}
 	}
@@ -519,6 +524,27 @@ public class CameraActivity extends AppCompatActivity {
 		}
 	}
 
+	@Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		switch(requestCode) {
+			case PREVIEW_IMAGE_RESULT:
+				// Get result from the preview screen
+				// Set the absolute image path as the return value for the camera intent
+				if(resultCode == Activity.RESULT_OK) {
+					cameraPreviewResult = data.getStringExtra(IMAGE_SAVED_PATH);
+					Intent resultIntent = new Intent();
+					resultIntent.putExtra(IMAGE_SAVED_PATH, cameraPreviewResult);
+					setResult(Activity.RESULT_OK, resultIntent);
+					Log.d(TAG, "Success: " + cameraPreviewResult);
+				} else if(resultCode == Activity.RESULT_CANCELED) {
+					// Set the response of the camera intent to result canceled.
+					setResult(Activity.RESULT_CANCELED);
+					Log.d(TAG, "Image deleted by user!");
+				}
+				break;
+		}
+	}
+
 	@Override public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
 			@NonNull int[] grantResults) {
 		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -552,8 +578,6 @@ public class CameraActivity extends AppCompatActivity {
 				} else {
 					Toast.makeText(getApplicationContext(), "App can't run without storage permissions.", Toast.LENGTH_SHORT).show();
 				}
-				break;
-			default:
 				break;
 		}
 	}
@@ -683,6 +707,12 @@ public class CameraActivity extends AppCompatActivity {
 		return super.onTouchEvent(event);
 	}
 
+	public void openImage(){
+		Intent sendFileAddressIntent = new Intent(this, ViewImageActivity.class);
+		sendFileAddressIntent.putExtra(IMAGE_FILE_LOCATION, imageFileName);
+		startActivityForResult(sendFileAddressIntent, PREVIEW_IMAGE_RESULT);
+	}
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -746,6 +776,7 @@ public class CameraActivity extends AppCompatActivity {
 						if(!isRecording){
 							if((t2 - t1) >= CLICK_DURATION) {
 								// Record a video for long press
+								hideSceneIcons();
 								MediaActionSound sound = new MediaActionSound();
 								sound.play(MediaActionSound.START_VIDEO_RECORDING);
 
@@ -762,6 +793,7 @@ public class CameraActivity extends AppCompatActivity {
 							}
 						} else {
 							// Stop video recording, set back the capture icon
+							showSceneIcons();
 							MediaActionSound sound = new MediaActionSound();
 							sound.play(MediaActionSound.STOP_VIDEO_RECORDING);
 							swipeText.setText("Swipe to change scenes");
@@ -802,6 +834,21 @@ public class CameraActivity extends AppCompatActivity {
 
 	}
 
+	private void hideSceneIcons() {
+		switcher1.setVisibility(View.INVISIBLE);
+		switcher2.setVisibility(View.INVISIBLE);
+		switcher3.setVisibility(View.INVISIBLE);
+		switcher4.setVisibility(View.INVISIBLE);
+		switcher5.setVisibility(View.INVISIBLE);
+	}
+
+	private void showSceneIcons() {
+		switcher1.setVisibility(View.VISIBLE);
+		switcher2.setVisibility(View.VISIBLE);
+		switcher3.setVisibility(View.VISIBLE);
+		switcher4.setVisibility(View.VISIBLE);
+		switcher5.setVisibility(View.VISIBLE);
+	}
 
 	private void initializeScenes() {
 		portrait = new ArrayList<Integer>() {
@@ -883,18 +930,20 @@ public class CameraActivity extends AppCompatActivity {
 
 			@Override
 			public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-				prevScene = selectedScene;
-				if (e2.getX() > e1.getX()) {
-					// Left to Right swipe
-					selectedScene += 1;
-					swipeScenes(selectedScene, prevScene);
-				} else if (e2.getX() < e1.getX()) {
-					// Right to Left swipe
-					selectedScene -= 1;
-					if(selectedScene < 0) {
-						selectedScene = 4;
+				if(!isRecording) {
+					prevScene = selectedScene;
+					if (e2.getX() > e1.getX()) {
+						// Left to Right swipe
+						selectedScene += 1;
+						swipeScenes(selectedScene, prevScene);
+					} else if (e2.getX() < e1.getX()) {
+						// Right to Left swipe
+						selectedScene -= 1;
+						if (selectedScene < 0) {
+							selectedScene = 4;
+						}
+						swipeScenes(selectedScene, prevScene);
 					}
-					swipeScenes(selectedScene, prevScene);
 				}
 				return super.onFling(e1, e2, velocityX, velocityY);
 			}
