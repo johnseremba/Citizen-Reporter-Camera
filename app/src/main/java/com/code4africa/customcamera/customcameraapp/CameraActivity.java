@@ -537,6 +537,7 @@ public class CameraActivity extends AppCompatActivity {
 					setResult(Activity.RESULT_OK, resultIntent);
 					Log.d(TAG, "Success: " + cameraPreviewResult);
 				} else if(resultCode == Activity.RESULT_CANCELED) {
+					// Set the response of the camera intent to result canceled.
 					setResult(Activity.RESULT_CANCELED);
 					Log.d(TAG, "Image deleted by user!");
 				}
