@@ -17,6 +17,7 @@ import java.io.File;
 
 public class ViewImageActivity extends AppCompatActivity {
 	private static final String IMAGE_FILE_LOCATION = "image_file_location";
+	private static final String IMAGE_SAVED_PATH = "Path";
 	private static final String TAG = ViewImageActivity.class.getSimpleName();
 	private File imageFile;
 	private ImageView imageView;
@@ -72,7 +73,9 @@ public class ViewImageActivity extends AppCompatActivity {
 
 		saveBtn.setOnClickListener(new View.OnClickListener() {
 			@Override public void onClick(View view) {
-				setResult(Activity.RESULT_OK);
+				Intent resultIntent = new Intent();
+				resultIntent.putExtra(IMAGE_SAVED_PATH, imageFile.getAbsolutePath());
+				setResult(Activity.RESULT_OK, resultIntent);
 				ViewImageActivity.super.finish();
 			}
 		});

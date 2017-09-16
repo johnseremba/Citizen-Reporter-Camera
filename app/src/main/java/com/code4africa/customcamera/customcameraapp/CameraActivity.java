@@ -1,6 +1,7 @@
 package com.code4africa.customcamera.customcameraapp;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -61,6 +62,8 @@ import java.util.List;
 
 public class CameraActivity extends AppCompatActivity {
 	private static final String TAG = CameraActivity.class.getSimpleName();
+	private static final String IMAGE_FILE_LOCATION = "image_file_location";
+	private static final String IMAGE_SAVED_PATH = "Path";
 	private static final int REQUEST_CAMERA_PERMISSION = 1;
 	private static final int REQUEST_STORAGE_PERMISSION = 2;
 	private static final int STATE_PREVIEW = 0;
@@ -107,7 +110,7 @@ public class CameraActivity extends AppCompatActivity {
 	int camLensFacing = CameraCharacteristics.LENS_FACING_BACK;
 	private boolean isRecording = false;
 	private Chronometer chronometer;
-	private static final String IMAGE_FILE_LOCATION = "image_file_location";
+	private String cameraPreviewResult;
 
 	private final ImageReader.OnImageAvailableListener onImageAvailableListener = new ImageReader.OnImageAvailableListener() {
 		@Override
@@ -525,14 +528,18 @@ public class CameraActivity extends AppCompatActivity {
 		super.onActivityResult(requestCode, resultCode, data);
 		switch(requestCode) {
 			case PREVIEW_IMAGE_RESULT:
-				if(resultCode == -1) {
-
-				} else if(resultCode == -1) {
+				// Get result from the preview screen
+				// Set the absolute image path as the return value for the camera intent
+				if(resultCode == Activity.RESULT_OK) {
+					cameraPreviewResult = data.getStringExtra(IMAGE_SAVED_PATH);
+					Intent resultIntent = new Intent();
+					resultIntent.putExtra(IMAGE_SAVED_PATH, cameraPreviewResult);
+					setResult(Activity.RESULT_OK, resultIntent);
+					Log.d(TAG, "Success: " + cameraPreviewResult);
+				} else if(resultCode == Activity.RESULT_CANCELED) {
+					setResult(Activity.RESULT_CANCELED);
 					Log.d(TAG, "Image deleted by user!");
 				}
-				break;
-			default:
-				Log.d(TAG, "Other returned: " + resultCode);
 				break;
 		}
 	}
