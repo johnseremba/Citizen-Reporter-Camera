@@ -913,18 +913,20 @@ public class CameraActivity extends AppCompatActivity {
 
 			@Override
 			public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-				prevScene = selectedScene;
-				if (e2.getX() > e1.getX()) {
-					// Left to Right swipe
-					selectedScene += 1;
-					swipeScenes(selectedScene, prevScene);
-				} else if (e2.getX() < e1.getX()) {
-					// Right to Left swipe
-					selectedScene -= 1;
-					if(selectedScene < 0) {
-						selectedScene = 4;
+				if(!isRecording) {
+					prevScene = selectedScene;
+					if (e2.getX() > e1.getX()) {
+						// Left to Right swipe
+						selectedScene += 1;
+						swipeScenes(selectedScene, prevScene);
+					} else if (e2.getX() < e1.getX()) {
+						// Right to Left swipe
+						selectedScene -= 1;
+						if (selectedScene < 0) {
+							selectedScene = 4;
+						}
+						swipeScenes(selectedScene, prevScene);
 					}
-					swipeScenes(selectedScene, prevScene);
 				}
 				return super.onFling(e1, e2, velocityX, velocityY);
 			}
