@@ -671,54 +671,56 @@ public class CameraActivity extends AppCompatActivity {
 	}
 
 	private void initializeCameraInterface() {
+		runOnUiThread(new Runnable() {
+			@Override public void run() {
+				switcher1.setFactory(new ViewSwitcher.ViewFactory() {
+					@Override public View makeView() {
+						ImageView imageView = new ImageView(getApplicationContext());
+						imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+						return  imageView;
+					}
+				});
 
-		switcher1.setFactory(new ViewSwitcher.ViewFactory() {
-			@Override public View makeView() {
-				ImageView imageView = new ImageView(getApplicationContext());
-				imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-				return  imageView;
+				switcher2.setFactory(new ViewSwitcher.ViewFactory() {
+					@Override public View makeView() {
+						ImageView imageView = new ImageView(getApplicationContext());
+						imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+						return  imageView;
+					}
+				});
+
+				switcher3.setFactory(new ViewSwitcher.ViewFactory() {
+					@Override public View makeView() {
+						ImageView imageView = new ImageView(getApplicationContext());
+						imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+						return  imageView;
+					}
+				});
+
+				switcher4.setFactory(new ViewSwitcher.ViewFactory() {
+					@Override public View makeView() {
+						ImageView imageView = new ImageView(getApplicationContext());
+						imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+						return  imageView;
+					}
+				});
+
+				switcher5.setFactory(new ViewSwitcher.ViewFactory() {
+					@Override public View makeView() {
+						ImageView imageView = new ImageView(getApplicationContext());
+						imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+						return  imageView;
+					}
+				});
+
+				switcher1.setImageResource(R.drawable.ic_circular);
+				switcher2.setImageResource(R.drawable.ic_circular);
+				switcher3.setImageResource(R.drawable.ic_selected_circular);
+				switcher4.setImageResource(R.drawable.ic_circular);
+				switcher5.setImageResource(R.drawable.ic_circular);
+				swipeScenes(selectedScene, prevScene);
 			}
 		});
-
-		switcher2.setFactory(new ViewSwitcher.ViewFactory() {
-			@Override public View makeView() {
-				ImageView imageView = new ImageView(getApplicationContext());
-				imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-				return  imageView;
-			}
-		});
-
-		switcher3.setFactory(new ViewSwitcher.ViewFactory() {
-			@Override public View makeView() {
-				ImageView imageView = new ImageView(getApplicationContext());
-				imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-				return  imageView;
-			}
-		});
-
-		switcher4.setFactory(new ViewSwitcher.ViewFactory() {
-			@Override public View makeView() {
-				ImageView imageView = new ImageView(getApplicationContext());
-				imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-				return  imageView;
-			}
-		});
-
-		switcher5.setFactory(new ViewSwitcher.ViewFactory() {
-			@Override public View makeView() {
-				ImageView imageView = new ImageView(getApplicationContext());
-				imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-				return  imageView;
-			}
-		});
-
-		switcher1.setImageResource(R.drawable.ic_circular);
-		switcher2.setImageResource(R.drawable.ic_circular);
-		switcher3.setImageResource(R.drawable.ic_selected_circular);
-		switcher4.setImageResource(R.drawable.ic_circular);
-		switcher5.setImageResource(R.drawable.ic_circular);
-		swipeScenes(selectedScene, prevScene);
-
 	}
 
 	@Override
@@ -877,21 +879,29 @@ public class CameraActivity extends AppCompatActivity {
 	}
 
 	private void hideSceneIcons() {
-		switcher1.setVisibility(View.INVISIBLE);
-		switcher2.setVisibility(View.INVISIBLE);
-		switcher3.setVisibility(View.INVISIBLE);
-		switcher4.setVisibility(View.INVISIBLE);
-		switcher5.setVisibility(View.INVISIBLE);
-		flashModeBtn.setVisibility(View.INVISIBLE);
+		runOnUiThread(new Runnable() {
+			@Override public void run() {
+				switcher1.setVisibility(View.INVISIBLE);
+				switcher2.setVisibility(View.INVISIBLE);
+				switcher3.setVisibility(View.INVISIBLE);
+				switcher4.setVisibility(View.INVISIBLE);
+				switcher5.setVisibility(View.INVISIBLE);
+				flashModeBtn.setVisibility(View.INVISIBLE);
+			}
+		});
 	}
 
 	private void showSceneIcons() {
-		switcher1.setVisibility(View.VISIBLE);
-		switcher2.setVisibility(View.VISIBLE);
-		switcher3.setVisibility(View.VISIBLE);
-		switcher4.setVisibility(View.VISIBLE);
-		switcher5.setVisibility(View.VISIBLE);
-		flashModeBtn.setVisibility(View.VISIBLE);
+		runOnUiThread(new Runnable() {
+			@Override public void run() {
+				switcher1.setVisibility(View.VISIBLE);
+				switcher2.setVisibility(View.VISIBLE);
+				switcher3.setVisibility(View.VISIBLE);
+				switcher4.setVisibility(View.VISIBLE);
+				switcher5.setVisibility(View.VISIBLE);
+				flashModeBtn.setVisibility(View.VISIBLE);
+			}
+		});
 	}
 
 	private void initializeScenes() {
