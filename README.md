@@ -36,9 +36,6 @@ Videos are stored under `.../Movies/Code4Africa/` folder.
 ### Camera Preview Activity
 ![Camera Preview](https://github.com/SerryJohns/CustomCameraApp/blob/master/img/Screenshot_20170917-010351.png)
 
-### Preview of the picture captured
-<a href="url"><img src="https://github.com/SerryJohns/CustomCameraApp/blob/master/img/Screenshot_20170917-010730.png" align="left" height="550" width="300" ></a>
-
 ### Video Recording interface
 ![Video Recording](https://github.com/SerryJohns/CustomCameraApp/blob/master/img/Screenshot_20170917-010749.png)
 
