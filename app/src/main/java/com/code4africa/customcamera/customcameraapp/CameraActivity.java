@@ -11,6 +11,7 @@ import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
@@ -63,7 +64,8 @@ import java.util.List;
 public class CameraActivity extends AppCompatActivity {
 	private static final String TAG = CameraActivity.class.getSimpleName();
 	private static final String IMAGE_FILE_LOCATION = "image_file_location";
-	private static final String IMAGE_SAVED_PATH = "Path";
+	private static final String IMAGE_SAVED_PATH = "imagePath";
+	private static final String VIDEO_SAVED_PATH = "videoPath";
 	private static final int REQUEST_CAMERA_PERMISSION = 1;
 	private static final int REQUEST_STORAGE_PERMISSION = 2;
 	private static final int STATE_PREVIEW = 0;
@@ -74,6 +76,7 @@ public class CameraActivity extends AppCompatActivity {
 	private ImageView capturePictureBtn;
 	private ImageView openGalleryBtn;
 	private ImageView swapCameraBtn;
+	private ImageView flashModeBtn;
 	private TextView swipeText;
 	private CameraDevice cameraDevice;
 	private String cameraID;
@@ -111,6 +114,7 @@ public class CameraActivity extends AppCompatActivity {
 	private boolean isRecording = false;
 	private Chronometer chronometer;
 	private String cameraPreviewResult;
+	private Integer flashStatus = 0;
 
 	private final ImageReader.OnImageAvailableListener onImageAvailableListener = new ImageReader.OnImageAvailableListener() {
 		@Override
@@ -166,20 +170,11 @@ public class CameraActivity extends AppCompatActivity {
 
 		private void process(CaptureResult captureResult) {
 			switch (captureState) {
-				case STATE_PREVIEW:
-					//
-					break;
 				case STATE_WAIT_LOCK:
 					captureState = STATE_PREVIEW;
-					Integer afState = captureResult.get(CaptureResult.CONTROL_AF_STATE);
-					if (afState == CaptureResult.CONTROL_AF_STATE_FOCUSED_LOCKED ||
-								afState == CaptureResult.CONTROL_AF_STATE_NOT_FOCUSED_LOCKED) {
-
-						MediaActionSound sound = new MediaActionSound();
-						sound.play(MediaActionSound.SHUTTER_CLICK);
-
-						 startStillCapture();
-					}
+					MediaActionSound sound = new MediaActionSound();
+					sound.play(MediaActionSound.SHUTTER_CLICK);
+					startStillCapture();
 					break;
 			}
 		}
@@ -335,6 +330,27 @@ public class CameraActivity extends AppCompatActivity {
 
 	}
 
+	private void swapFlashMode() {
+		flashStatus += 1;
+
+		if(flashStatus > 2) {
+			flashStatus = 0;
+		}
+
+		switch(flashStatus) {
+			case 0:
+				flashModeBtn.setImageResource(R.drawable.ic_flash_off);
+				break;
+			case 1:
+				flashModeBtn.setImageResource(R.drawable.ic_flash_on);
+				break;
+			case 2:
+				flashModeBtn.setImageResource(R.drawable.ic_flash_auto);
+				break;
+		}
+
+	}
+
 	private void connectCamera() {
 		CameraManager cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
 		try {
@@ -355,7 +371,19 @@ public class CameraActivity extends AppCompatActivity {
 		}
 	}
 
+	private void enableFlashMode() {
+		CameraManager cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+		try {
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+				cameraManager.setTorchMode(cameraID, true);
+			}
+		} catch (CameraAccessException e) {
+			e.printStackTrace();
+		}
+	}
+
 	private void startRecord() {
+		enableFlashMode();
 		try {
 			setUpMediaRecorder();
 			SurfaceTexture surfaceTexture = textureView.getSurfaceTexture();
@@ -455,8 +483,6 @@ public class CameraActivity extends AppCompatActivity {
 		String prepend = "VID_" + timestamp;
 		File videoFile = File.createTempFile(prepend, ".mp4", videoFolder);
 		videoFileName = videoFile.getAbsolutePath();
-		Log.d(TAG, "Video Name: " + videoFileName);
-		Log.d(TAG, "Video folder: " + videoFolder);
 		return videoFile;
 	}
 
@@ -465,8 +491,6 @@ public class CameraActivity extends AppCompatActivity {
 		String prepend = "IMG_" + timestamp;
 		File imageFile = File.createTempFile(prepend, ".jpg", imageFolder);
 		imageFileName = imageFile.getAbsolutePath();
-		Log.d(TAG, "Image Name: " + imageFileName);
-		Log.d(TAG, "Image folder: " + imageFolder);
 		return imageFile;
 	}
 
@@ -475,9 +499,7 @@ public class CameraActivity extends AppCompatActivity {
 			if(ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
 					== PackageManager.PERMISSION_GRANTED){
 				Log.d(TAG, "External storage permissions granted");
-				if(!isRecording) {
-					//lockFocus();
-				} else {
+				if(isRecording) {
 					try {
 						createVideoFileName();
 					} catch (IOException e) {
@@ -497,9 +519,7 @@ public class CameraActivity extends AppCompatActivity {
 					requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_STORAGE_PERMISSION);
 			}
 		} else {
-			if(!isRecording) {
-				//lockFocus();
-			} else {
+			if(isRecording) {
 				try {
 					createVideoFileName();
 				} catch (IOException e) {
@@ -567,9 +587,7 @@ public class CameraActivity extends AppCompatActivity {
 			case REQUEST_STORAGE_PERMISSION:
 				if(grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 					try {
-						if(!isRecording)
-							createImageFileName();
-						else
+						if(isRecording)
 							createVideoFileName();
 					} catch (IOException e) {
 						e.printStackTrace();
@@ -587,6 +605,21 @@ public class CameraActivity extends AppCompatActivity {
 			captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
 			captureRequestBuilder.addTarget(imageReader.getSurface());
 			captureRequestBuilder.set(CaptureRequest.JPEG_ORIENTATION, totalRotation); // Fix orientation skews
+
+			switch(flashStatus) {
+				case 0:
+					captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_ON);
+					captureRequestBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_OFF);
+					break;
+				case 1:
+					captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_ON_ALWAYS_FLASH);
+					captureRequestBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_SINGLE);
+					break;
+				case 2:
+					captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
+					captureRequestBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_OFF);
+					break;
+			}
 
 			CameraCaptureSession.CaptureCallback stillCaptureCallback = new CameraCaptureSession.CaptureCallback() {
 				@Override
@@ -638,54 +671,56 @@ public class CameraActivity extends AppCompatActivity {
 	}
 
 	private void initializeCameraInterface() {
+		runOnUiThread(new Runnable() {
+			@Override public void run() {
+				switcher1.setFactory(new ViewSwitcher.ViewFactory() {
+					@Override public View makeView() {
+						ImageView imageView = new ImageView(getApplicationContext());
+						imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+						return  imageView;
+					}
+				});
 
-		switcher1.setFactory(new ViewSwitcher.ViewFactory() {
-			@Override public View makeView() {
-				ImageView imageView = new ImageView(getApplicationContext());
-				imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-				return  imageView;
+				switcher2.setFactory(new ViewSwitcher.ViewFactory() {
+					@Override public View makeView() {
+						ImageView imageView = new ImageView(getApplicationContext());
+						imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+						return  imageView;
+					}
+				});
+
+				switcher3.setFactory(new ViewSwitcher.ViewFactory() {
+					@Override public View makeView() {
+						ImageView imageView = new ImageView(getApplicationContext());
+						imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+						return  imageView;
+					}
+				});
+
+				switcher4.setFactory(new ViewSwitcher.ViewFactory() {
+					@Override public View makeView() {
+						ImageView imageView = new ImageView(getApplicationContext());
+						imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+						return  imageView;
+					}
+				});
+
+				switcher5.setFactory(new ViewSwitcher.ViewFactory() {
+					@Override public View makeView() {
+						ImageView imageView = new ImageView(getApplicationContext());
+						imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+						return  imageView;
+					}
+				});
+
+				switcher1.setImageResource(R.drawable.ic_circular);
+				switcher2.setImageResource(R.drawable.ic_circular);
+				switcher3.setImageResource(R.drawable.ic_selected_circular);
+				switcher4.setImageResource(R.drawable.ic_circular);
+				switcher5.setImageResource(R.drawable.ic_circular);
+				swipeScenes(selectedScene, prevScene);
 			}
 		});
-
-		switcher2.setFactory(new ViewSwitcher.ViewFactory() {
-			@Override public View makeView() {
-				ImageView imageView = new ImageView(getApplicationContext());
-				imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-				return  imageView;
-			}
-		});
-
-		switcher3.setFactory(new ViewSwitcher.ViewFactory() {
-			@Override public View makeView() {
-				ImageView imageView = new ImageView(getApplicationContext());
-				imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-				return  imageView;
-			}
-		});
-
-		switcher4.setFactory(new ViewSwitcher.ViewFactory() {
-			@Override public View makeView() {
-				ImageView imageView = new ImageView(getApplicationContext());
-				imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-				return  imageView;
-			}
-		});
-
-		switcher5.setFactory(new ViewSwitcher.ViewFactory() {
-			@Override public View makeView() {
-				ImageView imageView = new ImageView(getApplicationContext());
-				imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-				return  imageView;
-			}
-		});
-
-		switcher1.setImageResource(R.drawable.ic_circular);
-		switcher2.setImageResource(R.drawable.ic_circular);
-		switcher3.setImageResource(R.drawable.ic_selected_circular);
-		switcher4.setImageResource(R.drawable.ic_circular);
-		switcher5.setImageResource(R.drawable.ic_circular);
-		imgOverlay.setImageResource(R.drawable.interaction_001);
-
 	}
 
 	@Override
@@ -730,6 +765,7 @@ public class CameraActivity extends AppCompatActivity {
 		capturePictureBtn = (ImageView) findViewById(R.id.img_capture);
 		openGalleryBtn = (ImageView) findViewById(R.id.img_gallery);
 		swapCameraBtn = (ImageView) findViewById(R.id.img_switch_camera);
+		flashModeBtn = (ImageView) findViewById(R.id.img_flash_btn);
 		swipeText = (TextView) findViewById(R.id.txt_swipe_caption);
 
 		switcher1 = (ImageSwitcher) findViewById(R.id.sw_swipe_1);
@@ -746,14 +782,6 @@ public class CameraActivity extends AppCompatActivity {
 
 		// Creates the swipe buttons and initializes the initial overlay image
 		initializeCameraInterface();
-
-		capturePictureBtn.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View view) {
-				checkWriteStoragePermission();
-				lockFocus();
-			}
-		});
 
 		capturePictureBtn.setOnTouchListener(new View.OnTouchListener() {
 			Float x1, x2, y1, y2;
@@ -803,6 +831,7 @@ public class CameraActivity extends AppCompatActivity {
 
 							isRecording = false;
 							capturePictureBtn.setImageResource(R.drawable.camera_capture);
+							swipeScenes(selectedScene, prevScene);
 
 							startPreview();
 							mediaRecorder.stop();
@@ -811,6 +840,8 @@ public class CameraActivity extends AppCompatActivity {
 							Intent mediaStoreUpdateIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
 							mediaStoreUpdateIntent.setData(Uri.fromFile(new File(videoFileName)));
 							sendBroadcast(mediaStoreUpdateIntent);
+
+							createVideoReturnIntent();
 						}
 						return true;
 				}
@@ -832,22 +863,45 @@ public class CameraActivity extends AppCompatActivity {
 			}
 		});
 
+		flashModeBtn.setOnClickListener(new View.OnClickListener() {
+			@Override public void onClick(View view) {
+				swapFlashMode();
+			}
+		});
+
+	}
+
+	private void createVideoReturnIntent() {
+		Intent resultIntent = new Intent();
+		resultIntent.putExtra(VIDEO_SAVED_PATH, videoFileName);
+		setResult(Activity.RESULT_OK, resultIntent);
+		Log.d(TAG, "Success: " + videoFileName);
 	}
 
 	private void hideSceneIcons() {
-		switcher1.setVisibility(View.INVISIBLE);
-		switcher2.setVisibility(View.INVISIBLE);
-		switcher3.setVisibility(View.INVISIBLE);
-		switcher4.setVisibility(View.INVISIBLE);
-		switcher5.setVisibility(View.INVISIBLE);
+		runOnUiThread(new Runnable() {
+			@Override public void run() {
+				switcher1.setVisibility(View.INVISIBLE);
+				switcher2.setVisibility(View.INVISIBLE);
+				switcher3.setVisibility(View.INVISIBLE);
+				switcher4.setVisibility(View.INVISIBLE);
+				switcher5.setVisibility(View.INVISIBLE);
+				flashModeBtn.setVisibility(View.INVISIBLE);
+			}
+		});
 	}
 
 	private void showSceneIcons() {
-		switcher1.setVisibility(View.VISIBLE);
-		switcher2.setVisibility(View.VISIBLE);
-		switcher3.setVisibility(View.VISIBLE);
-		switcher4.setVisibility(View.VISIBLE);
-		switcher5.setVisibility(View.VISIBLE);
+		runOnUiThread(new Runnable() {
+			@Override public void run() {
+				switcher1.setVisibility(View.VISIBLE);
+				switcher2.setVisibility(View.VISIBLE);
+				switcher3.setVisibility(View.VISIBLE);
+				switcher4.setVisibility(View.VISIBLE);
+				switcher5.setVisibility(View.VISIBLE);
+				flashModeBtn.setVisibility(View.VISIBLE);
+			}
+		});
 	}
 
 	private void initializeScenes() {

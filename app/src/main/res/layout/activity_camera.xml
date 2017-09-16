@@ -23,6 +23,16 @@
       app:layout_constraintTop_toTopOf="parent"
       />
   <ImageView
+      android:id="@+id/img_btn_bg"
+      android:layout_width="0dp"
+      android:layout_height="97dp"
+      android:background="@color/black_overlay"
+      app:layout_constraintBottom_toBottomOf="parent"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintStart_toStartOf="parent"
+      android:alpha="1"
+      />
+  <ImageView
       android:id="@+id/img_overlay"
       android:layout_width="match_parent"
       android:layout_height="match_parent"
@@ -158,11 +168,23 @@
       android:layout_height="wrap_content"
       android:layout_marginEnd="8dp"
       android:layout_marginStart="8dp"
-      android:layout_marginTop="4dp"
+      android:layout_marginTop="8dp"
       android:textColor="#ff0000"
       android:visibility="invisible"
       app:layout_constraintEnd_toEndOf="parent"
       app:layout_constraintStart_toStartOf="parent"
       app:layout_constraintTop_toTopOf="@+id/img_overlay"
+      />
+  <ImageView
+      android:id="@+id/img_flash_btn"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_marginEnd="8dp"
+      android:layout_marginStart="8dp"
+      android:layout_marginTop="8dp"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toTopOf="@+id/chronometer2"
+      app:srcCompat="@drawable/ic_flash_off"
       />
 </android.support.constraint.ConstraintLayout>

@@ -17,7 +17,7 @@ import java.io.File;
 
 public class ViewImageActivity extends AppCompatActivity {
 	private static final String IMAGE_FILE_LOCATION = "image_file_location";
-	private static final String IMAGE_SAVED_PATH = "Path";
+	private static final String IMAGE_SAVED_PATH = "imagePath";
 	private static final String TAG = ViewImageActivity.class.getSimpleName();
 	private File imageFile;
 	private ImageView imageView;

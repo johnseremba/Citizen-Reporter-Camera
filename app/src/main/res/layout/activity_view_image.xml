@@ -22,10 +22,10 @@
       android:layout_marginBottom="8dp"
       android:layout_marginEnd="16dp"
       android:clickable="true"
-      android:rotation="180"
       app:layout_constraintBottom_toBottomOf="parent"
       app:layout_constraintEnd_toEndOf="parent"
-      app:srcCompat="@drawable/ic_back_arrow"
+      app:srcCompat="@drawable/ic_circular_check"
+      android:focusable="true"
       />
   <ImageView
       android:id="@+id/img_close_btn"
@@ -37,5 +37,6 @@
       app:layout_constraintBottom_toBottomOf="parent"
       app:layout_constraintStart_toStartOf="parent"
       app:srcCompat="@drawable/ic_close"
+      android:focusable="true"
       />
 </android.support.constraint.ConstraintLayout>
