@@ -64,7 +64,8 @@ import java.util.List;
 public class CameraActivity extends AppCompatActivity {
 	private static final String TAG = CameraActivity.class.getSimpleName();
 	private static final String IMAGE_FILE_LOCATION = "image_file_location";
-	private static final String IMAGE_SAVED_PATH = "Path";
+	private static final String IMAGE_SAVED_PATH = "imagePath";
+	private static final String VIDEO_SAVED_PATH = "videoPath";
 	private static final int REQUEST_CAMERA_PERMISSION = 1;
 	private static final int REQUEST_STORAGE_PERMISSION = 2;
 	private static final int STATE_PREVIEW = 0;
@@ -482,8 +483,6 @@ public class CameraActivity extends AppCompatActivity {
 		String prepend = "VID_" + timestamp;
 		File videoFile = File.createTempFile(prepend, ".mp4", videoFolder);
 		videoFileName = videoFile.getAbsolutePath();
-		Log.d(TAG, "Video Name: " + videoFileName);
-		Log.d(TAG, "Video folder: " + videoFolder);
 		return videoFile;
 	}
 
@@ -492,8 +491,6 @@ public class CameraActivity extends AppCompatActivity {
 		String prepend = "IMG_" + timestamp;
 		File imageFile = File.createTempFile(prepend, ".jpg", imageFolder);
 		imageFileName = imageFile.getAbsolutePath();
-		Log.d(TAG, "Image Name: " + imageFileName);
-		Log.d(TAG, "Image folder: " + imageFolder);
 		return imageFile;
 	}
 
@@ -841,6 +838,8 @@ public class CameraActivity extends AppCompatActivity {
 							Intent mediaStoreUpdateIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
 							mediaStoreUpdateIntent.setData(Uri.fromFile(new File(videoFileName)));
 							sendBroadcast(mediaStoreUpdateIntent);
+
+							createVideoReturnIntent();
 						}
 						return true;
 				}
@@ -868,6 +867,13 @@ public class CameraActivity extends AppCompatActivity {
 			}
 		});
 
+	}
+
+	private void createVideoReturnIntent() {
+		Intent resultIntent = new Intent();
+		resultIntent.putExtra(VIDEO_SAVED_PATH, videoFileName);
+		setResult(Activity.RESULT_OK, resultIntent);
+		Log.d(TAG, "Success: " + videoFileName);
 	}
 
 	private void hideSceneIcons() {
