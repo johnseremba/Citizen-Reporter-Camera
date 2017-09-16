@@ -776,6 +776,7 @@ public class CameraActivity extends AppCompatActivity {
 						if(!isRecording){
 							if((t2 - t1) >= CLICK_DURATION) {
 								// Record a video for long press
+								hideSceneIcons();
 								MediaActionSound sound = new MediaActionSound();
 								sound.play(MediaActionSound.START_VIDEO_RECORDING);
 
@@ -792,6 +793,7 @@ public class CameraActivity extends AppCompatActivity {
 							}
 						} else {
 							// Stop video recording, set back the capture icon
+							showSceneIcons();
 							MediaActionSound sound = new MediaActionSound();
 							sound.play(MediaActionSound.STOP_VIDEO_RECORDING);
 							swipeText.setText("Swipe to change scenes");
@@ -832,6 +834,21 @@ public class CameraActivity extends AppCompatActivity {
 
 	}
 
+	private void hideSceneIcons() {
+		switcher1.setVisibility(View.INVISIBLE);
+		switcher2.setVisibility(View.INVISIBLE);
+		switcher3.setVisibility(View.INVISIBLE);
+		switcher4.setVisibility(View.INVISIBLE);
+		switcher5.setVisibility(View.INVISIBLE);
+	}
+
+	private void showSceneIcons() {
+		switcher1.setVisibility(View.VISIBLE);
+		switcher2.setVisibility(View.VISIBLE);
+		switcher3.setVisibility(View.VISIBLE);
+		switcher4.setVisibility(View.VISIBLE);
+		switcher5.setVisibility(View.VISIBLE);
+	}
 
 	private void initializeScenes() {
 		portrait = new ArrayList<Integer>() {
