@@ -394,6 +394,21 @@ public class CameraActivity extends AppCompatActivity {
 				captureRequestBuilder.addTarget(previewSurface);
 				captureRequestBuilder.addTarget(recordSurface);
 
+				switch(flashStatus) {
+					case 0:
+						captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_ON);
+						captureRequestBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_OFF);
+						break;
+					case 1:
+						captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_ON_ALWAYS_FLASH);
+						captureRequestBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_SINGLE);
+						break;
+					case 2:
+						captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
+						captureRequestBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_OFF);
+						break;
+				}
+
 				cameraDevice.createCaptureSession(Arrays.asList(previewSurface, recordSurface),
 						new CameraCaptureSession.StateCallback() {
 							@Override
@@ -875,6 +890,7 @@ public class CameraActivity extends AppCompatActivity {
 		switcher3.setVisibility(View.INVISIBLE);
 		switcher4.setVisibility(View.INVISIBLE);
 		switcher5.setVisibility(View.INVISIBLE);
+		flashModeBtn.setVisibility(View.INVISIBLE);
 	}
 
 	private void showSceneIcons() {
@@ -883,6 +899,7 @@ public class CameraActivity extends AppCompatActivity {
 		switcher3.setVisibility(View.VISIBLE);
 		switcher4.setVisibility(View.VISIBLE);
 		switcher5.setVisibility(View.VISIBLE);
+		flashModeBtn.setVisibility(View.VISIBLE);
 	}
 
 	private void initializeScenes() {
