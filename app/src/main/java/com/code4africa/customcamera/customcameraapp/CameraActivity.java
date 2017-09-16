@@ -512,7 +512,7 @@ public class CameraActivity extends AppCompatActivity {
 					== PackageManager.PERMISSION_GRANTED){
 				Log.d(TAG, "External storage permissions granted");
 				if(!isRecording) {
-					//lockFocus();
+					lockFocus();
 				} else {
 					try {
 						createVideoFileName();
@@ -534,7 +534,7 @@ public class CameraActivity extends AppCompatActivity {
 			}
 		} else {
 			if(!isRecording) {
-				//lockFocus();
+				lockFocus();
 			} else {
 				try {
 					createVideoFileName();
@@ -553,22 +553,6 @@ public class CameraActivity extends AppCompatActivity {
 	private void lockFocus() {
 		captureState = STATE_WAIT_LOCK;
 		captureRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER, CaptureRequest.CONTROL_AF_TRIGGER_START);
-
-		switch(flashStatus) {
-			case 0:
-				captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_ON);
-				captureRequestBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_OFF);
-				break;
-			case 1:
-				captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_ON_ALWAYS_FLASH);
-				captureRequestBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_SINGLE);
-				break;
-			case 2:
-				captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
-				captureRequestBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_OFF);
-				break;
-		}
-
 		try {
 			previewCaptureSession.capture(captureRequestBuilder.build(), previewCaptureCallback, backgroundHandler);
 		} catch (CameraAccessException e) {
@@ -639,6 +623,21 @@ public class CameraActivity extends AppCompatActivity {
 			captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
 			captureRequestBuilder.addTarget(imageReader.getSurface());
 			captureRequestBuilder.set(CaptureRequest.JPEG_ORIENTATION, totalRotation); // Fix orientation skews
+
+			switch(flashStatus) {
+				case 0:
+					captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_ON);
+					captureRequestBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_OFF);
+					break;
+				case 1:
+					captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_ON_ALWAYS_FLASH);
+					captureRequestBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_SINGLE);
+					break;
+				case 2:
+					captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
+					captureRequestBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_OFF);
+					break;
+			}
 
 			CameraCaptureSession.CaptureCallback stillCaptureCallback = new CameraCaptureSession.CaptureCallback() {
 				@Override
@@ -842,7 +841,7 @@ public class CameraActivity extends AppCompatActivity {
 							} else {
 								// Take a picture if the user just clicks
 								checkWriteStoragePermission();
-								lockFocus();
+								//lockFocus();
 							}
 						} else {
 							// Stop video recording, set back the capture icon
