@@ -169,20 +169,11 @@ public class CameraActivity extends AppCompatActivity {
 
 		private void process(CaptureResult captureResult) {
 			switch (captureState) {
-				case STATE_PREVIEW:
-					//
-					break;
 				case STATE_WAIT_LOCK:
 					captureState = STATE_PREVIEW;
-					Integer afState = captureResult.get(CaptureResult.CONTROL_AF_STATE);
-					if (afState == CaptureResult.CONTROL_AF_STATE_FOCUSED_LOCKED ||
-								afState == CaptureResult.CONTROL_AF_STATE_NOT_FOCUSED_LOCKED) {
-
-						MediaActionSound sound = new MediaActionSound();
-						sound.play(MediaActionSound.SHUTTER_CLICK);
-
-						 startStillCapture();
-					}
+					MediaActionSound sound = new MediaActionSound();
+					sound.play(MediaActionSound.SHUTTER_CLICK);
+					startStillCapture();
 					break;
 			}
 		}
@@ -511,9 +502,7 @@ public class CameraActivity extends AppCompatActivity {
 			if(ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
 					== PackageManager.PERMISSION_GRANTED){
 				Log.d(TAG, "External storage permissions granted");
-				if(!isRecording) {
-					lockFocus();
-				} else {
+				if(isRecording) {
 					try {
 						createVideoFileName();
 					} catch (IOException e) {
@@ -533,9 +522,7 @@ public class CameraActivity extends AppCompatActivity {
 					requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_STORAGE_PERMISSION);
 			}
 		} else {
-			if(!isRecording) {
-				lockFocus();
-			} else {
+			if(isRecording) {
 				try {
 					createVideoFileName();
 				} catch (IOException e) {
@@ -603,9 +590,7 @@ public class CameraActivity extends AppCompatActivity {
 			case REQUEST_STORAGE_PERMISSION:
 				if(grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 					try {
-						if(!isRecording)
-							createImageFileName();
-						else
+						if(isRecording)
 							createVideoFileName();
 					} catch (IOException e) {
 						e.printStackTrace();
@@ -799,14 +784,6 @@ public class CameraActivity extends AppCompatActivity {
 		// Creates the swipe buttons and initializes the initial overlay image
 		initializeCameraInterface();
 
-		capturePictureBtn.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View view) {
-				checkWriteStoragePermission();
-				lockFocus();
-			}
-		});
-
 		capturePictureBtn.setOnTouchListener(new View.OnTouchListener() {
 			Float x1, x2, y1, y2;
 			Long t1, t2;
@@ -841,7 +818,7 @@ public class CameraActivity extends AppCompatActivity {
 							} else {
 								// Take a picture if the user just clicks
 								checkWriteStoragePermission();
-								//lockFocus();
+								lockFocus();
 							}
 						} else {
 							// Stop video recording, set back the capture icon
