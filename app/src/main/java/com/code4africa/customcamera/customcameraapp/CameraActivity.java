@@ -355,7 +355,19 @@ public class CameraActivity extends AppCompatActivity {
 		}
 	}
 
+	private void enableFlashMode() {
+		CameraManager cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+		try {
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+				cameraManager.setTorchMode(cameraID, true);
+			}
+		} catch (CameraAccessException e) {
+			e.printStackTrace();
+		}
+	}
+
 	private void startRecord() {
+		enableFlashMode();
 		try {
 			setUpMediaRecorder();
 			SurfaceTexture surfaceTexture = textureView.getSurfaceTexture();
