@@ -1,5 +1,10 @@
 package com.code4africa.customcamera.customcameraapp;
 
+import android.app.Activity;
+import android.content.Intent;
+import android.media.MediaScannerConnection;
+import android.net.Uri;
+import android.os.Environment;
 import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -7,10 +12,16 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.Toast;
 import java.io.File;
 
 public class ViewImageActivity extends AppCompatActivity {
 	private static final String IMAGE_FILE_LOCATION = "image_file_location";
+	private static final String TAG = ViewImageActivity.class.getSimpleName();
+	private File imageFile;
+	private ImageView imageView;
+	private ImageView saveBtn;
+	private ImageView closeBtn;
 
 	@Override
 	public void onWindowFocusChanged(boolean hasFocus) {
@@ -36,15 +47,37 @@ public class ViewImageActivity extends AppCompatActivity {
 		int width = displayMetrics.widthPixels;
 		int height = displayMetrics.heightPixels;
 
-		ImageView imageView = (ImageView) findViewById(R.id.img_view);
+		imageView = (ImageView) findViewById(R.id.img_view);
+		closeBtn = (ImageView) findViewById(R.id.img_close_btn);
+		saveBtn = (ImageView) findViewById(R.id.img_save_btn);
 
-		File imageFile = new File(
+		imageFile = new File(
 				getIntent().getStringExtra(IMAGE_FILE_LOCATION)
 		);
-		Log.d("ImgView", "Intent started : " + imageFile);
 
 		SingleImageBitmapWorkerTask workerTask = new SingleImageBitmapWorkerTask(imageView, width, height);
 		workerTask.execute(imageFile);
+
+		closeBtn.setOnClickListener(new View.OnClickListener() {
+			@Override public void onClick(View view) {
+				boolean deleted = imageFile.delete();
+				if(deleted){
+					MediaScannerConnection.scanFile(getApplicationContext(),
+							new String[]{getIntent().getStringExtra(IMAGE_FILE_LOCATION)}, null, null);
+					setResult(Activity.RESULT_OK);
+					ViewImageActivity.super.finish();
+				} else {
+					Toast.makeText(getApplicationContext(), "Not deleted", Toast.LENGTH_SHORT);
+					Log.d(TAG, "Image not deleted!");
+				}
+			}
+		});
+
+		saveBtn.setOnClickListener(new View.OnClickListener() {
+			@Override public void onClick(View view) {
+
+			}
+		});
 	}
 
 	@Override
