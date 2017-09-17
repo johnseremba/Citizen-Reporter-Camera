@@ -15,22 +15,22 @@
       android:layout_height="match_parent"
       android:layout_alignParentBottom="true"
       android:layout_alignParentStart="true"
+      app:layout_constraintBottom_toBottomOf="parent"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toTopOf="parent"
       tools:layout_editor_absoluteX="0dp"
       tools:layout_editor_absoluteY="0dp"
-      app:layout_constraintStart_toStartOf="parent"
-      app:layout_constraintEnd_toEndOf="parent"
-      app:layout_constraintBottom_toBottomOf="parent"
-      app:layout_constraintTop_toTopOf="parent"
       />
   <ImageView
       android:id="@+id/img_btn_bg"
       android:layout_width="0dp"
       android:layout_height="97dp"
+      android:alpha="1"
       android:background="@color/black_overlay"
       app:layout_constraintBottom_toBottomOf="parent"
       app:layout_constraintEnd_toEndOf="parent"
       app:layout_constraintStart_toStartOf="parent"
-      android:alpha="1"
       />
   <ImageView
       android:id="@+id/img_overlay"
@@ -186,5 +186,16 @@
       app:layout_constraintStart_toStartOf="parent"
       app:layout_constraintTop_toTopOf="@+id/chronometer2"
       app:srcCompat="@drawable/ic_flash_off"
+      />
+  <android.support.v7.widget.RecyclerView
+      android:id="@+id/scene_recylcer_view"
+      android:layout_width="match_parent"
+      android:layout_height="80dp"
+      android:layout_marginBottom="8dp"
+      android:layout_marginEnd="8dp"
+      android:layout_marginStart="8dp"
+      app:layout_constraintBottom_toTopOf="@+id/sw_swipe_3"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintStart_toStartOf="parent"
       />
 </android.support.constraint.ConstraintLayout>
