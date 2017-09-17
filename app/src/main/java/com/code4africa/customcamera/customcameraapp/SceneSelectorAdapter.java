@@ -18,7 +18,7 @@ public class SceneSelectorAdapter extends RecyclerView.Adapter<SceneSelectorAdap
 	private OnClickThumbListener onClickThumbListener;
 
 	public interface OnClickThumbListener {
-		void OnClickScene(Integer position);
+		void OnClickScene(String sceneKey, Integer position);
 	}
 
 	public SceneSelectorAdapter (Activity activity, String sceneKey, HashMap<String, ArrayList<Integer>> scenesList) {
@@ -53,11 +53,6 @@ public class SceneSelectorAdapter extends RecyclerView.Adapter<SceneSelectorAdap
 			imageView = (ImageView) itemView.findViewById(R.id.scene_image_view);
 			this.scenesList = scenesList;
 			imageView.setOnClickListener(this);
-			//itemView.setOnClickListener(new View.OnClickListener() {
-			//	@Override public void onClick(View view) {
-			//		Toast.makeText(itemView.getContext(), "Clicked: " + position, Toast.LENGTH_SHORT).show();
-			//	}
-			//});
 		}
 
 		public ImageView getImageView() {
@@ -69,7 +64,7 @@ public class SceneSelectorAdapter extends RecyclerView.Adapter<SceneSelectorAdap
 		}
 
 		@Override public void onClick(View view) {
-			onClickThumbListener.OnClickScene(position);
+			onClickThumbListener.OnClickScene(sceneKey, position);
 		}
 	}
 

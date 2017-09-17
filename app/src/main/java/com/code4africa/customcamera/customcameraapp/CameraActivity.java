@@ -78,6 +78,11 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	private static final int STATE_PREVIEW = 0;
 	private static final int STATE_WAIT_LOCK = 1;
 	private static final int PREVIEW_IMAGE_RESULT = 3;
+	private static String PORTRAIT_SCENE = "Portrait";
+	private static String CANDID_SCENE = "Candid";
+	private static String INTERACTION_SCENE = "Interaction";
+	private static String ENVIRONMENT_SCENE = "Environment";
+	private static String SIGNATURE_SCENE = "Signature";
 	private int captureState = STATE_PREVIEW;
 	private TextureView textureView;
 	private ImageView capturePictureBtn;
@@ -134,8 +139,8 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 		}
 	};
 
-	@Override public void OnClickScene(Integer position) {
-		Toast.makeText(getApplicationContext(), "Clicked: " + position, Toast.LENGTH_SHORT).show();
+	@Override public void OnClickScene(String sceneKey, Integer position) {
+		imgOverlay.setImageResource(overlayScenes.get(sceneKey).get(position));
 	}
 
 	private class ImageSaver implements Runnable {
@@ -782,7 +787,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 		setContentView(R.layout.activity_camera);
 
 		sceneRecyclerView = (RecyclerView) findViewById(R.id.scene_recylcer_view);
-		layoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, true);
+		layoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
 		sceneRecyclerView.setLayoutManager(layoutManager);
 
 		gestureObject = new GestureDetectorCompat(this, new LearnGesture());
@@ -810,13 +815,41 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 		// Initializes the scenes with the relevant scene images
 		initializeScenes();
 
-		Toast.makeText(getApplicationContext(), "Interaction Scene", Toast.LENGTH_SHORT).show();
+		Toast.makeText(getApplicationContext(), R.string.interaction_scene, Toast.LENGTH_SHORT).show();
 
 		// Creates the swipe buttons and initializes the initial overlay image
 		initializeCameraInterface();
 
-		sceneSelectorAdapter = new SceneSelectorAdapter(this, "Portrait", overlayScenes);
-		sceneRecyclerView.setAdapter(sceneSelectorAdapter);
+		switcher1.setOnClickListener(new View.OnClickListener() {
+			@Override public void onClick(View view) {
+				setSceneAdapter(PORTRAIT_SCENE);
+			}
+		});
+
+		switcher2.setOnClickListener(new View.OnClickListener() {
+			@Override public void onClick(View view) {
+				setSceneAdapter(SIGNATURE_SCENE);
+			}
+		});
+
+		switcher3.setOnClickListener(new View.OnClickListener() {
+			@Override public void onClick(View view) {
+				setSceneAdapter(INTERACTION_SCENE);
+			}
+		});
+
+		switcher2.setOnClickListener(new View.OnClickListener() {
+			@Override public void onClick(View view) {
+				setSceneAdapter(CANDID_SCENE);
+			}
+		});
+
+		switcher2.setOnClickListener(new View.OnClickListener() {
+			@Override public void onClick(View view) {
+				setSceneAdapter(ENVIRONMENT_SCENE);
+			}
+		});
+
 
 		capturePictureBtn.setOnTouchListener(new View.OnTouchListener() {
 			Float x1, x2, y1, y2;
@@ -906,6 +939,11 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 
 	}
 
+	private void setSceneAdapter(String scene) {
+		sceneSelectorAdapter = new SceneSelectorAdapter(CameraActivity.this, scene, overlayScenes);
+		sceneRecyclerView.setAdapter(sceneSelectorAdapter);
+	}
+
 	private void createVideoReturnIntent() {
 		Intent resultIntent = new Intent();
 		resultIntent.putExtra(VIDEO_SAVED_PATH, videoFileName);
@@ -988,11 +1026,11 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 
 		overlayScenes = new HashMap<String, ArrayList<Integer>>(){
 			{
-				put("Portrait", portrait);
-				put("Signature", signature);
-				put("Interaction", interaction);
-				put("Candid", candid);
-				put("Environment", environment);
+				put(PORTRAIT_SCENE, portrait);
+				put(SIGNATURE_SCENE, signature);
+				put(INTERACTION_SCENE, interaction);
+				put(CANDID_SCENE, candid);
+				put(ENVIRONMENT_SCENE, environment);
 			}
 		};
 	}
@@ -1064,34 +1102,34 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 			switch(nextScene) {
 				case 0:
 					switcher1.setImageResource(R.drawable.ic_selected_circular);
-					swipeText.setText("Portrait");
-					imgOverlay.setImageResource(overlayScenes.get("Portrait").get(0));
+					swipeText.setText(PORTRAIT_SCENE);
+					imgOverlay.setImageResource(overlayScenes.get(PORTRAIT_SCENE).get(0));
 					break;
 				case 1:
 					switcher2.setImageResource(R.drawable.ic_selected_circular);
-					swipeText.setText("Signature");
-					imgOverlay.setImageResource(overlayScenes.get("Signature").get(0));
+					swipeText.setText(SIGNATURE_SCENE);
+					imgOverlay.setImageResource(overlayScenes.get(SIGNATURE_SCENE).get(0));
 					break;
 				case 2:
 					switcher3.setImageResource(R.drawable.ic_selected_circular);
-					swipeText.setText("Interaction");
-					imgOverlay.setImageResource(overlayScenes.get("Interaction").get(0));
+					swipeText.setText(INTERACTION_SCENE);
+					imgOverlay.setImageResource(overlayScenes.get(INTERACTION_SCENE).get(0));
 					break;
 				case 3:
 					switcher4.setImageResource(R.drawable.ic_selected_circular);
-					swipeText.setText("Candid");
-					imgOverlay.setImageResource(overlayScenes.get("Candid").get(0));
+					swipeText.setText(CANDID_SCENE);
+					imgOverlay.setImageResource(overlayScenes.get(CANDID_SCENE).get(0));
 					break;
 				case 4:
 					switcher5.setImageResource(R.drawable.ic_selected_circular);
-					swipeText.setText("Environment");
-					imgOverlay.setImageResource(overlayScenes.get("Environment").get(0));
+					swipeText.setText(ENVIRONMENT_SCENE);
+					imgOverlay.setImageResource(overlayScenes.get(ENVIRONMENT_SCENE).get(0));
 					break;
 				default:
 					selectedScene = 0;
 					switcher1.setImageResource(R.drawable.ic_selected_circular);
-					swipeText.setText("Portrait");
-					imgOverlay.setImageResource(overlayScenes.get("Portrait").get(0));
+					swipeText.setText(PORTRAIT_SCENE);
+					imgOverlay.setImageResource(overlayScenes.get(PORTRAIT_SCENE).get(0));
 					break;
 			}
 		}
