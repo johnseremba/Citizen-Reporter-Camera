@@ -132,6 +132,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	private RecyclerView sceneRecyclerView;
 	private LinearLayoutManager layoutManager;
 	private SceneSelectorAdapter sceneSelectorAdapter;
+	private ArrayList<Integer> myArr;
 
 	private final ImageReader.OnImageAvailableListener onImageAvailableListener = new ImageReader.OnImageAvailableListener() {
 		@Override
@@ -825,6 +826,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 
 		switcher1.setOnClickListener(new View.OnClickListener() {
 			@Override public void onClick(View view) {
+				prevScene = selectedScene;
 				selectedScene = 0;
 				setSceneAdapter(PORTRAIT_SCENE);
 				prevScene = 0;
@@ -833,6 +835,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 
 		switcher2.setOnClickListener(new View.OnClickListener() {
 			@Override public void onClick(View view) {
+				prevScene = selectedScene;
 				selectedScene = 1;
 				setSceneAdapter(SIGNATURE_SCENE);
 				prevScene = 1;
@@ -841,6 +844,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 
 		switcher3.setOnClickListener(new View.OnClickListener() {
 			@Override public void onClick(View view) {
+				prevScene = selectedScene;
 				selectedScene = 2;
 				setSceneAdapter(INTERACTION_SCENE);
 				prevScene = 2;
@@ -849,6 +853,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 
 		switcher4.setOnClickListener(new View.OnClickListener() {
 			@Override public void onClick(View view) {
+				prevScene = selectedScene;
 				selectedScene = 3;
 				setSceneAdapter(CANDID_SCENE);
 				prevScene = 3;
@@ -857,6 +862,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 
 		switcher5.setOnClickListener(new View.OnClickListener() {
 			@Override public void onClick(View view) {
+				prevScene = selectedScene;
 				selectedScene = 4;
 				setSceneAdapter(ENVIRONMENT_SCENE);
 				prevScene = 4;
@@ -955,7 +961,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	private void setSceneAdapter(String scene) {
 		swipeScenes(selectedScene, prevScene);
 		showSceneSwitcher();
-		sceneSelectorAdapter = new SceneSelectorAdapter(CameraActivity.this, scene, overlayScenes);
+		sceneSelectorAdapter = new SceneSelectorAdapter(CameraActivity.this, scene, overlayScenes.get(scene));
 		sceneRecyclerView.setAdapter(sceneSelectorAdapter);
 	}
 

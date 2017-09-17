@@ -13,7 +13,7 @@ import java.util.HashMap;
 
 public class SceneSelectorAdapter extends RecyclerView.Adapter<SceneSelectorAdapter.ViewHolder> {
 	private String sceneKey;
-	private HashMap<String, ArrayList<Integer>> scenesList;
+	private ArrayList<Integer> scenesList;
 	private static final String TAG = SceneSelectorAdapter.class.getSimpleName();
 	private OnClickThumbListener onClickThumbListener;
 
@@ -21,7 +21,7 @@ public class SceneSelectorAdapter extends RecyclerView.Adapter<SceneSelectorAdap
 		void OnClickScene(String sceneKey, Integer position);
 	}
 
-	public SceneSelectorAdapter (Activity activity, String sceneKey, HashMap<String, ArrayList<Integer>> scenesList) {
+	public SceneSelectorAdapter (Activity activity, String sceneKey, ArrayList<Integer> scenesList) {
 		this.sceneKey = sceneKey;
 		this.scenesList = scenesList;
 		this.onClickThumbListener = (OnClickThumbListener) activity;
@@ -35,7 +35,7 @@ public class SceneSelectorAdapter extends RecyclerView.Adapter<SceneSelectorAdap
 
 	@Override public void onBindViewHolder(ViewHolder holder, int position) {
 		holder.position = position;
-		holder.bindScene(scenesList.get(this.sceneKey).get(position));
+		holder.bindScene(scenesList.get(position));
 	}
 
 	@Override public int getItemCount() {
@@ -45,7 +45,7 @@ public class SceneSelectorAdapter extends RecyclerView.Adapter<SceneSelectorAdap
 	public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 		private final ImageView imageView;
 		private ImageView imageOverlay;
-		private HashMap<String, ArrayList<Integer>> scenesList;
+		private ArrayList<Integer> scenesList;
 		public Integer position;
 
 		public ViewHolder(final View itemView) {
