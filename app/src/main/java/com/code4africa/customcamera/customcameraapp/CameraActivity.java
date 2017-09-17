@@ -32,6 +32,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GestureDetectorCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.util.Size;
@@ -119,6 +120,7 @@ public class CameraActivity extends AppCompatActivity {
 	private Integer flashStatus = 0;
 
 	private RecyclerView sceneRecyclerView;
+	private LinearLayoutManager layoutManager;
 
 	private final ImageReader.OnImageAvailableListener onImageAvailableListener = new ImageReader.OnImageAvailableListener() {
 		@Override
@@ -769,6 +771,10 @@ public class CameraActivity extends AppCompatActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_camera);
+
+		sceneRecyclerView = (RecyclerView) findViewById(R.id.scene_recylcer_view);
+		layoutManager = new LinearLayoutManager(this);
+		sceneRecyclerView.setLayoutManager(layoutManager);
 
 		gestureObject = new GestureDetectorCompat(this, new LearnGesture());
 

@@ -6,13 +6,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-
-/**
- * Created by johnpaulseremba on 17/09/2017.
- */
+import java.util.ArrayList;
+import java.util.HashMap;
 
 public class SceneSelectorAdapter extends RecyclerView.Adapter<SceneSelectorAdapter.ViewHolder> {
-	private Cursor sceneSelectorAdapter;
 
 	@Override
 	public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -30,14 +27,20 @@ public class SceneSelectorAdapter extends RecyclerView.Adapter<SceneSelectorAdap
 
 	public static class ViewHolder extends RecyclerView.ViewHolder {
 		private final ImageView imageView;
+		private HashMap<String, ArrayList<Integer>> scenesList;
 
-		public ViewHolder(View itemView) {
+		public ViewHolder(View itemView, HashMap<String, ArrayList<Integer>> scenesList) {
 			super(itemView);
 			imageView = (ImageView) itemView.findViewById(R.id.scene_image_view);
+			this.scenesList = scenesList;
 		}
 
 		public ImageView getImageView() {
 			return imageView;
+		}
+
+		public HashMap<String, ArrayList<Integer>> getData() {
+
 		}
 	}
 
