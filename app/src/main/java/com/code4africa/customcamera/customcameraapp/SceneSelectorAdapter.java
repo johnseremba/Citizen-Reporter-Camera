@@ -28,6 +28,7 @@ public class SceneSelectorAdapter extends RecyclerView.Adapter<SceneSelectorAdap
 
 	@Override public void onBindViewHolder(ViewHolder holder, int position) {
 		Log.d(TAG, "Bind position: " + position);
+		holder.pos = position;
 		holder.bindScene(scenesList.get(this.sceneKey).get(position));
 	}
 
@@ -38,11 +39,18 @@ public class SceneSelectorAdapter extends RecyclerView.Adapter<SceneSelectorAdap
 	public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 		private final ImageView imageView;
 		private HashMap<String, ArrayList<Integer>> scenesList;
+		public Integer pos;
 
-		public ViewHolder(View itemView) {
+		public ViewHolder(final View itemView) {
 			super(itemView);
 			imageView = (ImageView) itemView.findViewById(R.id.scene_image_view);
 			this.scenesList = scenesList;
+
+			itemView.setOnClickListener(new View.OnClickListener() {
+				@Override public void onClick(View view) {
+					Log.d(TAG, "Clicked: " + pos);
+				}
+			});
 		}
 
 		public ImageView getImageView() {

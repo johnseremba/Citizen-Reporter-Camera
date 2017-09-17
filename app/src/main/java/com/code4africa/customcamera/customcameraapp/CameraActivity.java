@@ -28,6 +28,7 @@ import android.os.HandlerThread;
 import android.os.SystemClock;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.support.constraint.ConstraintLayout;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GestureDetectorCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -47,6 +48,7 @@ import android.hardware.camera2.CameraDevice;
 import android.widget.Chronometer;
 import android.widget.ImageSwitcher;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewSwitcher;
@@ -774,7 +776,7 @@ public class CameraActivity extends AppCompatActivity {
 		setContentView(R.layout.activity_camera);
 
 		sceneRecyclerView = (RecyclerView) findViewById(R.id.scene_recylcer_view);
-		layoutManager = new LinearLayoutManager(this);
+		layoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, true);
 		sceneRecyclerView.setLayoutManager(layoutManager);
 
 		gestureObject = new GestureDetectorCompat(this, new LearnGesture());
