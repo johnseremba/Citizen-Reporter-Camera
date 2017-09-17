@@ -121,6 +121,7 @@ public class CameraActivity extends AppCompatActivity {
 
 	private RecyclerView sceneRecyclerView;
 	private LinearLayoutManager layoutManager;
+	private SceneSelectorAdapter sceneSelectorAdapter;
 
 	private final ImageReader.OnImageAvailableListener onImageAvailableListener = new ImageReader.OnImageAvailableListener() {
 		@Override
@@ -805,6 +806,9 @@ public class CameraActivity extends AppCompatActivity {
 
 		// Creates the swipe buttons and initializes the initial overlay image
 		initializeCameraInterface();
+
+		sceneSelectorAdapter = new SceneSelectorAdapter("Portrait", overlayScenes);
+		sceneRecyclerView.setAdapter(sceneSelectorAdapter);
 
 		capturePictureBtn.setOnTouchListener(new View.OnTouchListener() {
 			Float x1, x2, y1, y2;
