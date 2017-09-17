@@ -32,6 +32,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GestureDetectorCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
@@ -116,6 +117,8 @@ public class CameraActivity extends AppCompatActivity {
 	private Chronometer chronometer;
 	private String cameraPreviewResult;
 	private Integer flashStatus = 0;
+
+	private RecyclerView sceneRecyclerView;
 
 	private final ImageReader.OnImageAvailableListener onImageAvailableListener = new ImageReader.OnImageAvailableListener() {
 		@Override
