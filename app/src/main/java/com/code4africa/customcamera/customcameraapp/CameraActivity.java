@@ -127,6 +127,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	private RecyclerView sceneRecyclerView;
 	private LinearLayoutManager layoutManager;
 	private SceneSelectorAdapter sceneSelectorAdapter;
+	private boolean moreScenes = false;
 
 	private final ImageReader.OnImageAvailableListener onImageAvailableListener = new ImageReader.OnImageAvailableListener() {
 		@Override
@@ -1054,11 +1055,13 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	private void hideSceneSwitcher() {
 		imgSceneBg.setVisibility(View.GONE);
 		sceneRecyclerView.setVisibility(View.GONE);
+		moreScenes = false;
 	}
 
 	private void showSceneSwitcher() {
 		imgSceneBg.setVisibility(View.VISIBLE);
 		sceneRecyclerView.setVisibility(View.VISIBLE);
+		moreScenes = true;
 	}
 
 	@Override
@@ -1083,6 +1086,10 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 
 			@Override
 			public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+				if(moreScenes) {
+					hideSceneSwitcher();
+				}
+
 				if(!isRecording) {
 					prevScene = selectedScene;
 					if (e2.getX() > e1.getX()) {
