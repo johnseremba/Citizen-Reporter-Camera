@@ -1,5 +1,6 @@
 package com.code4africa.customcamera.customcameraapp;
 
+import android.database.Cursor;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,6 +12,7 @@ import android.widget.ImageView;
  */
 
 public class SceneSelectorAdapter extends RecyclerView.Adapter<SceneSelectorAdapter.ViewHolder> {
+	private Cursor sceneSelectorAdapter;
 
 	@Override
 	public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
