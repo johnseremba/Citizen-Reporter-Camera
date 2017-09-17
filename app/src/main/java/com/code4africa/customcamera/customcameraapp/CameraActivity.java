@@ -2,7 +2,6 @@ package com.code4africa.customcamera.customcameraapp;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.LoaderManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -29,7 +28,6 @@ import android.os.HandlerThread;
 import android.os.SystemClock;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
-import android.support.constraint.ConstraintLayout;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GestureDetectorCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -40,17 +38,14 @@ import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.GestureDetector;
-import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.hardware.camera2.CameraDevice;
-import android.widget.AdapterView;
 import android.widget.Chronometer;
 import android.widget.ImageSwitcher;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewSwitcher;
@@ -132,7 +127,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	private RecyclerView sceneRecyclerView;
 	private LinearLayoutManager layoutManager;
 	private SceneSelectorAdapter sceneSelectorAdapter;
-	private ArrayList<Integer> myArr;
+	private boolean moreScenes = false;
 
 	private final ImageReader.OnImageAvailableListener onImageAvailableListener = new ImageReader.OnImageAvailableListener() {
 		@Override
@@ -1060,11 +1055,13 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	private void hideSceneSwitcher() {
 		imgSceneBg.setVisibility(View.GONE);
 		sceneRecyclerView.setVisibility(View.GONE);
+		moreScenes = false;
 	}
 
 	private void showSceneSwitcher() {
 		imgSceneBg.setVisibility(View.VISIBLE);
 		sceneRecyclerView.setVisibility(View.VISIBLE);
+		moreScenes = true;
 	}
 
 	@Override
@@ -1089,6 +1086,10 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 
 			@Override
 			public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+				if(moreScenes) {
+					hideSceneSwitcher();
+				}
+
 				if(!isRecording) {
 					prevScene = selectedScene;
 					if (e2.getX() > e1.getX()) {

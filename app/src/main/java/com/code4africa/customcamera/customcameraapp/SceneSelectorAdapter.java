@@ -2,14 +2,11 @@ package com.code4africa.customcamera.customcameraapp;
 
 import android.app.Activity;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.Toast;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class SceneSelectorAdapter extends RecyclerView.Adapter<SceneSelectorAdapter.ViewHolder> {
 	private String sceneKey;
@@ -46,7 +43,7 @@ public class SceneSelectorAdapter extends RecyclerView.Adapter<SceneSelectorAdap
 		private final ImageView imageView;
 		private ImageView imageOverlay;
 		private ArrayList<Integer> scenesList;
-		public Integer position;
+		private Integer position;
 
 		public ViewHolder(final View itemView) {
 			super(itemView);
