@@ -1,12 +1,12 @@
 # Code4Africa Custom Camera
 This is a custom camera app, built on top of the Camera2 api,  designed to take pictures in several scenes, using either the front or back cameras of the phone.
-The user touches the capture button to take a picture, and holds down the capture button to record a video. A user also swipes right or left to change scenes.
+The user touches the capture button to take a picture, and holds down the capture button to record a video. A user also swipes right or left to change scenes. You can touch/click the scene icons to preview other child scenes from which you can choose.
 
 ## Supported Systems
 The app is designed to work on Android OS
 
 ## Mininum SDK Version
-22
+21
 
 ## Targeted SDK Version
 26
@@ -29,6 +29,7 @@ Videos are stored under `.../Movies/Code4Africa/` folder.
 * Switch between back and front cameras.
 * Open default image gallery
 * Swipe to change Scenes
+* Swipe through child scenes
 * Record Videos in .mp4 format
 * Support for ActivityForResult
 
@@ -37,7 +38,12 @@ Videos are stored under `.../Movies/Code4Africa/` folder.
 ![Camera Preview](https://github.com/SerryJohns/CustomCameraApp/blob/master/img/Screenshot_20170917-010351.png)
 
 ### Video Recording interface
+Hold down the capture button and release to record. Tap the record button to stop.
 ![Video Recording](https://github.com/SerryJohns/CustomCameraApp/blob/master/img/Screenshot_20170917-010749.png)
+
+### Swipe through Child scenes
+When the user clicks/touches any of the environment icons, the child scenes menu is displayed with a list of scenes belonging to a particular category. The user can choose from any of them.
+![Child Scenes](https://github.com/SerryJohns/Code4Africa-Custom-Camera/blob/master/img/multiple_scenes.png)
 
 ## Known Issues
 * Taking pictures could be faster
