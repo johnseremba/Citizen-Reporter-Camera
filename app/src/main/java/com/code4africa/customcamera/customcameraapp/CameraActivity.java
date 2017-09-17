@@ -117,6 +117,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 
 	private ImageSwitcher switcher1, switcher2, switcher3, switcher4, switcher5;
 	private ImageView imgOverlay;
+	private ImageView imgSceneBg;
 	private HashMap<String, ArrayList<Integer>> overlayScenes;
 	private ArrayList<Integer> portrait, signature, interaction, candid, environment;
 	private GestureDetectorCompat gestureObject;
@@ -141,6 +142,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 
 	@Override public void OnClickScene(String sceneKey, Integer position) {
 		imgOverlay.setImageResource(overlayScenes.get(sceneKey).get(position));
+		hideSceneSwitcher();
 	}
 
 	private class ImageSaver implements Runnable {
@@ -811,6 +813,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 		switcher4 = (ImageSwitcher) findViewById(R.id.sw_swipe_4);
 		switcher5 = (ImageSwitcher) findViewById(R.id.sw_swipe_5);
 		imgOverlay = (ImageView) findViewById(R.id.img_overlay);
+		imgSceneBg = (ImageView) findViewById(R.id.scene_bg);
 
 		// Initializes the scenes with the relevant scene images
 		initializeScenes();
@@ -822,31 +825,41 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 
 		switcher1.setOnClickListener(new View.OnClickListener() {
 			@Override public void onClick(View view) {
+				selectedScene = 0;
 				setSceneAdapter(PORTRAIT_SCENE);
+				prevScene = 0;
 			}
 		});
 
 		switcher2.setOnClickListener(new View.OnClickListener() {
 			@Override public void onClick(View view) {
+				selectedScene = 1;
 				setSceneAdapter(SIGNATURE_SCENE);
+				prevScene = 1;
 			}
 		});
 
 		switcher3.setOnClickListener(new View.OnClickListener() {
 			@Override public void onClick(View view) {
+				selectedScene = 2;
 				setSceneAdapter(INTERACTION_SCENE);
+				prevScene = 2;
 			}
 		});
 
-		switcher2.setOnClickListener(new View.OnClickListener() {
+		switcher4.setOnClickListener(new View.OnClickListener() {
 			@Override public void onClick(View view) {
+				selectedScene = 3;
 				setSceneAdapter(CANDID_SCENE);
+				prevScene = 3;
 			}
 		});
 
-		switcher2.setOnClickListener(new View.OnClickListener() {
+		switcher5.setOnClickListener(new View.OnClickListener() {
 			@Override public void onClick(View view) {
+				selectedScene = 4;
 				setSceneAdapter(ENVIRONMENT_SCENE);
+				prevScene = 4;
 			}
 		});
 
@@ -940,6 +953,8 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	}
 
 	private void setSceneAdapter(String scene) {
+		swipeScenes(selectedScene, prevScene);
+		showSceneSwitcher();
 		sceneSelectorAdapter = new SceneSelectorAdapter(CameraActivity.this, scene, overlayScenes);
 		sceneRecyclerView.setAdapter(sceneSelectorAdapter);
 	}
@@ -978,6 +993,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	}
 
 	private void initializeScenes() {
+		hideSceneSwitcher();
 		portrait = new ArrayList<Integer>() {
 			{
 				add(R.drawable.portrait_001);
@@ -1033,6 +1049,16 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 				put(ENVIRONMENT_SCENE, environment);
 			}
 		};
+	}
+
+	private void hideSceneSwitcher() {
+		imgSceneBg.setVisibility(View.GONE);
+		sceneRecyclerView.setVisibility(View.GONE);
+	}
+
+	private void showSceneSwitcher() {
+		imgSceneBg.setVisibility(View.VISIBLE);
+		sceneRecyclerView.setVisibility(View.VISIBLE);
 	}
 
 	@Override
