@@ -16,6 +16,17 @@
       app:layout_constraintTop_toTopOf="parent"
       />
   <ImageView
+      android:id="@+id/img_btn_bg_2"
+      android:layout_width="0dp"
+      android:layout_height="76dp"
+      android:background="@color/black_overlay"
+      app:layout_constraintBottom_toBottomOf="parent"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintStart_toStartOf="parent"
+      android:alpha="1"
+      tools:layout_editor_absoluteY="435dp"
+      />
+  <ImageView
       android:id="@+id/img_save_btn"
       android:layout_width="50dp"
       android:layout_height="50dp"

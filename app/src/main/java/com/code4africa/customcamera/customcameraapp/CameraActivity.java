@@ -68,6 +68,7 @@ public class CameraActivity extends AppCompatActivity {
 	private static final String VIDEO_SAVED_PATH = "videoPath";
 	private static final int REQUEST_CAMERA_PERMISSION = 1;
 	private static final int REQUEST_STORAGE_PERMISSION = 2;
+	private static final int REQUEST_AUDIO_PERMISSION = 4;
 	private static final int STATE_PREVIEW = 0;
 	private static final int STATE_WAIT_LOCK = 1;
 	private static final int PREVIEW_IMAGE_RESULT = 3;
@@ -361,7 +362,7 @@ public class CameraActivity extends AppCompatActivity {
 					if(shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
 						Toast.makeText(this, "Code4Africa custom camera required access to the camera.", Toast.LENGTH_SHORT).show();
 					}
-					requestPermissions(new String[] {Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO}, REQUEST_CAMERA_PERMISSION);
+					requestPermissions(new String[] {Manifest.permission.CAMERA}, REQUEST_CAMERA_PERMISSION);
 				}
 			} else {
 				cameraManager.openCamera(cameraID, cameraDeviceStateCallback, backgroundHandler);
@@ -495,11 +496,42 @@ public class CameraActivity extends AppCompatActivity {
 	}
 
 	private void checkWriteStoragePermission() {
-		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
-			if(ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-					== PackageManager.PERMISSION_GRANTED){
-				Log.d(TAG, "External storage permissions granted");
-				if(isRecording) {
+		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+			if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+					!= PackageManager.PERMISSION_GRANTED) {
+				if (shouldShowRequestPermissionRationale(Manifest.permission.RECORD_AUDIO)) {
+					Toast.makeText(this.getApplicationContext(), "App needs to record audio",
+							Toast.LENGTH_SHORT).show();
+				}
+				Log.d(TAG, "No audio permissions.");
+				requestPermissions(new String[] { Manifest.permission.RECORD_AUDIO },
+						REQUEST_AUDIO_PERMISSION);
+			} else {
+				if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+						== PackageManager.PERMISSION_GRANTED) {
+					if (isRecording) {
+						try {
+							createVideoFileName();
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+						startRecord();
+						mediaRecorder.start();
+						chronometer.setBase(SystemClock.elapsedRealtime());
+						chronometer.setVisibility(View.VISIBLE);
+						chronometer.start();
+					}
+				} else {
+					if (shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+						Toast.makeText(this, "App needs to store pictures & videos", Toast.LENGTH_SHORT);
+					}
+					Log.d(TAG, "No external storage permissions");
+					requestPermissions(new String[] { Manifest.permission.WRITE_EXTERNAL_STORAGE },
+							REQUEST_STORAGE_PERMISSION);
+				}
+			}
+		} else{
+				if (isRecording) {
 					try {
 						createVideoFileName();
 					} catch (IOException e) {
@@ -511,27 +543,7 @@ public class CameraActivity extends AppCompatActivity {
 					chronometer.setVisibility(View.VISIBLE);
 					chronometer.start();
 				}
-			} else {
-					if(shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-						Toast.makeText(this, "App needs to store pictures & videos", Toast.LENGTH_SHORT);
-					}
-					Log.d(TAG, "No external storage permissions");
-					requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_STORAGE_PERMISSION);
 			}
-		} else {
-			if(isRecording) {
-				try {
-					createVideoFileName();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-				startRecord();
-				mediaRecorder.start();
-				chronometer.setBase(SystemClock.elapsedRealtime());
-				chronometer.setVisibility(View.VISIBLE);
-				chronometer.start();
-			}
-		}
 	}
 
 	private void lockFocus() {
@@ -576,13 +588,6 @@ public class CameraActivity extends AppCompatActivity {
 				} else {
 					Toast.makeText(getApplicationContext(), "Camera permission granted successfully", Toast.LENGTH_SHORT).show();
 				}
-
-				if(grantResults[1] != PackageManager.PERMISSION_GRANTED){
-					Toast.makeText(getApplicationContext(), "App can't run without audio permissions.", Toast.LENGTH_SHORT).show();
-				} else {
-					Toast.makeText(getApplicationContext(), "Audio permission granted successfully", Toast.LENGTH_SHORT).show();
-				}
-
 				break;
 			case REQUEST_STORAGE_PERMISSION:
 				if(grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -595,6 +600,15 @@ public class CameraActivity extends AppCompatActivity {
 					Toast.makeText(getApplicationContext(), "Storage permission granted successfully", Toast.LENGTH_SHORT).show();
 				} else {
 					Toast.makeText(getApplicationContext(), "App can't run without storage permissions.", Toast.LENGTH_SHORT).show();
+					Log.d(TAG, "Storage permissions denied.");
+				}
+				break;
+			case REQUEST_AUDIO_PERMISSION:
+				if(grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+					Toast.makeText(getApplicationContext(), "Audio permission granted successfully", Toast.LENGTH_SHORT).show();
+				} else {
+					Toast.makeText(getApplicationContext(), "App needs to record audio.", Toast.LENGTH_SHORT).show();
+					Log.d(TAG, "Audio permissions denied.");
 				}
 				break;
 		}
