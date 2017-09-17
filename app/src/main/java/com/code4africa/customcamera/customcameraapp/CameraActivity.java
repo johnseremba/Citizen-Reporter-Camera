@@ -452,7 +452,7 @@ public class CameraActivity extends AppCompatActivity {
 
 	public void createImageFolder() {
 		File imageFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
-		imageFolder = new File(imageFile, "Code4Africa");
+		imageFolder = new File(imageFile, getString(R.string.app_name));
 		if(!imageFolder.exists()) {
 			boolean result = imageFolder.mkdirs();
 			if(result) {
@@ -467,7 +467,7 @@ public class CameraActivity extends AppCompatActivity {
 
 	public void createVideoFolder() {
 		File videoFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES);
-		videoFolder = new File(videoFile, "Code4Africa");
+		videoFolder = new File(videoFile, getString(R.string.app_name));
 		if(!videoFolder.exists()) {
 			boolean result = videoFolder.mkdir();
 			if(result){
@@ -480,7 +480,7 @@ public class CameraActivity extends AppCompatActivity {
 
 	public File createVideoFileName() throws IOException {
 		String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-		String prepend = "VID_" + timestamp;
+		String prepend = "vid_" + timestamp;
 		File videoFile = File.createTempFile(prepend, ".mp4", videoFolder);
 		videoFileName = videoFile.getAbsolutePath();
 		return videoFile;
@@ -488,7 +488,7 @@ public class CameraActivity extends AppCompatActivity {
 
 	public File createImageFileName() throws IOException {
 		String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-		String prepend = "IMG_" + timestamp;
+		String prepend = "img_" + timestamp;
 		File imageFile = File.createTempFile(prepend, ".jpg", imageFolder);
 		imageFileName = imageFile.getAbsolutePath();
 		return imageFile;

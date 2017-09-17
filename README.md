@@ -1,4 +1,4 @@
-# Code4Africa Custom Camera
+# CitizenReporter Custom Camera
 This is a custom camera app, built on top of the Camera2 api,  designed to take pictures in several scenes, using either the front or back cameras of the phone.
 The user touches the capture button to take a picture, and holds down the capture button to record a video. A user also swipes right or left to change scenes.
 
@@ -20,8 +20,8 @@ When the camera app is called by another app, it returns the absolute path of ei
 
 ## Storage
 After a user has taken a picture, he/she decides whether to save the picture on not.
-Pictures taken by this camera are stored under `.../DCIM/Code4Africa/` folder.
-Videos are stored under `.../Movies/Code4Africa/` folder.
+Pictures taken by this camera are stored under `.../DCIM/[appname]/` folder.
+Videos are stored under `.../Movies/[appname]/` folder.
 
 ## Features
 * Flash (Off, Always on, Automatic) modes.
