@@ -1,12 +1,13 @@
 package com.code4africa.customcamera.customcameraapp;
 
-import android.database.Cursor;
+import android.app.Activity;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -14,10 +15,16 @@ public class SceneSelectorAdapter extends RecyclerView.Adapter<SceneSelectorAdap
 	private String sceneKey;
 	private HashMap<String, ArrayList<Integer>> scenesList;
 	private static final String TAG = SceneSelectorAdapter.class.getSimpleName();
+	private OnClickThumbListener onClickThumbListener;
 
-	public SceneSelectorAdapter (String sceneKey, HashMap<String, ArrayList<Integer>> scenesList) {
+	public interface OnClickThumbListener {
+		void OnClickScene(Integer position);
+	}
+
+	public SceneSelectorAdapter (Activity activity, String sceneKey, HashMap<String, ArrayList<Integer>> scenesList) {
 		this.sceneKey = sceneKey;
 		this.scenesList = scenesList;
+		this.onClickThumbListener = (OnClickThumbListener) activity;
 	}
 
 	@Override
@@ -27,8 +34,7 @@ public class SceneSelectorAdapter extends RecyclerView.Adapter<SceneSelectorAdap
 	}
 
 	@Override public void onBindViewHolder(ViewHolder holder, int position) {
-		Log.d(TAG, "Bind position: " + position);
-		holder.pos = position;
+		holder.position = position;
 		holder.bindScene(scenesList.get(this.sceneKey).get(position));
 	}
 
@@ -36,21 +42,22 @@ public class SceneSelectorAdapter extends RecyclerView.Adapter<SceneSelectorAdap
 		return this.scenesList.size();
 	}
 
-	public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+	public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 		private final ImageView imageView;
+		private ImageView imageOverlay;
 		private HashMap<String, ArrayList<Integer>> scenesList;
-		public Integer pos;
+		public Integer position;
 
 		public ViewHolder(final View itemView) {
 			super(itemView);
 			imageView = (ImageView) itemView.findViewById(R.id.scene_image_view);
 			this.scenesList = scenesList;
-
-			itemView.setOnClickListener(new View.OnClickListener() {
-				@Override public void onClick(View view) {
-					Log.d(TAG, "Clicked: " + pos);
-				}
-			});
+			imageView.setOnClickListener(this);
+			//itemView.setOnClickListener(new View.OnClickListener() {
+			//	@Override public void onClick(View view) {
+			//		Toast.makeText(itemView.getContext(), "Clicked: " + position, Toast.LENGTH_SHORT).show();
+			//	}
+			//});
 		}
 
 		public ImageView getImageView() {
@@ -58,12 +65,11 @@ public class SceneSelectorAdapter extends RecyclerView.Adapter<SceneSelectorAdap
 		}
 
 		public void bindScene(Integer sceneID) {
-			Log.d(TAG, "Bound Scene ID: " + sceneID);
 			imageView.setImageResource(sceneID);
 		}
 
 		@Override public void onClick(View view) {
-			Log.d(TAG, "Clicked: " + view);
+			onClickThumbListener.OnClickScene(position);
 		}
 	}
 

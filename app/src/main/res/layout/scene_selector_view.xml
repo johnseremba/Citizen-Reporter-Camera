@@ -10,6 +10,7 @@
       android:layout_width="125dp"
       android:layout_height="75dp"
       app:srcCompat="@drawable/candid_002"
+      android:rotation="90"
       />
 
 </LinearLayout>

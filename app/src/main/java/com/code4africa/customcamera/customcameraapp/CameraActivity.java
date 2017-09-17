@@ -2,6 +2,7 @@ package com.code4africa.customcamera.customcameraapp;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.LoaderManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -45,6 +46,7 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.hardware.camera2.CameraDevice;
+import android.widget.AdapterView;
 import android.widget.Chronometer;
 import android.widget.ImageSwitcher;
 import android.widget.ImageView;
@@ -65,7 +67,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
-public class CameraActivity extends AppCompatActivity {
+public class CameraActivity extends AppCompatActivity implements SceneSelectorAdapter.OnClickThumbListener {
 	private static final String TAG = CameraActivity.class.getSimpleName();
 	private static final String IMAGE_FILE_LOCATION = "image_file_location";
 	private static final String IMAGE_SAVED_PATH = "imagePath";
@@ -131,6 +133,10 @@ public class CameraActivity extends AppCompatActivity {
 			backgroundHandler.post(new ImageSaver(reader.acquireLatestImage()));
 		}
 	};
+
+	@Override public void OnClickScene(Integer position) {
+		Toast.makeText(getApplicationContext(), "Clicked: " + position, Toast.LENGTH_SHORT).show();
+	}
 
 	private class ImageSaver implements Runnable {
 		private final Image image;
@@ -809,7 +815,7 @@ public class CameraActivity extends AppCompatActivity {
 		// Creates the swipe buttons and initializes the initial overlay image
 		initializeCameraInterface();
 
-		sceneSelectorAdapter = new SceneSelectorAdapter("Portrait", overlayScenes);
+		sceneSelectorAdapter = new SceneSelectorAdapter(this, "Portrait", overlayScenes);
 		sceneRecyclerView.setAdapter(sceneSelectorAdapter);
 
 		capturePictureBtn.setOnTouchListener(new View.OnTouchListener() {
