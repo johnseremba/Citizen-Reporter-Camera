@@ -7,4 +7,6 @@
   <string name="title_activity_view_image">View Image</string>
   <string name="portrait_scene">Portrait</string>
   <string name="interaction_scene">Interaction Scene</string>
+  <string name="scene_changer_text">Swipe to change scenes</string>
+  <string name="recording_status">Recording video</string>
 </resources>

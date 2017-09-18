@@ -865,75 +865,57 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 			}
 		});
 
+		capturePictureBtn.setOnLongClickListener(new View.OnLongClickListener() {
+			@Override public boolean onLongClick(View view) {
+				// Record a video for long press
+				hideSceneIcons();
 
-		capturePictureBtn.setOnTouchListener(new View.OnTouchListener() {
-			Float x1, x2, y1, y2;
-			Long t1, t2;
-			private long CLICK_DURATION = 400;
-
-			@Override
-			public boolean onTouch(View view, MotionEvent motionEvent) {
-				switch (motionEvent.getAction()){
-					case MotionEvent.ACTION_DOWN:
-						x1 = motionEvent.getX();
-						y1 = motionEvent.getY();
-						t1 = System.currentTimeMillis();
-						return true;
-					case MotionEvent.ACTION_UP:
-						x2 = motionEvent.getX();
-						y2 = motionEvent.getY();
-						t2 = System.currentTimeMillis();
-
-						if(!isRecording){
-							if((t2 - t1) >= CLICK_DURATION) {
-								// Record a video for long press
-								hideSceneIcons();
-
-								if(moreScenes) {
-									hideSceneSwitcher();
-								}
-
-								MediaActionSound sound = new MediaActionSound();
-								sound.play(MediaActionSound.START_VIDEO_RECORDING);
-
-								isRecording = true;
-								imgOverlay.setImageDrawable(null);
-								swipeText.setText("Recording video");
-
-								capturePictureBtn.setImageResource(R.drawable.ic_video_record);
-								checkWriteStoragePermission();
-							} else {
-								// Take a picture if the user just clicks
-								checkWriteStoragePermission();
-								lockFocus();
-							}
-						} else {
-							// Stop video recording, set back the capture icon
-							showSceneIcons();
-							MediaActionSound sound = new MediaActionSound();
-							sound.play(MediaActionSound.STOP_VIDEO_RECORDING);
-							swipeText.setText("Swipe to change scenes");
-
-							chronometer.stop();
-							chronometer.setVisibility(View.INVISIBLE);
-
-							isRecording = false;
-							capturePictureBtn.setImageResource(R.drawable.camera_capture);
-							swipeScenes(selectedScene, prevScene);
-
-							startPreview();
-							mediaRecorder.stop();
-							mediaRecorder.reset();
-
-							Intent mediaStoreUpdateIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-							mediaStoreUpdateIntent.setData(Uri.fromFile(new File(videoFileName)));
-							sendBroadcast(mediaStoreUpdateIntent);
-
-							createVideoReturnIntent();
-						}
-						return true;
+				if(moreScenes) {
+					hideSceneSwitcher();
 				}
-				return false;
+
+				MediaActionSound sound = new MediaActionSound();
+				sound.play(MediaActionSound.START_VIDEO_RECORDING);
+
+				isRecording = true;
+				imgOverlay.setImageDrawable(null);
+				swipeText.setText(R.string.recording_status);
+
+				capturePictureBtn.setImageResource(R.drawable.ic_video_record);
+				checkWriteStoragePermission();
+				return true;
+			}
+		});
+
+		capturePictureBtn.setOnClickListener(new View.OnClickListener() {
+			@Override public void onClick(View view) {
+				if(!isRecording) {
+					// Take a picture if the user just clicks
+					checkWriteStoragePermission();
+					lockFocus();
+				} else {
+					// Stop video recording, set back the capture icon
+					showSceneIcons();
+					MediaActionSound sound = new MediaActionSound();
+					sound.play(MediaActionSound.STOP_VIDEO_RECORDING);
+					swipeText.setText(R.string.scene_changer_text);
+
+					chronometer.stop();
+					chronometer.setVisibility(View.INVISIBLE);
+
+					isRecording = false;
+					capturePictureBtn.setImageResource(R.drawable.camera_capture);
+					swipeScenes(selectedScene, prevScene);
+
+					startPreview();
+					mediaRecorder.stop();
+					mediaRecorder.reset();
+
+					Intent mediaStoreUpdateIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+					mediaStoreUpdateIntent.setData(Uri.fromFile(new File(videoFileName)));
+					sendBroadcast(mediaStoreUpdateIntent);
+					createVideoReturnIntent();
+				}
 			}
 		});
 
