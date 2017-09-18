@@ -191,8 +191,6 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 			switch (captureState) {
 				case STATE_WAIT_LOCK:
 					captureState = STATE_PREVIEW;
-					MediaActionSound sound = new MediaActionSound();
-					sound.play(MediaActionSound.SHUTTER_CLICK);
 					startStillCapture();
 					break;
 			}
@@ -666,6 +664,8 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 				}
 			};
 			previewCaptureSession.capture(captureRequestBuilder.build(), stillCaptureCallback, null);
+			MediaActionSound sound = new MediaActionSound();
+			sound.play(MediaActionSound.SHUTTER_CLICK);
 		} catch (CameraAccessException e) {
 			e.printStackTrace();
 		}
