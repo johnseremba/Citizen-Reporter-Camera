@@ -809,7 +809,6 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 		switcher4 = (ImageSwitcher) findViewById(R.id.sw_swipe_4);
 		switcher5 = (ImageSwitcher) findViewById(R.id.sw_swipe_5);
 		imgOverlay = (ImageView) findViewById(R.id.img_overlay);
-		imgSceneBg = (ImageView) findViewById(R.id.scene_bg);
 
 		// Initializes the scenes with the relevant scene images
 		initializeScenes();
@@ -1053,15 +1052,21 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	}
 
 	private void hideSceneSwitcher() {
-		imgSceneBg.setVisibility(View.GONE);
-		sceneRecyclerView.setVisibility(View.GONE);
-		moreScenes = false;
+		runOnUiThread(new Runnable() {
+			@Override public void run() {
+				sceneRecyclerView.setVisibility(View.GONE);
+				moreScenes = false;
+			}
+		});
 	}
 
 	private void showSceneSwitcher() {
-		imgSceneBg.setVisibility(View.VISIBLE);
-		sceneRecyclerView.setVisibility(View.VISIBLE);
-		moreScenes = true;
+		runOnUiThread(new Runnable() {
+			@Override public void run() {
+				sceneRecyclerView.setVisibility(View.VISIBLE);
+				moreScenes = true;
+			}
+		});
 	}
 
 	@Override

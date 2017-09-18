@@ -187,26 +187,17 @@
       app:layout_constraintTop_toTopOf="@+id/chronometer2"
       app:srcCompat="@drawable/ic_flash_off"
       />
-  <ImageView
-      android:id="@+id/scene_bg"
-      android:layout_width="match_parent"
-      android:layout_height="83dp"
-      android:layout_marginBottom="20dp"
-      android:background="@color/black"
-      app:layout_constraintBottom_toTopOf="@+id/txt_swipe_caption"
-      app:layout_constraintEnd_toEndOf="parent"
-      app:layout_constraintStart_toStartOf="parent"
-      android:alpha="0.8"
-      />
   <android.support.v7.widget.RecyclerView
       android:id="@+id/scene_recylcer_view"
       android:layout_width="match_parent"
       android:layout_height="75dp"
-      android:layout_marginBottom="8dp"
+      android:layout_marginBottom="16dp"
       android:layout_marginEnd="8dp"
       android:layout_marginStart="8dp"
+      android:background="@drawable/layout_bg"
       app:layout_constraintBottom_toTopOf="@+id/sw_swipe_3"
       app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintHorizontal_bias="0.0"
       app:layout_constraintStart_toStartOf="parent"
       >
   </android.support.v7.widget.RecyclerView>
