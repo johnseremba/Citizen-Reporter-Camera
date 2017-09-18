@@ -128,6 +128,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	private LinearLayoutManager layoutManager;
 	private SceneSelectorAdapter sceneSelectorAdapter;
 	private boolean moreScenes = false;
+	private String currentScene;
 
 	private final ImageReader.OnImageAvailableListener onImageAvailableListener = new ImageReader.OnImageAvailableListener() {
 		@Override
@@ -809,12 +810,12 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 		switcher4 = (ImageSwitcher) findViewById(R.id.sw_swipe_4);
 		switcher5 = (ImageSwitcher) findViewById(R.id.sw_swipe_5);
 		imgOverlay = (ImageView) findViewById(R.id.img_overlay);
-		imgSceneBg = (ImageView) findViewById(R.id.scene_bg);
 
 		// Initializes the scenes with the relevant scene images
 		initializeScenes();
 
 		Toast.makeText(getApplicationContext(), R.string.interaction_scene, Toast.LENGTH_SHORT).show();
+		currentScene = INTERACTION_SCENE;
 
 		// Creates the swipe buttons and initializes the initial overlay image
 		initializeCameraInterface();
@@ -887,6 +888,11 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 							if((t2 - t1) >= CLICK_DURATION) {
 								// Record a video for long press
 								hideSceneIcons();
+
+								if(moreScenes) {
+									hideSceneSwitcher();
+								}
+
 								MediaActionSound sound = new MediaActionSound();
 								sound.play(MediaActionSound.START_VIDEO_RECORDING);
 
@@ -1053,15 +1059,21 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	}
 
 	private void hideSceneSwitcher() {
-		imgSceneBg.setVisibility(View.GONE);
-		sceneRecyclerView.setVisibility(View.GONE);
-		moreScenes = false;
+		runOnUiThread(new Runnable() {
+			@Override public void run() {
+				sceneRecyclerView.setVisibility(View.GONE);
+				moreScenes = false;
+			}
+		});
 	}
 
 	private void showSceneSwitcher() {
-		imgSceneBg.setVisibility(View.VISIBLE);
-		sceneRecyclerView.setVisibility(View.VISIBLE);
-		moreScenes = true;
+		runOnUiThread(new Runnable() {
+			@Override public void run() {
+				sceneRecyclerView.setVisibility(View.VISIBLE);
+				moreScenes = true;
+			}
+		});
 	}
 
 	@Override
@@ -1107,6 +1119,14 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 				}
 				return super.onFling(e1, e2, velocityX, velocityY);
 			}
+
+			@Override public void onLongPress(MotionEvent e) {
+				// Show child scenes on long pressing the screen.;
+				super.onLongPress(e);
+				showSceneSwitcher();
+				sceneSelectorAdapter = new SceneSelectorAdapter(CameraActivity.this, currentScene, overlayScenes.get(currentScene));
+				sceneRecyclerView.setAdapter(sceneSelectorAdapter);
+			}
 		}
 
 		public void swipeScenes(Integer nextScene, Integer prevScene) {
@@ -1137,32 +1157,38 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 					switcher1.setImageResource(R.drawable.ic_selected_circular);
 					swipeText.setText(PORTRAIT_SCENE);
 					imgOverlay.setImageResource(overlayScenes.get(PORTRAIT_SCENE).get(0));
+					currentScene = PORTRAIT_SCENE;
 					break;
 				case 1:
 					switcher2.setImageResource(R.drawable.ic_selected_circular);
 					swipeText.setText(SIGNATURE_SCENE);
 					imgOverlay.setImageResource(overlayScenes.get(SIGNATURE_SCENE).get(0));
+					currentScene = SIGNATURE_SCENE;
 					break;
 				case 2:
 					switcher3.setImageResource(R.drawable.ic_selected_circular);
 					swipeText.setText(INTERACTION_SCENE);
 					imgOverlay.setImageResource(overlayScenes.get(INTERACTION_SCENE).get(0));
+					currentScene = INTERACTION_SCENE;
 					break;
 				case 3:
 					switcher4.setImageResource(R.drawable.ic_selected_circular);
 					swipeText.setText(CANDID_SCENE);
 					imgOverlay.setImageResource(overlayScenes.get(CANDID_SCENE).get(0));
+					currentScene = CANDID_SCENE;
 					break;
 				case 4:
 					switcher5.setImageResource(R.drawable.ic_selected_circular);
 					swipeText.setText(ENVIRONMENT_SCENE);
 					imgOverlay.setImageResource(overlayScenes.get(ENVIRONMENT_SCENE).get(0));
+					currentScene = ENVIRONMENT_SCENE;
 					break;
 				default:
 					selectedScene = 0;
 					switcher1.setImageResource(R.drawable.ic_selected_circular);
 					swipeText.setText(PORTRAIT_SCENE);
 					imgOverlay.setImageResource(overlayScenes.get(PORTRAIT_SCENE).get(0));
+					currentScene = PORTRAIT_SCENE;
 					break;
 			}
 		}
