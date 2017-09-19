@@ -402,7 +402,6 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	}
 
 	private void startRecord() {
-		enableFlashMode();
 		try {
 			setUpMediaRecorder();
 			SurfaceTexture surfaceTexture = textureView.getSurfaceTexture();
@@ -515,19 +514,11 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 
 	private void checkWriteStoragePermission() {
 		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-			if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
-					!= PackageManager.PERMISSION_GRANTED) {
-				if (shouldShowRequestPermissionRationale(Manifest.permission.RECORD_AUDIO)) {
-					Toast.makeText(this.getApplicationContext(), "App needs to record audio",
-							Toast.LENGTH_SHORT).show();
-				}
-				Log.d(TAG, "No audio permissions.");
-				requestPermissions(new String[] { Manifest.permission.RECORD_AUDIO },
-						REQUEST_AUDIO_PERMISSION);
-			} else {
-				if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-						== PackageManager.PERMISSION_GRANTED) {
-					if (isRecording) {
+			if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+					== PackageManager.PERMISSION_GRANTED) {
+				if (isRecording) {
+					if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+							== PackageManager.PERMISSION_GRANTED) {
 						try {
 							createVideoFileName();
 						} catch (IOException e) {
@@ -538,15 +529,23 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 						chronometer.setBase(SystemClock.elapsedRealtime());
 						chronometer.setVisibility(View.VISIBLE);
 						chronometer.start();
+					} else {
+						if (shouldShowRequestPermissionRationale(Manifest.permission.RECORD_AUDIO)) {
+							Toast.makeText(this.getApplicationContext(), "App needs to record audio",
+									Toast.LENGTH_SHORT).show();
+						}
+						Log.d(TAG, "No audio permissions.");
+						requestPermissions(new String[] { Manifest.permission.RECORD_AUDIO },
+								REQUEST_AUDIO_PERMISSION);
 					}
-				} else {
-					if (shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-						Toast.makeText(this, "App needs to store pictures & videos", Toast.LENGTH_SHORT);
-					}
-					Log.d(TAG, "No external storage permissions");
-					requestPermissions(new String[] { Manifest.permission.WRITE_EXTERNAL_STORAGE },
-							REQUEST_STORAGE_PERMISSION);
 				}
+			} else {
+				if (shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+					Toast.makeText(this, "App needs to store pictures & videos", Toast.LENGTH_SHORT).show();
+				}
+				Log.d(TAG, "No external storage permissions");
+				requestPermissions(new String[] { Manifest.permission.WRITE_EXTERNAL_STORAGE },
+						REQUEST_STORAGE_PERMISSION);
 			}
 		} else{
 				if (isRecording) {
@@ -604,7 +603,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 				if(grantResults[0] != PackageManager.PERMISSION_GRANTED){
 					Toast.makeText(getApplicationContext(), "App can't run without camera permissions.", Toast.LENGTH_SHORT).show();
 				} else {
-					Toast.makeText(getApplicationContext(), "Camera permission granted successfully", Toast.LENGTH_SHORT).show();
+					Log.d(TAG, "Camera permission granted successfully");
 				}
 				break;
 			case REQUEST_STORAGE_PERMISSION:
@@ -615,7 +614,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
-					Toast.makeText(getApplicationContext(), "Storage permission granted successfully", Toast.LENGTH_SHORT).show();
+					Log.d(TAG,"Storage permission granted successfully");
 				} else {
 					Toast.makeText(getApplicationContext(), "App can't run without storage permissions.", Toast.LENGTH_SHORT).show();
 					Log.d(TAG, "Storage permissions denied.");
@@ -623,7 +622,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 				break;
 			case REQUEST_AUDIO_PERMISSION:
 				if(grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-					Toast.makeText(getApplicationContext(), "Audio permission granted successfully", Toast.LENGTH_SHORT).show();
+					Log.d(TAG,"Audio permission granted successfully");
 				} else {
 					Toast.makeText(getApplicationContext(), "App needs to record audio.", Toast.LENGTH_SHORT).show();
 					Log.d(TAG, "Audio permissions denied.");
@@ -703,56 +702,52 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	}
 
 	private void initializeCameraInterface() {
-		runOnUiThread(new Runnable() {
-			@Override public void run() {
-				switcher1.setFactory(new ViewSwitcher.ViewFactory() {
-					@Override public View makeView() {
-						ImageView imageView = new ImageView(getApplicationContext());
-						imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-						return  imageView;
-					}
-				});
-
-				switcher2.setFactory(new ViewSwitcher.ViewFactory() {
-					@Override public View makeView() {
-						ImageView imageView = new ImageView(getApplicationContext());
-						imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-						return  imageView;
-					}
-				});
-
-				switcher3.setFactory(new ViewSwitcher.ViewFactory() {
-					@Override public View makeView() {
-						ImageView imageView = new ImageView(getApplicationContext());
-						imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-						return  imageView;
-					}
-				});
-
-				switcher4.setFactory(new ViewSwitcher.ViewFactory() {
-					@Override public View makeView() {
-						ImageView imageView = new ImageView(getApplicationContext());
-						imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-						return  imageView;
-					}
-				});
-
-				switcher5.setFactory(new ViewSwitcher.ViewFactory() {
-					@Override public View makeView() {
-						ImageView imageView = new ImageView(getApplicationContext());
-						imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-						return  imageView;
-					}
-				});
-
-				switcher1.setImageResource(R.drawable.ic_circular);
-				switcher2.setImageResource(R.drawable.ic_circular);
-				switcher3.setImageResource(R.drawable.ic_selected_circular);
-				switcher4.setImageResource(R.drawable.ic_circular);
-				switcher5.setImageResource(R.drawable.ic_circular);
-				swipeScenes(selectedScene, prevScene);
+		switcher1.setFactory(new ViewSwitcher.ViewFactory() {
+			@Override public View makeView() {
+				ImageView imageView = new ImageView(getApplicationContext());
+				imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+				return  imageView;
 			}
 		});
+
+		switcher2.setFactory(new ViewSwitcher.ViewFactory() {
+			@Override public View makeView() {
+				ImageView imageView = new ImageView(getApplicationContext());
+				imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+				return  imageView;
+			}
+		});
+
+		switcher3.setFactory(new ViewSwitcher.ViewFactory() {
+			@Override public View makeView() {
+				ImageView imageView = new ImageView(getApplicationContext());
+				imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+				return  imageView;
+			}
+		});
+
+		switcher4.setFactory(new ViewSwitcher.ViewFactory() {
+			@Override public View makeView() {
+				ImageView imageView = new ImageView(getApplicationContext());
+				imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+				return  imageView;
+			}
+		});
+
+		switcher5.setFactory(new ViewSwitcher.ViewFactory() {
+			@Override public View makeView() {
+				ImageView imageView = new ImageView(getApplicationContext());
+				imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+				return  imageView;
+			}
+		});
+
+		switcher1.setImageResource(R.drawable.ic_circular);
+		switcher2.setImageResource(R.drawable.ic_circular);
+		switcher3.setImageResource(R.drawable.ic_selected_circular);
+		switcher4.setImageResource(R.drawable.ic_circular);
+		switcher5.setImageResource(R.drawable.ic_circular);
+		swipeScenes(selectedScene, prevScene);
 	}
 
 	@Override
@@ -956,29 +951,21 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	}
 
 	private void hideSceneIcons() {
-		runOnUiThread(new Runnable() {
-			@Override public void run() {
-				switcher1.setVisibility(View.INVISIBLE);
-				switcher2.setVisibility(View.INVISIBLE);
-				switcher3.setVisibility(View.INVISIBLE);
-				switcher4.setVisibility(View.INVISIBLE);
-				switcher5.setVisibility(View.INVISIBLE);
-				flashModeBtn.setVisibility(View.INVISIBLE);
-			}
-		});
+		switcher1.setVisibility(View.INVISIBLE);
+		switcher2.setVisibility(View.INVISIBLE);
+		switcher3.setVisibility(View.INVISIBLE);
+		switcher4.setVisibility(View.INVISIBLE);
+		switcher5.setVisibility(View.INVISIBLE);
+		flashModeBtn.setVisibility(View.INVISIBLE);
 	}
 
 	private void showSceneIcons() {
-		runOnUiThread(new Runnable() {
-			@Override public void run() {
-				switcher1.setVisibility(View.VISIBLE);
-				switcher2.setVisibility(View.VISIBLE);
-				switcher3.setVisibility(View.VISIBLE);
-				switcher4.setVisibility(View.VISIBLE);
-				switcher5.setVisibility(View.VISIBLE);
-				flashModeBtn.setVisibility(View.VISIBLE);
-			}
-		});
+		switcher1.setVisibility(View.VISIBLE);
+		switcher2.setVisibility(View.VISIBLE);
+		switcher3.setVisibility(View.VISIBLE);
+		switcher4.setVisibility(View.VISIBLE);
+		switcher5.setVisibility(View.VISIBLE);
+		flashModeBtn.setVisibility(View.VISIBLE);
 	}
 
 	private void initializeScenes() {
@@ -1041,21 +1028,13 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	}
 
 	private void hideSceneSwitcher() {
-		runOnUiThread(new Runnable() {
-			@Override public void run() {
-				sceneRecyclerView.setVisibility(View.GONE);
-				moreScenes = false;
-			}
-		});
+		sceneRecyclerView.setVisibility(View.GONE);
+		moreScenes = false;
 	}
 
 	private void showSceneSwitcher() {
-		runOnUiThread(new Runnable() {
-			@Override public void run() {
-				sceneRecyclerView.setVisibility(View.VISIBLE);
-				moreScenes = true;
-			}
-		});
+		sceneRecyclerView.setVisibility(View.VISIBLE);
+		moreScenes = true;
 	}
 
 	@Override
