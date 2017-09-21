@@ -779,37 +779,14 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_camera);
 
-		sceneRecyclerView = (RecyclerView) findViewById(R.id.scene_recylcer_view);
-		layoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
-		sceneRecyclerView.setLayoutManager(layoutManager);
-
 		gestureObject = new GestureDetectorCompat(this, new LearnGesture());
+
+		initializeObjects();
+		// Initializes the scenes with the relevant scene images
+		initializeScenes();
 
 		createImageFolder();
 		createVideoFolder();
-
-		mediaRecorder = new MediaRecorder();
-
-		chronometer = (Chronometer) findViewById(R.id.chronometer2);
-		textureView = (TextureView) findViewById(R.id.tv_camera);
-		capturePictureBtn = (ImageView) findViewById(R.id.img_capture);
-		openGalleryBtn = (ImageView) findViewById(R.id.img_gallery);
-		swapCameraBtn = (ImageView) findViewById(R.id.img_switch_camera);
-		flashModeBtn = (ImageView) findViewById(R.id.img_flash_btn);
-		swipeText = (TextView) findViewById(R.id.txt_swipe_caption);
-
-		switcher1 = (ImageSwitcher) findViewById(R.id.sw_swipe_1);
-		switcher2 = (ImageSwitcher) findViewById(R.id.sw_swipe_2);
-		switcher3 = (ImageSwitcher) findViewById(R.id.sw_swipe_3);
-		switcher4 = (ImageSwitcher) findViewById(R.id.sw_swipe_4);
-		switcher5 = (ImageSwitcher) findViewById(R.id.sw_swipe_5);
-		imgOverlay = (ImageView) findViewById(R.id.img_overlay);
-
-		seekBarProgressText = (TextView) findViewById(R.id.txt_seekbar_progress);
-		lightSeekBar = (SeekBar) findViewById(R.id.seekbar_light);
-
-		// Initializes the scenes with the relevant scene images
-		initializeScenes();
 
 		Toast.makeText(getApplicationContext(), R.string.interaction_scene, Toast.LENGTH_SHORT).show();
 		currentScene = INTERACTION_SCENE;
@@ -824,15 +801,15 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 					progressValue = (AE_RANGE - progressValue) * -1;
 				}
 				seekBarProgressText.setText(Double.toString(progressValue));
-				increaseBrightness(progressValue);
 			}
 
 			@Override public void onStartTrackingTouch(SeekBar seekBar) {
-
+				seekBarProgressText.setVisibility(View.VISIBLE);
 			}
 
 			@Override public void onStopTrackingTouch(SeekBar seekBar) {
-				Toast.makeText(getApplicationContext(), "Going to change", Toast.LENGTH_SHORT).show();
+				increaseBrightness(progressValue);
+				seekBarProgressText.setVisibility(View.INVISIBLE);
 			}
 		});
 
@@ -957,20 +934,42 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 
 	}
 
+	private void initializeObjects() {
+		mediaRecorder = new MediaRecorder();
+		sceneRecyclerView = (RecyclerView) findViewById(R.id.scene_recylcer_view);
+		layoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
+		sceneRecyclerView.setLayoutManager(layoutManager);
+
+		chronometer = (Chronometer) findViewById(R.id.chronometer2);
+		textureView = (TextureView) findViewById(R.id.tv_camera);
+		capturePictureBtn = (ImageView) findViewById(R.id.img_capture);
+		openGalleryBtn = (ImageView) findViewById(R.id.img_gallery);
+		swapCameraBtn = (ImageView) findViewById(R.id.img_switch_camera);
+		flashModeBtn = (ImageView) findViewById(R.id.img_flash_btn);
+		swipeText = (TextView) findViewById(R.id.txt_swipe_caption);
+
+		switcher1 = (ImageSwitcher) findViewById(R.id.sw_swipe_1);
+		switcher2 = (ImageSwitcher) findViewById(R.id.sw_swipe_2);
+		switcher3 = (ImageSwitcher) findViewById(R.id.sw_swipe_3);
+		switcher4 = (ImageSwitcher) findViewById(R.id.sw_swipe_4);
+		switcher5 = (ImageSwitcher) findViewById(R.id.sw_swipe_5);
+		imgOverlay = (ImageView) findViewById(R.id.img_overlay);
+
+		seekBarProgressText = (TextView) findViewById(R.id.txt_seekbar_progress);
+		lightSeekBar = (SeekBar) findViewById(R.id.seekbar_light);
+	}
+
 	private void increaseBrightness(double progressValue) {
+		captureRequestBuilder.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION, (int) progressValue);
+		applySettings();
+	}
+
+	private void applySettings() {
 		try {
-			CameraCharacteristics cameraCharacteristics = cameraManager.getCameraCharacteristics(cameraID);
-			captureRequestBuilder.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION, (int) progressValue);
 			previewCaptureSession.setRepeatingRequest(captureRequestBuilder.build(), null, null);
-			//captureRequestBuilder.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION, (int) progressValue);
-			//captureRequestBuilder.build();
-		//	CaptureRequest.CONTROL_AF_TRIGGER, CaptureRequest.CONTROL_AF_TRIGGER_START);
 		} catch (CameraAccessException e) {
 			e.printStackTrace();
 		}
-		//Camera.Parameters params = mCamera.getParameters();
-		//params.setExposureCompensation(params.getMaxExposureCompensation()); // maximum
-		//mCamera.setParameters(params);
 	}
 
 	private double round(double value, int places) {
@@ -1015,6 +1014,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	}
 
 	private void initializeScenes() {
+		seekBarProgressText.setVisibility(View.INVISIBLE);
 		hideSceneSwitcher();
 		portrait = new ArrayList<Integer>() {
 			{
