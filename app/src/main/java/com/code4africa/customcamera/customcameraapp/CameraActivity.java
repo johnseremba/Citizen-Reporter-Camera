@@ -46,6 +46,7 @@ import android.hardware.camera2.CameraDevice;
 import android.widget.Chronometer;
 import android.widget.ImageSwitcher;
 import android.widget.ImageView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewSwitcher;
@@ -73,6 +74,9 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	private static final int STATE_PREVIEW = 0;
 	private static final int STATE_WAIT_LOCK = 1;
 	private static final int PREVIEW_IMAGE_RESULT = 3;
+	private static final int CAMERA_MAX_ZOOM = 3;
+	private static final int PROGRESS_MIN = 50;
+	private static final int PROGRESS_MAX = 100;
 	private static String PORTRAIT_SCENE = "Portrait";
 	private static String CANDID_SCENE = "Candid";
 	private static String INTERACTION_SCENE = "Interaction";
@@ -118,7 +122,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	private GestureDetectorCompat gestureObject;
 	private Integer selectedScene = 2;
 	private Integer prevScene = 2;
-	int camLensFacing = CameraCharacteristics.LENS_FACING_BACK;
+	private int camLensFacing = CameraCharacteristics.LENS_FACING_BACK;
 	private boolean isRecording = false;
 	private Chronometer chronometer;
 	private String cameraPreviewResult;
@@ -129,6 +133,9 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	private SceneSelectorAdapter sceneSelectorAdapter;
 	private boolean moreScenes = false;
 	private String currentScene;
+
+	private SeekBar lightSeekBar;
+	private TextView seekBarProgressText;
 
 	private final ImageReader.OnImageAvailableListener onImageAvailableListener = new ImageReader.OnImageAvailableListener() {
 		@Override
@@ -795,6 +802,9 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 		switcher5 = (ImageSwitcher) findViewById(R.id.sw_swipe_5);
 		imgOverlay = (ImageView) findViewById(R.id.img_overlay);
 
+		seekBarProgressText = (TextView) findViewById(R.id.txt_seekbar_progress);
+		lightSeekBar = (SeekBar) findViewById(R.id.seekbar_light);
+
 		// Initializes the scenes with the relevant scene images
 		initializeScenes();
 
@@ -803,6 +813,29 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 
 		// Creates the swipe buttons and initializes the initial overlay image
 		initializeCameraInterface();
+
+		lightSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+			private double progressValue;
+			private String charge = "+";
+
+			@Override public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+				progressValue = round(((double)progress / PROGRESS_MAX) * CAMERA_MAX_ZOOM, 2);
+				if(progress < PROGRESS_MIN) {
+					progressValue = (CAMERA_MAX_ZOOM - progressValue) * -1;
+					charge = "-";
+				}
+
+				seekBarProgressText.setText(Double.toString(progressValue));
+			}
+
+			@Override public void onStartTrackingTouch(SeekBar seekBar) {
+
+			}
+
+			@Override public void onStopTrackingTouch(SeekBar seekBar) {
+
+			}
+		});
 
 		switcher1.setOnClickListener(new View.OnClickListener() {
 			@Override public void onClick(View view) {
@@ -923,6 +956,15 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 			}
 		});
 
+	}
+
+	private double round(double value, int places) {
+		if (places < 0) throw new IllegalArgumentException();
+
+		long factor = (long) Math.pow(10, places);
+		value = value * factor;
+		long tmp = Math.round(value);
+		return (double) tmp / factor;
 	}
 
 	private void setSceneAdapter(String scene) {
