@@ -390,17 +390,6 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 		}
 	}
 
-	private void enableFlashMode() {
-		CameraManager cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
-		try {
-			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-				cameraManager.setTorchMode(cameraID, true);
-			}
-		} catch (CameraAccessException e) {
-			e.printStackTrace();
-		}
-	}
-
 	private void startRecord() {
 		try {
 			setUpMediaRecorder();
@@ -1088,6 +1077,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 				sceneSelectorAdapter = new SceneSelectorAdapter(CameraActivity.this, currentScene, overlayScenes.get(currentScene));
 				sceneRecyclerView.setAdapter(sceneSelectorAdapter);
 			}
+
 		}
 
 		public void swipeScenes(Integer nextScene, Integer prevScene) {
