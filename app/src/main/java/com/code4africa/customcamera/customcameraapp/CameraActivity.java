@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.ImageFormat;
+import android.graphics.Paint;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
@@ -136,7 +137,8 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	private double progressValue;
 	private SeekBar lightSeekBar;
 	private TextView seekBarProgressText;
-	private int AE_RANGE = 3;
+	private int AE_RANGE;
+	private CameraManager cameraManager;
 
 	private final ImageReader.OnImageAvailableListener onImageAvailableListener = new ImageReader.OnImageAvailableListener() {
 		@Override
@@ -277,8 +279,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	}
 
 	private void setUpCamera(int width, int height) {
-		CameraManager cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
-
+		cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
 		try{
 			for(String camID: cameraManager.getCameraIdList()){
 				CameraCharacteristics cameraCharacteristics = cameraManager.getCameraCharacteristics(camID);
@@ -823,6 +824,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 					progressValue = (AE_RANGE - progressValue) * -1;
 				}
 				seekBarProgressText.setText(Double.toString(progressValue));
+				increaseBrightness(progressValue);
 			}
 
 			@Override public void onStartTrackingTouch(SeekBar seekBar) {
@@ -953,6 +955,22 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 			}
 		});
 
+	}
+
+	private void increaseBrightness(double progressValue) {
+		try {
+			CameraCharacteristics cameraCharacteristics = cameraManager.getCameraCharacteristics(cameraID);
+			captureRequestBuilder.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION, (int) progressValue);
+			previewCaptureSession.setRepeatingRequest(captureRequestBuilder.build(), null, null);
+			//captureRequestBuilder.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION, (int) progressValue);
+			//captureRequestBuilder.build();
+		//	CaptureRequest.CONTROL_AF_TRIGGER, CaptureRequest.CONTROL_AF_TRIGGER_START);
+		} catch (CameraAccessException e) {
+			e.printStackTrace();
+		}
+		//Camera.Parameters params = mCamera.getParameters();
+		//params.setExposureCompensation(params.getMaxExposureCompensation()); // maximum
+		//mCamera.setParameters(params);
 	}
 
 	private double round(double value, int places) {
