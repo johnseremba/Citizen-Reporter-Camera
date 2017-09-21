@@ -6,7 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.ImageFormat;
-import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
@@ -137,8 +137,10 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	private double progressValue;
 	private SeekBar lightSeekBar;
 	private TextView seekBarProgressText;
-	private int AE_RANGE;
+	private int aeRange;
 	private CameraManager cameraManager;
+	private float fingerSpacing = 0;
+	private int zoomLevel = 1;
 
 	private final ImageReader.OnImageAvailableListener onImageAvailableListener = new ImageReader.OnImageAvailableListener() {
 		@Override
@@ -303,7 +305,10 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 					imageReader = ImageReader.newInstance(imageSize.getWidth(), imageSize.getHeight(), ImageFormat.JPEG, 1);
 					imageReader.setOnImageAvailableListener(onImageAvailableListener, backgroundHandler);
 					cameraID = camID;
-					AE_RANGE = cameraCharacteristics.get(CameraCharacteristics.CONTROL_AE_COMPENSATION_RANGE).getUpper();
+					aeRange = cameraCharacteristics.get(CameraCharacteristics.CONTROL_AE_COMPENSATION_RANGE).getUpper();
+					float[] zoomz = cameraCharacteristics.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS);
+					Log.d(TAG, "Zoom: " + zoomz);
+					Log.d(TAG, "Lengths: " + zoomz.length);
 					return;
 				}
 			}
@@ -796,9 +801,9 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 
 		lightSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 			@Override public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-				progressValue = round(((double)progress / PROGRESS_MAX) * AE_RANGE, 2);
+				progressValue = round(((double)progress / PROGRESS_MAX) * aeRange, 2);
 				if(progress < PROGRESS_MIN) {
-					progressValue = (AE_RANGE - progressValue) * -1;
+					progressValue = (aeRange - progressValue) * -1;
 				}
 				seekBarProgressText.setText(Double.toString(progressValue));
 			}
@@ -1135,6 +1140,56 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 				sceneRecyclerView.setAdapter(sceneSelectorAdapter);
 			}
 
+			private float getFingerSpacing(MotionEvent e) {
+				float x = e.getX(0) - e.getX(1);
+				float y = e.getY(0) - e.getY(1);
+				return (float) Math.sqrt(x * x + y * y);
+			}
+
+			@Override public boolean onSingleTapUp(MotionEvent e) {
+				float maxZoom;
+				int action;
+				float currentFingerPlacing;
+
+				try {
+					CameraCharacteristics cameraCharacteristics = cameraManager.getCameraCharacteristics(cameraID);
+					maxZoom = cameraCharacteristics.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM) * 10;
+					Rect activePixesAfter = cameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
+					action = e.getAction();
+
+					if(e.getPointerCount() > 1) {
+						// Multitouch logic
+						currentFingerPlacing = getFingerSpacing(e);
+						if(fingerSpacing != 0) {
+							if (currentFingerPlacing > fingerSpacing && maxZoom > zoomLevel) {
+								zoomLevel++;
+							} else if (currentFingerPlacing < fingerSpacing && maxZoom > 1) {
+								zoomLevel--;
+							}
+							int minWidth = (int) (activePixesAfter.width() / maxZoom);
+							int minHeight = (int) (activePixesAfter.height() / maxZoom);
+							int widthDiff = activePixesAfter.width() - minWidth;
+							int heightDiff = activePixesAfter.height() - minHeight;
+							int cropWidth = widthDiff / 100 * (int) zoomLevel;
+							int cropHeight = heightDiff / 100 * (int) zoomLevel;
+
+							cropWidth -= cropHeight & 3;
+							cropHeight -= cropHeight & 3;
+							Rect zoom = new Rect(cropWidth, cropHeight, activePixesAfter.width() - cropWidth, activePixesAfter.height() - cropHeight);
+							captureRequestBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoom);
+						}
+						fingerSpacing = currentFingerPlacing;
+					} else {
+						if(action == MotionEvent.ACTION_UP) {
+							// Single touch event action
+						}
+					}
+					applySettings();
+				} catch (CameraAccessException e1) {
+					e1.printStackTrace();
+				}
+				return super.onSingleTapUp(e);
+			}
 		}
 
 		public void swipeScenes(Integer nextScene, Integer prevScene) {
