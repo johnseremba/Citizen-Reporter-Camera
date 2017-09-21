@@ -74,7 +74,6 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	private static final int STATE_PREVIEW = 0;
 	private static final int STATE_WAIT_LOCK = 1;
 	private static final int PREVIEW_IMAGE_RESULT = 3;
-	private static final int CAMERA_MAX_ZOOM = 3;
 	private static final int PROGRESS_MIN = 50;
 	private static final int PROGRESS_MAX = 100;
 	private static String PORTRAIT_SCENE = "Portrait";
@@ -134,8 +133,10 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	private boolean moreScenes = false;
 	private String currentScene;
 
+	private double progressValue;
 	private SeekBar lightSeekBar;
 	private TextView seekBarProgressText;
+	private int AE_RANGE = 3;
 
 	private final ImageReader.OnImageAvailableListener onImageAvailableListener = new ImageReader.OnImageAvailableListener() {
 		@Override
@@ -301,6 +302,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 					imageReader = ImageReader.newInstance(imageSize.getWidth(), imageSize.getHeight(), ImageFormat.JPEG, 1);
 					imageReader.setOnImageAvailableListener(onImageAvailableListener, backgroundHandler);
 					cameraID = camID;
+					AE_RANGE = cameraCharacteristics.get(CameraCharacteristics.CONTROL_AE_COMPENSATION_RANGE).getUpper();
 					return;
 				}
 			}
@@ -815,16 +817,11 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 		initializeCameraInterface();
 
 		lightSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-			private double progressValue;
-			private String charge = "+";
-
 			@Override public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-				progressValue = round(((double)progress / PROGRESS_MAX) * CAMERA_MAX_ZOOM, 2);
+				progressValue = round(((double)progress / PROGRESS_MAX) * AE_RANGE, 2);
 				if(progress < PROGRESS_MIN) {
-					progressValue = (CAMERA_MAX_ZOOM - progressValue) * -1;
-					charge = "-";
+					progressValue = (AE_RANGE - progressValue) * -1;
 				}
-
 				seekBarProgressText.setText(Double.toString(progressValue));
 			}
 
@@ -833,7 +830,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 			}
 
 			@Override public void onStopTrackingTouch(SeekBar seekBar) {
-
+				Toast.makeText(getApplicationContext(), "Going to change", Toast.LENGTH_SHORT).show();
 			}
 		});
 
