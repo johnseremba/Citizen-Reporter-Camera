@@ -19,11 +19,11 @@
       android:id="@+id/img_btn_bg_2"
       android:layout_width="0dp"
       android:layout_height="76dp"
-      android:background="@color/black_overlay"
+      android:background="@color/colorPrimaryDark"
       app:layout_constraintBottom_toBottomOf="parent"
       app:layout_constraintEnd_toEndOf="parent"
       app:layout_constraintStart_toStartOf="parent"
-      android:alpha="1"
+      android:alpha="0.5"
       tools:layout_editor_absoluteY="435dp"
       />
   <ImageView

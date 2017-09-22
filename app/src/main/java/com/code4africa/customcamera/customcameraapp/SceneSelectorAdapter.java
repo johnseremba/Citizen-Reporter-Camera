@@ -26,7 +26,7 @@ public class SceneSelectorAdapter extends RecyclerView.Adapter<SceneSelectorAdap
 
 	@Override
 	public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-		View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.scene_selector_view, parent, false);
+		View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_selector_view, parent, false);
 		return new ViewHolder(view);
 	}
 

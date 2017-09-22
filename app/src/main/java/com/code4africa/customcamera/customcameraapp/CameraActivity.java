@@ -6,6 +6,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.ImageFormat;
+import android.graphics.Matrix;
+import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
@@ -39,6 +42,7 @@ import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
@@ -46,6 +50,7 @@ import android.hardware.camera2.CameraDevice;
 import android.widget.Chronometer;
 import android.widget.ImageSwitcher;
 import android.widget.ImageView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewSwitcher;
@@ -73,6 +78,8 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	private static final int STATE_PREVIEW = 0;
 	private static final int STATE_WAIT_LOCK = 1;
 	private static final int PREVIEW_IMAGE_RESULT = 3;
+	private static final int PROGRESS_MIN = 50;
+	private static final int PROGRESS_MAX = 100;
 	private static String PORTRAIT_SCENE = "Portrait";
 	private static String CANDID_SCENE = "Candid";
 	private static String INTERACTION_SCENE = "Interaction";
@@ -118,7 +125,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	private GestureDetectorCompat gestureObject;
 	private Integer selectedScene = 2;
 	private Integer prevScene = 2;
-	int camLensFacing = CameraCharacteristics.LENS_FACING_BACK;
+	private int camLensFacing = CameraCharacteristics.LENS_FACING_BACK;
 	private boolean isRecording = false;
 	private Chronometer chronometer;
 	private String cameraPreviewResult;
@@ -129,6 +136,22 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	private SceneSelectorAdapter sceneSelectorAdapter;
 	private boolean moreScenes = false;
 	private String currentScene;
+
+	private double progressValue;
+	private SeekBar lightSeekBar;
+	private TextView seekBarProgressText;
+	private int aeRange;
+	private CameraManager cameraManager;
+	private float fingerSpacing = 0;
+	private int zoomLevel = 1;
+	private float[] availableFocalLengths;
+	private Float maxDigitalZoom;
+
+	private ScaleGestureDetector scaleGestureDetector;
+	private float scale = 10f;
+	private TextView zoomCaption;
+	private Rect activePixesAfter;
+	private Rect zoom;
 
 	private final ImageReader.OnImageAvailableListener onImageAvailableListener = new ImageReader.OnImageAvailableListener() {
 		@Override
@@ -202,6 +225,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	private TextureView.SurfaceTextureListener surfaceTextureListener = new TextureView.SurfaceTextureListener() {
 		@Override public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int width, int height) {
 			setUpCamera(width, height);
+			transformImage(width, height);
 			connectCamera();
 		}
 
@@ -269,8 +293,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	}
 
 	private void setUpCamera(int width, int height) {
-		CameraManager cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
-
+		cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
 		try{
 			for(String camID: cameraManager.getCameraIdList()){
 				CameraCharacteristics cameraCharacteristics = cameraManager.getCameraCharacteristics(camID);
@@ -294,6 +317,11 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 					imageReader = ImageReader.newInstance(imageSize.getWidth(), imageSize.getHeight(), ImageFormat.JPEG, 1);
 					imageReader.setOnImageAvailableListener(onImageAvailableListener, backgroundHandler);
 					cameraID = camID;
+					aeRange = cameraCharacteristics.get(CameraCharacteristics.CONTROL_AE_COMPENSATION_RANGE).getUpper();
+
+					availableFocalLengths = cameraCharacteristics.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS);
+					activePixesAfter = cameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
+					maxDigitalZoom = cameraCharacteristics.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM) * 10;
 					return;
 				}
 			}
@@ -384,17 +412,6 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 				}
 			} else {
 				cameraManager.openCamera(cameraID, cameraDeviceStateCallback, backgroundHandler);
-			}
-		} catch (CameraAccessException e) {
-			e.printStackTrace();
-		}
-	}
-
-	private void enableFlashMode() {
-		CameraManager cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
-		try {
-			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-				cameraManager.setTorchMode(cameraID, true);
 			}
 		} catch (CameraAccessException e) {
 			e.printStackTrace();
@@ -496,20 +513,18 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 		}
 	}
 
-	public File createVideoFileName() throws IOException {
+	public void createVideoFileName() throws IOException {
 		String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
 		String prepend = "VID_" + timestamp;
 		File videoFile = File.createTempFile(prepend, ".mp4", videoFolder);
 		videoFileName = videoFile.getAbsolutePath();
-		return videoFile;
 	}
 
-	public File createImageFileName() throws IOException {
+	public void createImageFileName() throws IOException {
 		String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
 		String prepend = "IMG_" + timestamp;
 		File imageFile = File.createTempFile(prepend, ".jpg", imageFolder);
 		imageFileName = imageFile.getAbsolutePath();
-		return imageFile;
 	}
 
 	private void checkWriteStoragePermission() {
@@ -652,6 +667,9 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 					break;
 			}
 
+			captureRequestBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoom);
+			captureRequestBuilder.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION, (int) progressValue);
+
 			CameraCaptureSession.CaptureCallback stillCaptureCallback = new CameraCaptureSession.CaptureCallback() {
 				@Override
 				public void onCaptureStarted(@NonNull CameraCaptureSession session,
@@ -750,6 +768,28 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 		swipeScenes(selectedScene, prevScene);
 	}
 
+	private void transformImage(int width, int height) {
+		if(prevScene == null || textureView == null) {
+			return;
+		}
+
+		Matrix matrix = new Matrix();
+		int rotation = getWindowManager().getDefaultDisplay().getRotation();
+		RectF textureRectF = new RectF(0, 0, width, height);
+		RectF previewRectF = new RectF(0, 0, previewSize.getHeight(), previewSize.getWidth());
+		float centerX = textureRectF.centerX();
+		float centerY = textureRectF.centerY();
+
+		if(rotation == Surface.ROTATION_90 || rotation == Surface.ROTATION_270) {
+			previewRectF.offset(centerX - previewRectF.centerX(), centerY - previewRectF.centerY());
+			matrix.setRectToRect(textureRectF, previewRectF, Matrix.ScaleToFit.FILL);
+			float scale = Math.max((float) width / previewSize.getWidth(), (float) height / previewSize.getHeight());
+			matrix.postScale(scale, scale, centerX, centerY);
+			matrix.postRotate(90 * (rotation - 2), centerX, centerY);
+		}
+		textureView.setTransform(matrix);
+	}
+
 	@Override
 	public void onWindowFocusChanged(boolean hasFocus) {
 		super.onWindowFocusChanged(hasFocus);
@@ -766,6 +806,9 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 
 	@Override public boolean onTouchEvent(MotionEvent event) {
 		this.gestureObject.onTouchEvent(event);
+		if(!isRecording) {
+			this.scaleGestureDetector.onTouchEvent(event);
+		}
 		return super.onTouchEvent(event);
 	}
 
@@ -775,45 +818,94 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 		startActivityForResult(sendFileAddressIntent, PREVIEW_IMAGE_RESULT);
 	}
 
+	private void zoomIn(int zoomLevel) {
+		int minWidth = (int) (activePixesAfter.width() / maxDigitalZoom);
+		int minHeight = (int) (activePixesAfter.height() / maxDigitalZoom);
+		int widthDiff = activePixesAfter.width() - minWidth;
+		int heightDiff = activePixesAfter.height() - minHeight;
+		int cropWidth = widthDiff / 100 * (int) zoomLevel;
+		int cropHeight = heightDiff / 100 * (int) zoomLevel;
+
+		cropWidth -= cropHeight & 3;
+		cropHeight -= cropHeight & 3;
+		zoom = new Rect(cropWidth, cropHeight, activePixesAfter.width() - cropWidth, activePixesAfter.height() - cropHeight);
+		captureRequestBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoom);
+		applySettings();
+	}
+
+	private class ScaleListener implements ScaleGestureDetector.OnScaleGestureListener {
+		float onScaleBegin = 0;
+		float onScaleEnd = 0;
+
+		@Override public boolean onScale(ScaleGestureDetector scaleGestureDetector) {
+			if(scale > maxDigitalZoom) {
+				scale = 10f;
+				onScaleBegin = 0;
+				onScaleEnd = 0;
+			}
+			zoomCaption.setVisibility(View.VISIBLE);
+			scale *= scaleGestureDetector.getScaleFactor();
+			zoomCaption.setText(String.format("Zoom: %s", String.valueOf((int) scale)));
+			return true;
+		}
+
+		@Override public boolean onScaleBegin(ScaleGestureDetector scaleGestureDetector) {
+			onScaleBegin = scale;
+			return true;
+		}
+
+		@Override public void onScaleEnd(ScaleGestureDetector scaleGestureDetector) {
+			onScaleEnd = scale;
+			if(onScaleEnd > onScaleBegin){
+				Log.d(TAG, "Scaled up by: " + String.valueOf(onScaleEnd/onScaleBegin));
+				Log.d(TAG, "Max Zoom: " + String.valueOf(maxDigitalZoom));
+			} else {
+				Log.d(TAG, "Scaled down by: " + String.valueOf(onScaleBegin/onScaleEnd));
+			}
+			zoomIn((int) onScaleEnd);
+			zoomCaption.setVisibility(View.INVISIBLE);
+		}
+	}
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_camera);
 
-		sceneRecyclerView = (RecyclerView) findViewById(R.id.scene_recylcer_view);
-		layoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
-		sceneRecyclerView.setLayoutManager(layoutManager);
-
 		gestureObject = new GestureDetectorCompat(this, new LearnGesture());
+		scaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener());
+
+		initializeObjects();
+		// Initializes the scenes with the relevant scene images
+		initializeScenes();
 
 		createImageFolder();
 		createVideoFolder();
-
-		mediaRecorder = new MediaRecorder();
-
-		chronometer = (Chronometer) findViewById(R.id.chronometer2);
-		textureView = (TextureView) findViewById(R.id.tv_camera);
-		capturePictureBtn = (ImageView) findViewById(R.id.img_capture);
-		openGalleryBtn = (ImageView) findViewById(R.id.img_gallery);
-		swapCameraBtn = (ImageView) findViewById(R.id.img_switch_camera);
-		flashModeBtn = (ImageView) findViewById(R.id.img_flash_btn);
-		swipeText = (TextView) findViewById(R.id.txt_swipe_caption);
-
-		switcher1 = (ImageSwitcher) findViewById(R.id.sw_swipe_1);
-		switcher2 = (ImageSwitcher) findViewById(R.id.sw_swipe_2);
-		switcher3 = (ImageSwitcher) findViewById(R.id.sw_swipe_3);
-		switcher4 = (ImageSwitcher) findViewById(R.id.sw_swipe_4);
-		switcher5 = (ImageSwitcher) findViewById(R.id.sw_swipe_5);
-		imgOverlay = (ImageView) findViewById(R.id.img_overlay);
-
-		// Initializes the scenes with the relevant scene images
-		initializeScenes();
 
 		Toast.makeText(getApplicationContext(), R.string.interaction_scene, Toast.LENGTH_SHORT).show();
 		currentScene = INTERACTION_SCENE;
 
 		// Creates the swipe buttons and initializes the initial overlay image
 		initializeCameraInterface();
+
+		lightSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+			@Override public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+				progressValue = round(((double)progress / PROGRESS_MAX) * aeRange, 2);
+				if(progress < PROGRESS_MIN) {
+					progressValue = (aeRange - progressValue) * -1;
+				}
+				seekBarProgressText.setText(Double.toString(progressValue));
+			}
+
+			@Override public void onStartTrackingTouch(SeekBar seekBar) {
+				seekBarProgressText.setVisibility(View.VISIBLE);
+			}
+
+			@Override public void onStopTrackingTouch(SeekBar seekBar) {
+				increaseBrightness(progressValue);
+				seekBarProgressText.setVisibility(View.INVISIBLE);
+			}
+		});
 
 		switcher1.setOnClickListener(new View.OnClickListener() {
 			@Override public void onClick(View view) {
@@ -936,6 +1028,54 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 
 	}
 
+	private void initializeObjects() {
+		mediaRecorder = new MediaRecorder();
+		sceneRecyclerView = (RecyclerView) findViewById(R.id.scene_recylcer_view);
+		layoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
+		sceneRecyclerView.setLayoutManager(layoutManager);
+
+		chronometer = (Chronometer) findViewById(R.id.chronometer2);
+		textureView = (TextureView) findViewById(R.id.tv_camera);
+		capturePictureBtn = (ImageView) findViewById(R.id.img_capture);
+		openGalleryBtn = (ImageView) findViewById(R.id.img_gallery);
+		swapCameraBtn = (ImageView) findViewById(R.id.img_switch_camera);
+		flashModeBtn = (ImageView) findViewById(R.id.img_flash_btn);
+		swipeText = (TextView) findViewById(R.id.txt_swipe_caption);
+
+		switcher1 = (ImageSwitcher) findViewById(R.id.sw_swipe_1);
+		switcher2 = (ImageSwitcher) findViewById(R.id.sw_swipe_2);
+		switcher3 = (ImageSwitcher) findViewById(R.id.sw_swipe_3);
+		switcher4 = (ImageSwitcher) findViewById(R.id.sw_swipe_4);
+		switcher5 = (ImageSwitcher) findViewById(R.id.sw_swipe_5);
+		imgOverlay = (ImageView) findViewById(R.id.img_overlay);
+
+		seekBarProgressText = (TextView) findViewById(R.id.txt_seekbar_progress);
+		lightSeekBar = (SeekBar) findViewById(R.id.seekbar_light);
+		zoomCaption = (TextView) findViewById(R.id.txt_zoom_caption);
+	}
+
+	private void increaseBrightness(double progressValue) {
+		captureRequestBuilder.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION, (int) progressValue);
+		applySettings();
+	}
+
+	private void applySettings() {
+		try {
+			previewCaptureSession.setRepeatingRequest(captureRequestBuilder.build(), null, null);
+		} catch (CameraAccessException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private double round(double value, int places) {
+		if (places < 0) throw new IllegalArgumentException();
+
+		long factor = (long) Math.pow(10, places);
+		value = value * factor;
+		long tmp = Math.round(value);
+		return (double) tmp / factor;
+	}
+
 	private void setSceneAdapter(String scene) {
 		swipeScenes(selectedScene, prevScene);
 		showSceneSwitcher();
@@ -957,6 +1097,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 		switcher4.setVisibility(View.INVISIBLE);
 		switcher5.setVisibility(View.INVISIBLE);
 		flashModeBtn.setVisibility(View.INVISIBLE);
+		lightSeekBar.setVisibility(View.INVISIBLE);
 	}
 
 	private void showSceneIcons() {
@@ -966,9 +1107,12 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 		switcher4.setVisibility(View.VISIBLE);
 		switcher5.setVisibility(View.VISIBLE);
 		flashModeBtn.setVisibility(View.VISIBLE);
+		lightSeekBar.setVisibility(View.VISIBLE);
 	}
 
 	private void initializeScenes() {
+		seekBarProgressText.setVisibility(View.INVISIBLE);
+		zoomCaption.setVisibility(View.INVISIBLE);
 		hideSceneSwitcher();
 		portrait = new ArrayList<Integer>() {
 			{
@@ -1049,6 +1193,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 
 		if(textureView.isAvailable()) {
 			setUpCamera(textureView.getWidth(), textureView.getHeight());
+			transformImage(textureView.getWidth(), textureView.getHeight());
 			connectCamera();
 		} else {
 			textureView.setSurfaceTextureListener(surfaceTextureListener);
@@ -1087,6 +1232,57 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 				showSceneSwitcher();
 				sceneSelectorAdapter = new SceneSelectorAdapter(CameraActivity.this, currentScene, overlayScenes.get(currentScene));
 				sceneRecyclerView.setAdapter(sceneSelectorAdapter);
+			}
+
+			private float getFingerSpacing(MotionEvent e) {
+				float x = e.getX(0) - e.getX(1);
+				float y = e.getY(0) - e.getY(1);
+				return (float) Math.sqrt(x * x + y * y);
+			}
+
+			@Override public boolean onSingleTapUp(MotionEvent e) {
+				float maxZoom;
+				int action;
+				float currentFingerPlacing;
+
+				try {
+					CameraCharacteristics cameraCharacteristics = cameraManager.getCameraCharacteristics(cameraID);
+					maxZoom = cameraCharacteristics.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM) * 10;
+					Rect activePixesAfter = cameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
+					action = e.getAction();
+
+					if(e.getPointerCount() > 1) {
+						// Multitouch logic
+						currentFingerPlacing = getFingerSpacing(e);
+						if(fingerSpacing != 0) {
+							if (currentFingerPlacing > fingerSpacing && maxZoom > zoomLevel) {
+								zoomLevel++;
+							} else if (currentFingerPlacing < fingerSpacing && maxZoom > 1) {
+								zoomLevel--;
+							}
+							int minWidth = (int) (activePixesAfter.width() / maxZoom);
+							int minHeight = (int) (activePixesAfter.height() / maxZoom);
+							int widthDiff = activePixesAfter.width() - minWidth;
+							int heightDiff = activePixesAfter.height() - minHeight;
+							int cropWidth = widthDiff / 100 * (int) zoomLevel;
+							int cropHeight = heightDiff / 100 * (int) zoomLevel;
+
+							cropWidth -= cropHeight & 3;
+							cropHeight -= cropHeight & 3;
+							Rect zoom = new Rect(cropWidth, cropHeight, activePixesAfter.width() - cropWidth, activePixesAfter.height() - cropHeight);
+							captureRequestBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoom);
+						}
+						fingerSpacing = currentFingerPlacing;
+					} else {
+						if(action == MotionEvent.ACTION_UP) {
+							// Single touch event action
+						}
+					}
+					applySettings();
+				} catch (CameraAccessException e1) {
+					e1.printStackTrace();
+				}
+				return super.onSingleTapUp(e);
 			}
 		}
 
