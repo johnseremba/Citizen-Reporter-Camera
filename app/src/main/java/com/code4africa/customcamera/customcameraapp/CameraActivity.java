@@ -151,6 +151,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	private float scale = 10f;
 	private TextView zoomCaption;
 	private Rect activePixesAfter;
+	private Rect zoom;
 
 	private final ImageReader.OnImageAvailableListener onImageAvailableListener = new ImageReader.OnImageAvailableListener() {
 		@Override
@@ -321,9 +322,6 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 					availableFocalLengths = cameraCharacteristics.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS);
 					activePixesAfter = cameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
 					maxDigitalZoom = cameraCharacteristics.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM) * 10;
-
-					Log.d(TAG, "Zoom: " + availableFocalLengths);
-					Log.d(TAG, "Max Zoom: " + maxDigitalZoom);
 					return;
 				}
 			}
@@ -671,6 +669,8 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 					break;
 			}
 
+			captureRequestBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoom);
+
 			CameraCaptureSession.CaptureCallback stillCaptureCallback = new CameraCaptureSession.CaptureCallback() {
 				@Override
 				public void onCaptureStarted(@NonNull CameraCaptureSession session,
@@ -827,7 +827,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 
 		cropWidth -= cropHeight & 3;
 		cropHeight -= cropHeight & 3;
-		Rect zoom = new Rect(cropWidth, cropHeight, activePixesAfter.width() - cropWidth, activePixesAfter.height() - cropHeight);
+		zoom = new Rect(cropWidth, cropHeight, activePixesAfter.width() - cropWidth, activePixesAfter.height() - cropHeight);
 		captureRequestBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoom);
 		applySettings();
 	}
@@ -844,7 +844,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 			}
 			zoomCaption.setVisibility(View.VISIBLE);
 			scale *= scaleGestureDetector.getScaleFactor();
-			zoomCaption.setText("Zoom: " + String.valueOf((int)scale));
+			zoomCaption.setText(String.format("Zoom: %s", String.valueOf((int) scale)));
 			return true;
 		}
 
@@ -863,7 +863,6 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 			}
 			zoomIn((int) onScaleEnd);
 			zoomCaption.setVisibility(View.INVISIBLE);
-			//Toast.makeText(getApplicationContext(), "Scale End: " + onScaleEnd, Toast.LENGTH_SHORT).show();
 		}
 	}
 
