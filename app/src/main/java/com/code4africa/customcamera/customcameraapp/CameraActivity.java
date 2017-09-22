@@ -149,6 +149,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	private Float maxDigitalZoom;
 
 	private ScaleGestureDetector scaleGestureDetector;
+	private float scale = 1f;
 
 	private Button zoomBtn;
 
@@ -806,6 +807,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 
 	@Override public boolean onTouchEvent(MotionEvent event) {
 		this.gestureObject.onTouchEvent(event);
+		this.scaleGestureDetector.onTouchEvent(event);
 		return super.onTouchEvent(event);
 	}
 
@@ -816,16 +818,29 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	}
 
 	private class ScaleListender implements ScaleGestureDetector.OnScaleGestureListener {
+		float onScaleBegin = 0;
+		float onScaleEnd = 0;
+
 		@Override public boolean onScale(ScaleGestureDetector scaleGestureDetector) {
+			scale *= scaleGestureDetector.getScaleFactor();
 			return true;
 		}
 
 		@Override public boolean onScaleBegin(ScaleGestureDetector scaleGestureDetector) {
+			onScaleBegin = scale;
+			Toast.makeText(getApplicationContext(), "Sacale Begin: " + onScaleBegin, Toast.LENGTH_SHORT).show();
 			return true;
 		}
 
 		@Override public void onScaleEnd(ScaleGestureDetector scaleGestureDetector) {
-
+			onScaleEnd = scale;
+			if(onScaleEnd > onScaleBegin){
+				Log.d(TAG, "Scaled up by: " + String.valueOf(onScaleEnd/onScaleBegin));
+			} else {
+				Log.d(TAG, "Scaled down by: " + String.valueOf(onScaleBegin/onScaleEnd));
+			}
+			Log.d(TAG, "New Scale: " + String.valueOf(onScaleEnd));
+			Toast.makeText(getApplicationContext(), "Scale End: " + onScaleEnd, Toast.LENGTH_SHORT).show();
 		}
 	}
 
