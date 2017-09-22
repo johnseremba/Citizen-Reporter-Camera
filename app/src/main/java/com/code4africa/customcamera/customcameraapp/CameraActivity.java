@@ -513,20 +513,18 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 		}
 	}
 
-	public File createVideoFileName() throws IOException {
+	public void createVideoFileName() throws IOException {
 		String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
 		String prepend = "VID_" + timestamp;
 		File videoFile = File.createTempFile(prepend, ".mp4", videoFolder);
 		videoFileName = videoFile.getAbsolutePath();
-		return videoFile;
 	}
 
-	public File createImageFileName() throws IOException {
+	public void createImageFileName() throws IOException {
 		String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
 		String prepend = "IMG_" + timestamp;
 		File imageFile = File.createTempFile(prepend, ".jpg", imageFolder);
 		imageFileName = imageFile.getAbsolutePath();
-		return imageFile;
 	}
 
 	private void checkWriteStoragePermission() {
@@ -808,7 +806,9 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 
 	@Override public boolean onTouchEvent(MotionEvent event) {
 		this.gestureObject.onTouchEvent(event);
-		this.scaleGestureDetector.onTouchEvent(event);
+		if(!isRecording) {
+			this.scaleGestureDetector.onTouchEvent(event);
+		}
 		return super.onTouchEvent(event);
 	}
 
@@ -1097,6 +1097,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 		switcher4.setVisibility(View.INVISIBLE);
 		switcher5.setVisibility(View.INVISIBLE);
 		flashModeBtn.setVisibility(View.INVISIBLE);
+		lightSeekBar.setVisibility(View.INVISIBLE);
 	}
 
 	private void showSceneIcons() {
@@ -1106,6 +1107,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 		switcher4.setVisibility(View.VISIBLE);
 		switcher5.setVisibility(View.VISIBLE);
 		flashModeBtn.setVisibility(View.VISIBLE);
+		lightSeekBar.setVisibility(View.VISIBLE);
 	}
 
 	private void initializeScenes() {
