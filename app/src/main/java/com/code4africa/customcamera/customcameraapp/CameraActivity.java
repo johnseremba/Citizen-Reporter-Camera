@@ -46,6 +46,7 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.hardware.camera2.CameraDevice;
+import android.widget.Button;
 import android.widget.Chronometer;
 import android.widget.ImageSwitcher;
 import android.widget.ImageView;
@@ -143,6 +144,10 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	private CameraManager cameraManager;
 	private float fingerSpacing = 0;
 	private int zoomLevel = 1;
+	private float[] availableFocalLengths;
+	private Float maxDigitalZoom;
+
+	private Button zoomBtn;
 
 	private final ImageReader.OnImageAvailableListener onImageAvailableListener = new ImageReader.OnImageAvailableListener() {
 		@Override
@@ -309,9 +314,12 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 					imageReader.setOnImageAvailableListener(onImageAvailableListener, backgroundHandler);
 					cameraID = camID;
 					aeRange = cameraCharacteristics.get(CameraCharacteristics.CONTROL_AE_COMPENSATION_RANGE).getUpper();
-					float[] zoomz = cameraCharacteristics.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS);
-					Log.d(TAG, "Zoom: " + zoomz);
-					Log.d(TAG, "Lengths: " + zoomz.length);
+
+					availableFocalLengths = cameraCharacteristics.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS);
+					maxDigitalZoom = cameraCharacteristics.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM);
+
+					Log.d(TAG, "Zoom: " + availableFocalLengths);
+					Log.d(TAG, "Max Zoom: " + maxDigitalZoom);
 					return;
 				}
 			}
@@ -765,7 +773,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 		Matrix matrix = new Matrix();
 		int rotation = getWindowManager().getDefaultDisplay().getRotation();
 		RectF textureRectF = new RectF(0, 0, width, height);
-		RectF previewRectF = new RectF(0, 0, previewSize.getWidth(), previewSize.getHeight());
+		RectF previewRectF = new RectF(0, 0, previewSize.getHeight(), previewSize.getWidth());
 		float centerX = textureRectF.centerX();
 		float centerY = textureRectF.centerY();
 
@@ -987,6 +995,8 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 
 		seekBarProgressText = (TextView) findViewById(R.id.txt_seekbar_progress);
 		lightSeekBar = (SeekBar) findViewById(R.id.seekbar_light);
+
+		zoomBtn = (Button) findViewById(R.id.btn_zoom);
 	}
 
 	private void increaseBrightness(double progressValue) {
