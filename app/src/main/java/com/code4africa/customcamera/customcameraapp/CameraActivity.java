@@ -670,6 +670,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 			}
 
 			captureRequestBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoom);
+			captureRequestBuilder.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION, (int) progressValue);
 
 			CameraCaptureSession.CaptureCallback stillCaptureCallback = new CameraCaptureSession.CaptureCallback() {
 				@Override
