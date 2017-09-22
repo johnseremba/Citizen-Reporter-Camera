@@ -832,6 +832,41 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 		// Creates the swipe buttons and initializes the initial overlay image
 		initializeCameraInterface();
 
+		zoomBtn.setOnClickListener(new View.OnClickListener() {
+			@Override public void onClick(View view) {
+
+				float maxZoom;
+				int action;
+				float currentFingerPlacing;
+
+				try {
+					CameraCharacteristics cameraCharacteristics = cameraManager.getCameraCharacteristics(cameraID);
+					maxZoom = cameraCharacteristics.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM) * 10;
+					Rect activePixesAfter = cameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
+					zoomLevel++;
+					int minWidth = (int) (activePixesAfter.width() / maxZoom);
+					int minHeight = (int) (activePixesAfter.height() / maxZoom);
+					int widthDiff = activePixesAfter.width() - minWidth;
+					int heightDiff = activePixesAfter.height() - minHeight;
+					int cropWidth = widthDiff / 100 * (int) zoomLevel;
+					int cropHeight = heightDiff / 100 * (int) zoomLevel;
+
+
+					Log.d(TAG, "Max Level: " + maxZoom);
+
+					cropWidth -= cropHeight & 3;
+					cropHeight -= cropHeight & 3;
+					Rect zoom = new Rect(cropWidth, cropHeight, activePixesAfter.width() - cropWidth, activePixesAfter.height() - cropHeight);
+					captureRequestBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoom);
+					applySettings();
+				} catch (CameraAccessException e1) {
+					e1.printStackTrace();
+				}
+
+				Toast.makeText(CameraActivity.this, "Zoom clicked!", Toast.LENGTH_SHORT).show();
+			}
+		});
+
 		lightSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 			@Override public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
 				progressValue = round(((double)progress / PROGRESS_MAX) * aeRange, 2);
