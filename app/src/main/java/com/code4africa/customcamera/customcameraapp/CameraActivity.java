@@ -47,7 +47,6 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.hardware.camera2.CameraDevice;
-import android.widget.Button;
 import android.widget.Chronometer;
 import android.widget.ImageSwitcher;
 import android.widget.ImageView;
@@ -815,7 +814,34 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 		startActivityForResult(sendFileAddressIntent, PREVIEW_IMAGE_RESULT);
 	}
 
-	private class ScaleListender implements ScaleGestureDetector.OnScaleGestureListener {
+	private void zoomIn(int zoomLevel) {
+		float maxZoom;
+		int action;
+		float currentFingerPlacing;
+
+		try {
+			CameraCharacteristics cameraCharacteristics = cameraManager.getCameraCharacteristics(cameraID);
+			maxZoom = cameraCharacteristics.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM) * 10;
+			Rect activePixesAfter = cameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
+
+			int minWidth = (int) (activePixesAfter.width() / maxZoom);
+			int minHeight = (int) (activePixesAfter.height() / maxZoom);
+			int widthDiff = activePixesAfter.width() - minWidth;
+			int heightDiff = activePixesAfter.height() - minHeight;
+			int cropWidth = widthDiff / 100 * (int) zoomLevel;
+			int cropHeight = heightDiff / 100 * (int) zoomLevel;
+
+			cropWidth -= cropHeight & 3;
+			cropHeight -= cropHeight & 3;
+			Rect zoom = new Rect(cropWidth, cropHeight, activePixesAfter.width() - cropWidth, activePixesAfter.height() - cropHeight);
+			captureRequestBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoom);
+			applySettings();
+		} catch (CameraAccessException e1) {
+			e1.printStackTrace();
+		}
+	}
+
+	private class ScaleListener implements ScaleGestureDetector.OnScaleGestureListener {
 		float onScaleBegin = 0;
 		float onScaleEnd = 0;
 
@@ -826,7 +852,6 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 
 		@Override public boolean onScaleBegin(ScaleGestureDetector scaleGestureDetector) {
 			onScaleBegin = scale;
-			Toast.makeText(getApplicationContext(), "Sacale Begin: " + onScaleBegin, Toast.LENGTH_SHORT).show();
 			return true;
 		}
 
@@ -837,8 +862,8 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 			} else {
 				Log.d(TAG, "Scaled down by: " + String.valueOf(onScaleBegin/onScaleEnd));
 			}
-			Log.d(TAG, "New Scale: " + String.valueOf(onScaleEnd));
-			Toast.makeText(getApplicationContext(), "Scale End: " + onScaleEnd, Toast.LENGTH_SHORT).show();
+			zoomIn((int) onScaleEnd);
+			//Toast.makeText(getApplicationContext(), "Scale End: " + onScaleEnd, Toast.LENGTH_SHORT).show();
 		}
 	}
 
@@ -848,7 +873,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 		setContentView(R.layout.activity_camera);
 
 		gestureObject = new GestureDetectorCompat(this, new LearnGesture());
-		scaleGestureDetector = new ScaleGestureDetector(this, new ScaleListender());
+		scaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener());
 
 		initializeObjects();
 		// Initializes the scenes with the relevant scene images

@@ -227,4 +227,16 @@
       app:layout_constraintEnd_toEndOf="@+id/seekbar_light"
       app:layout_constraintStart_toStartOf="@+id/seekbar_light"
       />
+  <TextView
+      android:id="@+id/txt_zoom_caption"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_marginEnd="8dp"
+      android:padding="5dp"
+      android:layout_marginStart="8dp"
+      android:background="@drawable/layout_bg"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toBottomOf="@+id/img_flash_btn"
+      />
 </android.support.constraint.ConstraintLayout>
