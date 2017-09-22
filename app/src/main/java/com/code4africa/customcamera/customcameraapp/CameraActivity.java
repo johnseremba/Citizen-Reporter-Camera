@@ -216,6 +216,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	private TextureView.SurfaceTextureListener surfaceTextureListener = new TextureView.SurfaceTextureListener() {
 		@Override public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int width, int height) {
 			setUpCamera(width, height);
+			transformImage(width, height);
 			connectCamera();
 		}
 
@@ -1124,6 +1125,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 
 		if(textureView.isAvailable()) {
 			setUpCamera(textureView.getWidth(), textureView.getHeight());
+			transformImage(textureView.getWidth(), textureView.getHeight());
 			connectCamera();
 		} else {
 			textureView.setSurfaceTextureListener(surfaceTextureListener);

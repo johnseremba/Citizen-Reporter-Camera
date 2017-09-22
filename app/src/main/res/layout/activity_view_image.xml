@@ -23,7 +23,7 @@
       app:layout_constraintBottom_toBottomOf="parent"
       app:layout_constraintEnd_toEndOf="parent"
       app:layout_constraintStart_toStartOf="parent"
-      android:alpha="1"
+      android:alpha="0.5"
       tools:layout_editor_absoluteY="435dp"
       />
   <ImageView
