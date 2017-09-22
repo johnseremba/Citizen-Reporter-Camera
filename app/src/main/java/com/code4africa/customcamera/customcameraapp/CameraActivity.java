@@ -151,8 +151,6 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	private ScaleGestureDetector scaleGestureDetector;
 	private float scale = 1f;
 
-	private Button zoomBtn;
-
 	private final ImageReader.OnImageAvailableListener onImageAvailableListener = new ImageReader.OnImageAvailableListener() {
 		@Override
 		public void onImageAvailable(ImageReader reader) {
@@ -865,41 +863,6 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 		// Creates the swipe buttons and initializes the initial overlay image
 		initializeCameraInterface();
 
-		zoomBtn.setOnClickListener(new View.OnClickListener() {
-			@Override public void onClick(View view) {
-
-				float maxZoom;
-				int action;
-				float currentFingerPlacing;
-
-				try {
-					CameraCharacteristics cameraCharacteristics = cameraManager.getCameraCharacteristics(cameraID);
-					maxZoom = cameraCharacteristics.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM) * 10;
-					Rect activePixesAfter = cameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
-					zoomLevel++;
-					int minWidth = (int) (activePixesAfter.width() / maxZoom);
-					int minHeight = (int) (activePixesAfter.height() / maxZoom);
-					int widthDiff = activePixesAfter.width() - minWidth;
-					int heightDiff = activePixesAfter.height() - minHeight;
-					int cropWidth = widthDiff / 100 * (int) zoomLevel;
-					int cropHeight = heightDiff / 100 * (int) zoomLevel;
-
-
-					Log.d(TAG, "Max Level: " + maxZoom);
-
-					cropWidth -= cropHeight & 3;
-					cropHeight -= cropHeight & 3;
-					Rect zoom = new Rect(cropWidth, cropHeight, activePixesAfter.width() - cropWidth, activePixesAfter.height() - cropHeight);
-					captureRequestBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoom);
-					applySettings();
-				} catch (CameraAccessException e1) {
-					e1.printStackTrace();
-				}
-
-				Toast.makeText(CameraActivity.this, "Zoom clicked!", Toast.LENGTH_SHORT).show();
-			}
-		});
-
 		lightSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 			@Override public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
 				progressValue = round(((double)progress / PROGRESS_MAX) * aeRange, 2);
@@ -1063,8 +1026,6 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 
 		seekBarProgressText = (TextView) findViewById(R.id.txt_seekbar_progress);
 		lightSeekBar = (SeekBar) findViewById(R.id.seekbar_light);
-
-		zoomBtn = (Button) findViewById(R.id.btn_zoom);
 	}
 
 	private void increaseBrightness(double progressValue) {
