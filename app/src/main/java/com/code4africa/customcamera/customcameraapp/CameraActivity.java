@@ -6,7 +6,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.ImageFormat;
+import android.graphics.Matrix;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
@@ -752,6 +754,28 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 		switcher4.setImageResource(R.drawable.ic_circular);
 		switcher5.setImageResource(R.drawable.ic_circular);
 		swipeScenes(selectedScene, prevScene);
+	}
+
+	private void transformImage(int width, int height) {
+		if(prevScene == null || textureView == null) {
+			return;
+		}
+
+		Matrix matrix = new Matrix();
+		int rotation = getWindowManager().getDefaultDisplay().getRotation();
+		RectF textureRectF = new RectF(0, 0, width, height);
+		RectF previewRectF = new RectF(0, 0, previewSize.getWidth(), previewSize.getHeight());
+		float centerX = textureRectF.centerX();
+		float centerY = textureRectF.centerY();
+
+		if(rotation == Surface.ROTATION_90 || rotation == Surface.ROTATION_270) {
+			previewRectF.offset(centerX - previewRectF.centerX(), centerY - previewRectF.centerY());
+			matrix.setRectToRect(textureRectF, previewRectF, Matrix.ScaleToFit.FILL);
+			float scale = Math.max((float) width / previewSize.getWidth(), (float) height / previewSize.getHeight());
+			matrix.postScale(scale, scale, centerX, centerY);
+			matrix.postRotate(90 * (rotation - 2), centerX, centerY);
+		}
+		textureView.setTransform(matrix);
 	}
 
 	@Override
