@@ -42,6 +42,7 @@ import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
@@ -146,6 +147,8 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	private int zoomLevel = 1;
 	private float[] availableFocalLengths;
 	private Float maxDigitalZoom;
+
+	private ScaleGestureDetector scaleGestureDetector;
 
 	private Button zoomBtn;
 
@@ -812,12 +815,27 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 		startActivityForResult(sendFileAddressIntent, PREVIEW_IMAGE_RESULT);
 	}
 
+	private class ScaleListender implements ScaleGestureDetector.OnScaleGestureListener {
+		@Override public boolean onScale(ScaleGestureDetector scaleGestureDetector) {
+			return true;
+		}
+
+		@Override public boolean onScaleBegin(ScaleGestureDetector scaleGestureDetector) {
+			return true;
+		}
+
+		@Override public void onScaleEnd(ScaleGestureDetector scaleGestureDetector) {
+
+		}
+	}
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_camera);
 
 		gestureObject = new GestureDetectorCompat(this, new LearnGesture());
+		scaleGestureDetector = new ScaleGestureDetector(this, new ScaleListender());
 
 		initializeObjects();
 		// Initializes the scenes with the relevant scene images
