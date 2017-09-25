@@ -1268,19 +1268,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 				sceneRecyclerView.setAdapter(sceneSelectorAdapter);
 			}
 
-			private float getFingerSpacing(MotionEvent e) {
-				float x = e.getX(0) - e.getX(1);
-				float y = e.getY(0) - e.getY(1);
-				return (float) Math.sqrt(x * x + y * y);
-			}
-
 			@Override public boolean onSingleTapUp(MotionEvent e) {
-				final int actionMasked = e.getActionMasked();
-
-				//if(actionMasked != MotionEvent.ACTION_DOWN) {
-				//	return false;
-				//}
-
 				if(manualFocusEnguaged) {
 					Log.d(TAG, "Manual focus already engaged!");
 					return true;
@@ -1328,9 +1316,6 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 					e1.printStackTrace();
 				}
 				manualFocusEnguaged = true;
-				Toast.makeText(getApplicationContext(), "Focused", Toast.LENGTH_SHORT).show();
-
-				//return super.onSingleTapUp(e);
 				return true;
 			}
 		}
