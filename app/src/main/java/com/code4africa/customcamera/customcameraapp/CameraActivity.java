@@ -1264,47 +1264,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 			}
 
 			@Override public boolean onSingleTapUp(MotionEvent e) {
-				float maxZoom;
-				int action;
-				float currentFingerPlacing;
 
-				try {
-					CameraCharacteristics cameraCharacteristics = cameraManager.getCameraCharacteristics(cameraID);
-					maxZoom = cameraCharacteristics.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM) * 10;
-					Rect activePixesAfter = cameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
-					action = e.getAction();
-
-					if(e.getPointerCount() > 1) {
-						// Multitouch logic
-						currentFingerPlacing = getFingerSpacing(e);
-						if(fingerSpacing != 0) {
-							if (currentFingerPlacing > fingerSpacing && maxZoom > zoomLevel) {
-								zoomLevel++;
-							} else if (currentFingerPlacing < fingerSpacing && maxZoom > 1) {
-								zoomLevel--;
-							}
-							int minWidth = (int) (activePixesAfter.width() / maxZoom);
-							int minHeight = (int) (activePixesAfter.height() / maxZoom);
-							int widthDiff = activePixesAfter.width() - minWidth;
-							int heightDiff = activePixesAfter.height() - minHeight;
-							int cropWidth = widthDiff / 100 * (int) zoomLevel;
-							int cropHeight = heightDiff / 100 * (int) zoomLevel;
-
-							cropWidth -= cropHeight & 3;
-							cropHeight -= cropHeight & 3;
-							Rect zoom = new Rect(cropWidth, cropHeight, activePixesAfter.width() - cropWidth, activePixesAfter.height() - cropHeight);
-							captureRequestBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoom);
-						}
-						fingerSpacing = currentFingerPlacing;
-					} else {
-						if(action == MotionEvent.ACTION_UP) {
-							// Single touch event action
-						}
-					}
-					applySettings();
-				} catch (CameraAccessException e1) {
-					e1.printStackTrace();
-				}
 				return super.onSingleTapUp(e);
 			}
 		}
