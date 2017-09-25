@@ -38,6 +38,7 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.util.Rational;
 import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.GestureDetector;
@@ -159,6 +160,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 			backgroundHandler.post(new ImageSaver(reader.acquireLatestImage()));
 		}
 	};
+	private Rational compesationStep;
 
 	@Override public void OnClickScene(String sceneKey, Integer position) {
 		imgOverlay.setImageResource(overlayScenes.get(sceneKey).get(position));
@@ -318,6 +320,8 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 					imageReader.setOnImageAvailableListener(onImageAvailableListener, backgroundHandler);
 					cameraID = camID;
 					aeRange = cameraCharacteristics.get(CameraCharacteristics.CONTROL_AE_COMPENSATION_RANGE).getUpper();
+					compesationStep = cameraCharacteristics.get(CameraCharacteristics.CONTROL_AE_COMPENSATION_STEP);
+					Log.d(TAG, "Compesation Step: " + compesationStep);
 
 					availableFocalLengths = cameraCharacteristics.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS);
 					activePixesAfter = cameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
@@ -678,7 +682,10 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 			}
 
 			captureRequestBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoom);
+			captureRequestBuilder.set(CaptureRequest.CONTROL_AE_LOCK, false);
+			captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_ON);
 			captureRequestBuilder.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION, (int) progressValue);
+			captureRequestBuilder.set(CaptureRequest.CONTROL_AE_LOCK, true);
 
 			CameraCaptureSession.CaptureCallback stillCaptureCallback = new CameraCaptureSession.CaptureCallback() {
 				@Override
@@ -901,6 +908,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 		lightSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 			@Override public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
 				progressValue = round(((double)(progress - PROGRESS_MIN) / PROGRESS_MIN) * aeRange, 2);
+				//compesationStep.doubleValue() * progressValue;
 				seekBarProgressText.setText(String.format("%s", Double.toString(progressValue)));
 			}
 
@@ -1063,7 +1071,10 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	}
 
 	private void increaseBrightness(double progressValue) {
+		captureRequestBuilder.set(CaptureRequest.CONTROL_AE_LOCK, false);
+		captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_ON);
 		captureRequestBuilder.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION, (int) progressValue);
+		captureRequestBuilder.set(CaptureRequest.CONTROL_AE_LOCK, true);
 		applySettings();
 	}
 
