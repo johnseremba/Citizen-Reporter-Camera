@@ -588,6 +588,16 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 		}
 	}
 
+	private void unLockFocus() {
+		captureState = STATE_PREVIEW;
+		captureRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER, CaptureRequest.CONTROL_AF_TRIGGER_CANCEL);
+		try {
+			previewCaptureSession.capture(captureRequestBuilder.build(), previewCaptureCallback, backgroundHandler);
+		} catch (CameraAccessException e) {
+			e.printStackTrace();
+		}
+	}
+
 	@Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
 		switch(requestCode) {
@@ -890,12 +900,10 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 
 		lightSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 			@Override public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-				progressValue = round(((double)progress / PROGRESS_MAX) * aeRange, 2);
-				if(progress < PROGRESS_MIN) {
-					progressValue = (aeRange - progressValue) * -1;
-				}
-				seekBarProgressText.setText(Double.toString(progressValue));
+				progressValue = round(((double)(progress - PROGRESS_MIN) / PROGRESS_MIN) * aeRange, 2);
+				seekBarProgressText.setText(String.format("%s", Double.toString(progressValue)));
 			}
+
 
 			@Override public void onStartTrackingTouch(SeekBar seekBar) {
 				seekBarProgressText.setVisibility(View.VISIBLE);
