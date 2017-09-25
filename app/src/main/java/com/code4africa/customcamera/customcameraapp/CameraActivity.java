@@ -855,8 +855,12 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 		float onScaleEnd = 0;
 
 		@Override public boolean onScale(ScaleGestureDetector scaleGestureDetector) {
-			if(scale > maxDigitalZoom) {
-				scale = 10f;
+			if(scale >= maxDigitalZoom) {
+				scale = maxDigitalZoom;
+				onScaleBegin = 0;
+				onScaleEnd = 0;
+			} else if (scale < 1) {
+				scale = 1f;
 				onScaleBegin = 0;
 				onScaleEnd = 0;
 			}
