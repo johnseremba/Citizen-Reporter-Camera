@@ -213,17 +213,14 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 		public void onCaptureCompleted(@NonNull CameraCaptureSession session,
 				@NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
 			super.onCaptureCompleted(session, request, result);
-			process(result);
 			manualFocusEnguaged = false;
 
 			if(request.getTag() == "FOCUS_TAG") {
 				captureRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER, null);
-				try {
-					previewCaptureSession.setRepeatingRequest(captureRequestBuilder.build(), null, null);
-				} catch (CameraAccessException e) {
-					e.printStackTrace();
-				}
+				applySettings();
 			}
+
+			process(result);
 		}
 
 		private void process(CaptureResult captureResult) {
@@ -1309,7 +1306,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 
 				captureRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER, CameraMetadata.CONTROL_AF_TRIGGER_CANCEL);
 				captureRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CameraMetadata.CONTROL_AF_MODE_OFF);
-				//applySettings();
+
 				try {
 					previewCaptureSession.capture(captureRequestBuilder.build(), previewCaptureCallback, backgroundHandler);
 				} catch (CameraAccessException e1) {
@@ -1324,15 +1321,17 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 				captureRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CameraMetadata.CONTROL_AF_MODE_AUTO);
 				captureRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER, CameraMetadata.CONTROL_AF_TRIGGER_START);
 				captureRequestBuilder.setTag("FOCUS_TAG");
-				//applySettings();
+
 				try {
 					previewCaptureSession.capture(captureRequestBuilder.build(), previewCaptureCallback, backgroundHandler);
 				} catch (CameraAccessException e1) {
 					e1.printStackTrace();
 				}
 				manualFocusEnguaged = true;
+				Toast.makeText(getApplicationContext(), "Focused", Toast.LENGTH_SHORT).show();
 
-				return super.onSingleTapUp(e);
+				//return super.onSingleTapUp(e);
+				return true;
 			}
 		}
 
