@@ -18,6 +18,7 @@ import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
+import android.hardware.camera2.params.MeteringRectangle;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
 import android.media.ImageReader;
@@ -161,6 +162,9 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 		}
 	};
 	private Rational compesationStep;
+	private boolean manualFocusEnguaged = false;
+	private Rect sensorArraySize;
+	private boolean isMeteringAFAreaSuppported;
 
 	@Override public void OnClickScene(String sceneKey, Integer position) {
 		imgOverlay.setImageResource(overlayScenes.get(sceneKey).get(position));
@@ -210,6 +214,16 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 				@NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
 			super.onCaptureCompleted(session, request, result);
 			process(result);
+			manualFocusEnguaged = false;
+
+			if(request.getTag() == "FOCUS_TAG") {
+				captureRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER, null);
+				try {
+					previewCaptureSession.setRepeatingRequest(captureRequestBuilder.build(), null, null);
+				} catch (CameraAccessException e) {
+					e.printStackTrace();
+				}
+			}
 		}
 
 		private void process(CaptureResult captureResult) {
@@ -321,11 +335,12 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 					cameraID = camID;
 					aeRange = cameraCharacteristics.get(CameraCharacteristics.CONTROL_AE_COMPENSATION_RANGE).getUpper();
 					compesationStep = cameraCharacteristics.get(CameraCharacteristics.CONTROL_AE_COMPENSATION_STEP);
-					Log.d(TAG, "Compesation Step: " + compesationStep);
-
+					sensorArraySize = cameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
 					availableFocalLengths = cameraCharacteristics.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS);
 					activePixesAfter = cameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
-					maxDigitalZoom = cameraCharacteristics.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM) * 10;
+					maxDigitalZoom = cameraCharacteristics.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM);
+					isMeteringAFAreaSuppported = cameraCharacteristics.get(CameraCharacteristics.CONTROL_MAX_REGIONS_AF) >= 1;
+					maxDigitalZoom *= 10;
 					return;
 				}
 			}
@@ -912,7 +927,6 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 		lightSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 			@Override public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
 				progressValue = round(((double)(progress - PROGRESS_MIN) / PROGRESS_MIN) * aeRange, 2);
-				//compesationStep.doubleValue() * progressValue;
 				seekBarProgressText.setText(String.format("%s", Double.toString(progressValue)));
 			}
 
@@ -1264,6 +1278,59 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 			}
 
 			@Override public boolean onSingleTapUp(MotionEvent e) {
+				final int actionMasked = e.getActionMasked();
+
+				//if(actionMasked != MotionEvent.ACTION_DOWN) {
+				//	return false;
+				//}
+
+				if(manualFocusEnguaged) {
+					Log.d(TAG, "Manual focus already engaged!");
+					return true;
+				}
+
+				final int y = (int)((e.getX() / (float) textureView.getWidth()) * (float) sensorArraySize.height());
+				final int x = (int)((e.getY() / (float) textureView.getHeight()) * (float) sensorArraySize.width());
+				final int halfTouchWidth = (int) e.getTouchMajor(); // 150;
+				final int halfTouchHeight = (int) e.getTouchMinor(); //150;
+				MeteringRectangle focusArea = new MeteringRectangle(
+						Math.max(x - halfTouchWidth, 0),
+						Math.max(y - halfTouchHeight, 0),
+						halfTouchWidth * 2,
+						halfTouchHeight * 2,
+						MeteringRectangle.METERING_WEIGHT_MAX - 1
+				);
+
+				try {
+					previewCaptureSession.stopRepeating();
+				} catch (CameraAccessException e1) {
+					e1.printStackTrace();
+				}
+
+				captureRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER, CameraMetadata.CONTROL_AF_TRIGGER_CANCEL);
+				captureRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CameraMetadata.CONTROL_AF_MODE_OFF);
+				//applySettings();
+				try {
+					previewCaptureSession.capture(captureRequestBuilder.build(), previewCaptureCallback, backgroundHandler);
+				} catch (CameraAccessException e1) {
+					e1.printStackTrace();
+				}
+
+				if(isMeteringAFAreaSuppported) {
+					captureRequestBuilder.set(CaptureRequest.CONTROL_AF_REGIONS, new MeteringRectangle[] {focusArea});
+				}
+
+				captureRequestBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
+				captureRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CameraMetadata.CONTROL_AF_MODE_AUTO);
+				captureRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER, CameraMetadata.CONTROL_AF_TRIGGER_START);
+				captureRequestBuilder.setTag("FOCUS_TAG");
+				//applySettings();
+				try {
+					previewCaptureSession.capture(captureRequestBuilder.build(), previewCaptureCallback, backgroundHandler);
+				} catch (CameraAccessException e1) {
+					e1.printStackTrace();
+				}
+				manualFocusEnguaged = true;
 
 				return super.onSingleTapUp(e);
 			}
