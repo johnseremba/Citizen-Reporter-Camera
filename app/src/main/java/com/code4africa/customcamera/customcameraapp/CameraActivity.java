@@ -559,6 +559,7 @@ public class CameraActivity extends AppCompatActivity
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 			if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
 					== PackageManager.PERMISSION_GRANTED) {
+				createMediaFolders();
 				if (isRecording) {
 					if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
 							== PackageManager.PERMISSION_GRANTED) {
@@ -591,6 +592,7 @@ public class CameraActivity extends AppCompatActivity
 						REQUEST_STORAGE_PERMISSION);
 			}
 		} else {
+			createMediaFolders();
 			if (isRecording) {
 				try {
 					createVideoFileName();
@@ -604,6 +606,11 @@ public class CameraActivity extends AppCompatActivity
 				chronometer.start();
 			}
 		}
+	}
+
+	private void createMediaFolders() {
+		createImageFolder();
+		createVideoFolder();
 	}
 
 	private void lockFocus() {
@@ -940,9 +947,6 @@ public class CameraActivity extends AppCompatActivity
 		initializeObjects();
 		// Initializes the scenes with the relevant scene images
 		initializeScenes();
-
-		createImageFolder();
-		createVideoFolder();
 
 		Toast.makeText(getApplicationContext(), R.string.interaction_scene, Toast.LENGTH_SHORT).show();
 		currentScene = INTERACTION_SCENE;
