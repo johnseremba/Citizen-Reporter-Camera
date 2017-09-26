@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.ImageFormat;
@@ -156,8 +157,9 @@ public class CameraActivity extends AppCompatActivity
 	private Rect activePixesAfter;
 	private Rect zoom;
 
-	private ListView whiteBalanceList;
+	public ListView whiteBalanceList;
 	private ImageView imgToggleWB;
+	private int wbMode = 0;
 
 	private final ImageReader.OnImageAvailableListener onImageAvailableListener =
 			new ImageReader.OnImageAvailableListener() {
@@ -169,6 +171,7 @@ public class CameraActivity extends AppCompatActivity
 	private boolean manualFocusEngaged = false;
 	private Rect sensorArraySize;
 	private boolean isMeteringAFAreaSupported;
+	private String[] wbScenes = {"Auto", "Incandescent", "Daylight", "Fluorescent", "Cloudy", "Twilight", "Shade"};
 
 	@Override public void OnClickScene(String sceneKey, Integer position) {
 		imgOverlay.setImageResource(overlayScenes.get(sceneKey).get(position));
@@ -699,6 +702,7 @@ public class CameraActivity extends AppCompatActivity
 			captureRequestBuilder.set(CaptureRequest.JPEG_ORIENTATION,
 					totalRotation); // Fix orientation skews
 			setFlashMode();
+			setWBMode(wbMode);
 
 			captureRequestBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoom);
 			captureRequestBuilder.set(CaptureRequest.CONTROL_AE_LOCK, false);
@@ -934,10 +938,43 @@ public class CameraActivity extends AppCompatActivity
 	private void showWBList() {
 		AlertDialog.Builder builder = new AlertDialog.Builder(CameraActivity.this);
 		builder.setCancelable(true);
-		builder.setPositiveButton("OK", null);
-		builder.setView(whiteBalanceList);
+		builder.setItems(wbScenes, new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int which) {
+				// The 'which' argument contains the index position
+				// of the selected item
+				wbMode = which;
+				setWBMode(which);
+			}
+		});
 		AlertDialog dialog = builder.create();
 		dialog.show();
+	}
+
+	private void setWBMode(int index) {
+		//private String[] wbScenes = {"Auto", "Incandescent", "Daylight", "Fluorescent", "Cloudy", "Twilight", "Shade"};
+		switch(index) {
+			case 0:
+				captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_AUTO);
+				break;
+			case 1:
+				captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_INCANDESCENT);
+				break;
+			case 2:
+				captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_DAYLIGHT);
+				break;
+			case 3:
+				captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_FLUORESCENT);
+				break;
+			case 4:
+				captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_CLOUDY_DAYLIGHT);
+				break;
+			case 5:
+				captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_TWILIGHT);
+				break;
+			case 6:
+				captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_SHADE);
+		}
+		applySettings();
 	}
 
 	@Override
@@ -958,7 +995,7 @@ public class CameraActivity extends AppCompatActivity
 		initializeCameraInterface(); // Creates the swipe buttons
 
 		String[] wbScenes = {"Auto", "Incadescent", "Daylight", "Fluorescent", "Cloudy", "Twilight", "Shade"};
-		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.wb_scenes_list, R.id.txt_scene_id, wbScenes);
+		final ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.wb_scenes_list, R.id.txt_scene_id, wbScenes);
 		whiteBalanceList.setAdapter(adapter);
 
 		whiteBalanceList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
