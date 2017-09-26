@@ -56,6 +56,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewSwitcher;
+import com.bumptech.glide.Glide;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -81,7 +82,6 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	private static final int STATE_WAIT_LOCK = 1;
 	private static final int PREVIEW_IMAGE_RESULT = 3;
 	private static final int PROGRESS_MIN = 50;
-	private static final int PROGRESS_MAX = 100;
 	private static String PORTRAIT_SCENE = "Portrait";
 	private static String CANDID_SCENE = "Candid";
 	private static String INTERACTION_SCENE = "Interaction";
