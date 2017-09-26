@@ -690,24 +690,7 @@ public class CameraActivity extends AppCompatActivity
 			captureRequestBuilder.addTarget(imageReader.getSurface());
 			captureRequestBuilder.set(CaptureRequest.JPEG_ORIENTATION,
 					totalRotation); // Fix orientation skews
-
-			switch (flashStatus) {
-				case 0:
-					captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
-							CameraMetadata.CONTROL_AE_MODE_ON);
-					captureRequestBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_OFF);
-					break;
-				case 1:
-					captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
-							CameraMetadata.CONTROL_AE_MODE_ON_ALWAYS_FLASH);
-					captureRequestBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_SINGLE);
-					break;
-				case 2:
-					captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
-							CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
-					captureRequestBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_OFF);
-					break;
-			}
+			setFlashMode();
 
 			captureRequestBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoom);
 			captureRequestBuilder.set(CaptureRequest.CONTROL_AE_LOCK, false);
@@ -732,6 +715,26 @@ public class CameraActivity extends AppCompatActivity
 			previewCaptureSession.capture(captureRequestBuilder.build(), stillCaptureCallback, null);
 		} catch (CameraAccessException e) {
 			e.printStackTrace();
+		}
+	}
+
+	private void setFlashMode() {
+		switch (flashStatus) {
+			case 0:
+				captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
+						CameraMetadata.CONTROL_AE_MODE_ON);
+				captureRequestBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_OFF);
+				break;
+			case 1:
+				captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
+						CameraMetadata.CONTROL_AE_MODE_ON_ALWAYS_FLASH);
+				captureRequestBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_SINGLE);
+				break;
+			case 2:
+				captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
+						CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
+				captureRequestBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_OFF);
+				break;
 		}
 	}
 
@@ -922,25 +925,20 @@ public class CameraActivity extends AppCompatActivity
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		if(BuildConfig.DEBUG) {
-			StrictMode.VmPolicy vmPolicy = new StrictMode.VmPolicy.Builder().penaltyLog().penaltyDeath().build();
+		if (BuildConfig.DEBUG) {
+			StrictMode.VmPolicy vmPolicy =
+					new StrictMode.VmPolicy.Builder().penaltyLog().penaltyDeath().build();
 			StrictMode.setVmPolicy(vmPolicy);
 		}
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_camera);
 
+		currentScene = INTERACTION_SCENE;
 		gestureObject = new GestureDetectorCompat(this, new LearnGesture());
 		scaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener());
-
 		initializeObjects();
-		// Initializes the scenes with the relevant scene images
 		initializeScenes();
-
-		Toast.makeText(getApplicationContext(), R.string.interaction_scene, Toast.LENGTH_SHORT).show();
-		currentScene = INTERACTION_SCENE;
-
-		// Creates the swipe buttons and initializes the initial overlay image
-		initializeCameraInterface();
+		initializeCameraInterface(); // Creates the swipe buttons
 
 		lightSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 			@Override public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -1242,7 +1240,6 @@ public class CameraActivity extends AppCompatActivity
 
 	@Override protected void onResume() {
 		super.onResume();
-
 		startBackgroundThread();
 
 		if (textureView.isAvailable()) {
@@ -1255,7 +1252,6 @@ public class CameraActivity extends AppCompatActivity
 	}
 
 	public class LearnGesture extends GestureDetector.SimpleOnGestureListener {
-
 		@Override
 		public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
 			if (moreScenes) {
@@ -1318,6 +1314,7 @@ public class CameraActivity extends AppCompatActivity
 			captureRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
 					CameraMetadata.CONTROL_AF_TRIGGER_CANCEL);
 			captureRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CameraMetadata.CONTROL_AF_MODE_OFF);
+			setFlashMode();
 
 			try {
 				previewCaptureSession.capture(captureRequestBuilder.build(), previewCaptureCallback,
