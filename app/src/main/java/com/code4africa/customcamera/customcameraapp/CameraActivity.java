@@ -2,6 +2,7 @@ package com.code4africa.customcamera.customcameraapp;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -49,9 +50,13 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.hardware.camera2.CameraDevice;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Chronometer;
 import android.widget.ImageSwitcher;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -150,6 +155,9 @@ public class CameraActivity extends AppCompatActivity
 	private TextView zoomCaption;
 	private Rect activePixesAfter;
 	private Rect zoom;
+
+	private ListView whiteBalanceList;
+	private ImageView imgToggleWB;
 
 	private final ImageReader.OnImageAvailableListener onImageAvailableListener =
 			new ImageReader.OnImageAvailableListener() {
@@ -923,6 +931,15 @@ public class CameraActivity extends AppCompatActivity
 		}
 	}
 
+	private void showWBList() {
+		AlertDialog.Builder builder = new AlertDialog.Builder(CameraActivity.this);
+		builder.setCancelable(true);
+		builder.setPositiveButton("OK", null);
+		builder.setView(whiteBalanceList);
+		AlertDialog dialog = builder.create();
+		dialog.show();
+	}
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		if (BuildConfig.DEBUG) {
@@ -939,6 +956,24 @@ public class CameraActivity extends AppCompatActivity
 		initializeObjects();
 		initializeScenes();
 		initializeCameraInterface(); // Creates the swipe buttons
+
+		String[] wbScenes = {"Auto", "Incadescent", "Daylight", "Fluorescent", "Cloudy", "Twilight", "Shade"};
+		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.wb_scenes_list, R.id.txt_scene_id, wbScenes);
+		whiteBalanceList.setAdapter(adapter);
+
+		whiteBalanceList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+			@Override public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+				ViewGroup vg = (ViewGroup) view;
+				TextView txt = (TextView) findViewById(R.id.txt_scene_id);
+				Toast.makeText(getApplicationContext(), txt.getText().toString(), Toast.LENGTH_SHORT).show();
+			}
+		});
+
+		imgToggleWB.setOnClickListener(new View.OnClickListener() {
+			@Override public void onClick(View view) {
+				showWBList();
+			}
+		});
 
 		lightSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 			@Override public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -1100,6 +1135,9 @@ public class CameraActivity extends AppCompatActivity
 		seekBarProgressText = (TextView) findViewById(R.id.txt_seekbar_progress);
 		lightSeekBar = (SeekBar) findViewById(R.id.seekbar_light);
 		zoomCaption = (TextView) findViewById(R.id.txt_zoom_caption);
+
+		whiteBalanceList = new ListView(this);
+		imgToggleWB = (ImageView) findViewById(R.id.img_settings_btn);
 	}
 
 	private void increaseBrightness(double progressValue) {
