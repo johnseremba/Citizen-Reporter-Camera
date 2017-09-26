@@ -241,4 +241,16 @@
       app:layout_constraintStart_toStartOf="parent"
       app:layout_constraintTop_toBottomOf="@+id/img_flash_btn"
       />
+  <ImageView
+      android:id="@+id/imageView"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_marginBottom="8dp"
+      android:layout_marginEnd="8dp"
+      android:layout_marginStart="8dp"
+      app:layout_constraintBottom_toBottomOf="parent"
+      app:layout_constraintEnd_toStartOf="@+id/img_capture"
+      app:layout_constraintStart_toEndOf="@+id/img_gallery"
+      app:srcCompat="@drawable/ic_gear_thin"
+      />
 </android.support.constraint.ConstraintLayout>

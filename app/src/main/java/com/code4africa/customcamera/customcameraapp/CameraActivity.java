@@ -18,6 +18,7 @@ import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
+import android.hardware.camera2.params.MeteringRectangle;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
 import android.media.ImageReader;
@@ -55,6 +56,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewSwitcher;
+import com.bumptech.glide.Glide;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -68,7 +70,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
-public class CameraActivity extends AppCompatActivity implements SceneSelectorAdapter.OnClickThumbListener {
+public class CameraActivity extends AppCompatActivity
+		implements SceneSelectorAdapter.OnClickThumbListener {
 	private static final String TAG = CameraActivity.class.getSimpleName();
 	private static final String IMAGE_FILE_LOCATION = "image_file_location";
 	private static final String IMAGE_SAVED_PATH = "imagePath";
@@ -80,7 +83,6 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	private static final int STATE_WAIT_LOCK = 1;
 	private static final int PREVIEW_IMAGE_RESULT = 3;
 	private static final int PROGRESS_MIN = 50;
-	private static final int PROGRESS_MAX = 100;
 	private static String PORTRAIT_SCENE = "Portrait";
 	private static String CANDID_SCENE = "Candid";
 	private static String INTERACTION_SCENE = "Interaction";
@@ -98,12 +100,14 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	private HandlerThread backgroundHandlerThread;
 	private Handler backgroundHandler;
 	private static SparseIntArray ORIENTATIONS = new SparseIntArray();
+
 	static {
 		ORIENTATIONS.append(Surface.ROTATION_0, 0);
 		ORIENTATIONS.append(Surface.ROTATION_90, 90);
 		ORIENTATIONS.append(Surface.ROTATION_180, 180);
 		ORIENTATIONS.append(Surface.ROTATION_270, 270);
 	}
+
 	private CaptureRequest.Builder captureRequestBuilder;
 
 	private File imageFolder;
@@ -154,13 +158,17 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	private Rect activePixesAfter;
 	private Rect zoom;
 
-	private final ImageReader.OnImageAvailableListener onImageAvailableListener = new ImageReader.OnImageAvailableListener() {
-		@Override
-		public void onImageAvailable(ImageReader reader) {
-			backgroundHandler.post(new ImageSaver(reader.acquireLatestImage()));
-		}
-	};
+	private final ImageReader.OnImageAvailableListener onImageAvailableListener =
+			new ImageReader.OnImageAvailableListener() {
+				@Override
+				public void onImageAvailable(ImageReader reader) {
+					backgroundHandler.post(new ImageSaver(reader.acquireLatestImage()));
+				}
+			};
 	private Rational compesationStep;
+	private boolean manualFocusEnguaged = false;
+	private Rect sensorArraySize;
+	private boolean isMeteringAFAreaSuppported;
 
 	@Override public void OnClickScene(String sceneKey, Integer position) {
 		imgOverlay.setImageResource(overlayScenes.get(sceneKey).get(position));
@@ -192,7 +200,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 				mediaStoreUpdateIntent.setData(Uri.fromFile(new File(imageFileName)));
 				sendBroadcast(mediaStoreUpdateIntent);
 
-				if(fileOutputStream != null) {
+				if (fileOutputStream != null) {
 					try {
 						fileOutputStream.close();
 					} catch (IOException e) {
@@ -204,53 +212,64 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 		}
 	}
 
-	private CameraCaptureSession.CaptureCallback previewCaptureCallback = new CameraCaptureSession.CaptureCallback() {
-		@Override
-		public void onCaptureCompleted(@NonNull CameraCaptureSession session,
-				@NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
-			super.onCaptureCompleted(session, request, result);
-			process(result);
-		}
+	private CameraCaptureSession.CaptureCallback previewCaptureCallback =
+			new CameraCaptureSession.CaptureCallback() {
+				@Override
+				public void onCaptureCompleted(@NonNull CameraCaptureSession session,
+						@NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
+					super.onCaptureCompleted(session, request, result);
+					manualFocusEnguaged = false;
 
-		private void process(CaptureResult captureResult) {
-			switch (captureState) {
-				case STATE_WAIT_LOCK:
-					captureState = STATE_PREVIEW;
-					MediaActionSound sound = new MediaActionSound();
-					sound.play(MediaActionSound.SHUTTER_CLICK);
-					startStillCapture();
-					break;
-			}
-		}
-	};
+					if (request.getTag() == "FOCUS_TAG") {
+						captureRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER, null);
+						applySettings();
+					}
 
-	private TextureView.SurfaceTextureListener surfaceTextureListener = new TextureView.SurfaceTextureListener() {
-		@Override public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int width, int height) {
-			setUpCamera(width, height);
-			transformImage(width, height);
-			connectCamera();
-		}
+					process(result);
+				}
 
-		@Override
-		public void onSurfaceTextureSizeChanged(SurfaceTexture surfaceTexture, int width, int height) {
+				private void process(CaptureResult captureResult) {
+					switch (captureState) {
+						case STATE_WAIT_LOCK:
+							captureState = STATE_PREVIEW;
+							MediaActionSound sound = new MediaActionSound();
+							sound.play(MediaActionSound.SHUTTER_CLICK);
+							startStillCapture();
+							break;
+					}
+				}
+			};
 
-		}
+	private TextureView.SurfaceTextureListener surfaceTextureListener =
+			new TextureView.SurfaceTextureListener() {
+				@Override public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int width,
+						int height) {
+					setUpCamera(width, height);
+					transformImage(width, height);
+					connectCamera();
+				}
 
-		@Override public boolean onSurfaceTextureDestroyed(SurfaceTexture surfaceTexture) {
-			return false;
-		}
+				@Override
+				public void onSurfaceTextureSizeChanged(SurfaceTexture surfaceTexture, int width,
+						int height) {
 
-		@Override public void onSurfaceTextureUpdated(SurfaceTexture surfaceTexture) {
+				}
 
-		}
-	};
+				@Override public boolean onSurfaceTextureDestroyed(SurfaceTexture surfaceTexture) {
+					return false;
+				}
+
+				@Override public void onSurfaceTextureUpdated(SurfaceTexture surfaceTexture) {
+
+				}
+			};
 
 	private CameraDevice.StateCallback cameraDeviceStateCallback = new CameraDevice.StateCallback() {
 		@Override public void onOpened(@NonNull CameraDevice camera) {
 			cameraDevice = camera;
 			mediaRecorder = new MediaRecorder();
 
-			if(isRecording) {
+			if (isRecording) {
 				try {
 					createVideoFileName();
 				} catch (IOException e) {
@@ -284,11 +303,11 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	};
 
 	private void closeCamera() {
-		if(cameraDevice != null) {
+		if (cameraDevice != null) {
 			cameraDevice.close();
 			cameraDevice = null;
 		}
-		if(mediaRecorder != null) {
+		if (mediaRecorder != null) {
 			mediaRecorder.release();
 			mediaRecorder = null;
 		}
@@ -296,10 +315,10 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 
 	private void setUpCamera(int width, int height) {
 		cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
-		try{
-			for(String camID: cameraManager.getCameraIdList()){
+		try {
+			for (String camID : cameraManager.getCameraIdList()) {
 				CameraCharacteristics cameraCharacteristics = cameraManager.getCameraCharacteristics(camID);
-				if(cameraCharacteristics.get(CameraCharacteristics.LENS_FACING) ==
+				if (cameraCharacteristics.get(CameraCharacteristics.LENS_FACING) ==
 						camLensFacing) {
 					int deviceOrientation = getWindowManager().getDefaultDisplay().getRotation();
 					totalRotation = sensorToDeviceOrientation(cameraCharacteristics, deviceOrientation);
@@ -307,32 +326,45 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 					int rotatedHeight = height;
 					boolean swapRotation = totalRotation == 90 || totalRotation == 270;
 
-					if(swapRotation) {
+					if (swapRotation) {
 						rotatedWidth = height;
 						rotatedHeight = width;
 					}
 
-					StreamConfigurationMap map = cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
-					previewSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture.class), rotatedWidth, rotatedHeight);
-					videoSize = chooseOptimalSize(map.getOutputSizes(MediaRecorder.class), rotatedWidth, rotatedHeight);
-					imageSize = chooseOptimalSize(map.getOutputSizes(ImageFormat.JPEG), rotatedWidth, rotatedHeight);
-					imageReader = ImageReader.newInstance(imageSize.getWidth(), imageSize.getHeight(), ImageFormat.JPEG, 1);
+					StreamConfigurationMap map =
+							cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+					previewSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture.class), rotatedWidth,
+							rotatedHeight);
+					videoSize = chooseOptimalSize(map.getOutputSizes(MediaRecorder.class), rotatedWidth,
+							rotatedHeight);
+					imageSize =
+							chooseOptimalSize(map.getOutputSizes(ImageFormat.JPEG), rotatedWidth, rotatedHeight);
+					imageReader =
+							ImageReader.newInstance(imageSize.getWidth(), imageSize.getHeight(), ImageFormat.JPEG,
+									1);
 					imageReader.setOnImageAvailableListener(onImageAvailableListener, backgroundHandler);
 					cameraID = camID;
-					aeRange = cameraCharacteristics.get(CameraCharacteristics.CONTROL_AE_COMPENSATION_RANGE).getUpper();
-					compesationStep = cameraCharacteristics.get(CameraCharacteristics.CONTROL_AE_COMPENSATION_STEP);
-					Log.d(TAG, "Compesation Step: " + compesationStep);
-
-					availableFocalLengths = cameraCharacteristics.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS);
-					activePixesAfter = cameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
-					maxDigitalZoom = cameraCharacteristics.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM) * 10;
+					aeRange = cameraCharacteristics.get(CameraCharacteristics.CONTROL_AE_COMPENSATION_RANGE)
+							.getUpper();
+					compesationStep =
+							cameraCharacteristics.get(CameraCharacteristics.CONTROL_AE_COMPENSATION_STEP);
+					sensorArraySize =
+							cameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
+					availableFocalLengths =
+							cameraCharacteristics.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS);
+					activePixesAfter =
+							cameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
+					maxDigitalZoom =
+							cameraCharacteristics.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM);
+					isMeteringAFAreaSuppported =
+							cameraCharacteristics.get(CameraCharacteristics.CONTROL_MAX_REGIONS_AF) >= 1;
+					maxDigitalZoom *= 10;
 					return;
 				}
 			}
 		} catch (CameraAccessException e) {
 			e.printStackTrace();
 		}
-
 	}
 
 	private void startBackgroundThread() {
@@ -352,7 +384,8 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 		}
 	}
 
-	private static int sensorToDeviceOrientation(CameraCharacteristics cameraCharacteristics,int deviceOrientation) {
+	private static int sensorToDeviceOrientation(CameraCharacteristics cameraCharacteristics,
+			int deviceOrientation) {
 		int sensorOrientation = cameraCharacteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
 		deviceOrientation = ORIENTATIONS.get(deviceOrientation);
 		return (sensorOrientation + deviceOrientation + 360) % 360;
@@ -360,35 +393,35 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 
 	public static class CompareSizeByArea implements Comparator<Size> {
 		@Override public int compare(Size lhs, Size rhs) {
-			return Long.signum((long) lhs.getWidth() * lhs.getHeight() / (long) rhs.getWidth() * rhs.getHeight());
+			return Long.signum(
+					(long) lhs.getWidth() * lhs.getHeight() / (long) rhs.getWidth() * rhs.getHeight());
 		}
 	}
 
 	public static Size chooseOptimalSize(Size[] choices, int width, int height) {
 		List<Size> optimal = new ArrayList<Size>();
-		for(Size option : choices) {
-			if(option.getHeight() == option.getWidth() * height / width
+		for (Size option : choices) {
+			if (option.getHeight() == option.getWidth() * height / width
 					&& option.getWidth() >= width && option.getHeight() >= height) {
 				optimal.add(option);
 			}
 		}
 
-		if(optimal.size() > 0) {
+		if (optimal.size() > 0) {
 			return Collections.min(optimal, new CompareSizeByArea());
 		} else {
 			return choices[0];
 		}
-
 	}
 
 	private void swapFlashMode() {
 		flashStatus += 1;
 
-		if(flashStatus > 2) {
+		if (flashStatus > 2) {
 			flashStatus = 0;
 		}
 
-		switch(flashStatus) {
+		switch (flashStatus) {
 			case 0:
 				flashModeBtn.setImageResource(R.drawable.ic_flash_off);
 				break;
@@ -399,20 +432,22 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 				flashModeBtn.setImageResource(R.drawable.ic_flash_auto);
 				break;
 		}
-
 	}
 
 	private void connectCamera() {
 		CameraManager cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
 		try {
-			if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-				if(ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED){
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+				if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+						== PackageManager.PERMISSION_GRANTED) {
 					cameraManager.openCamera(cameraID, cameraDeviceStateCallback, backgroundHandler);
 				} else {
-					if(shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
-						Toast.makeText(this, "Code4Africa custom camera required access to the camera.", Toast.LENGTH_SHORT).show();
+					if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
+						Toast.makeText(this, "Code4Africa custom camera required access to the camera.",
+								Toast.LENGTH_SHORT).show();
 					}
-					requestPermissions(new String[] {Manifest.permission.CAMERA}, REQUEST_CAMERA_PERMISSION);
+					requestPermissions(new String[] { Manifest.permission.CAMERA },
+							REQUEST_CAMERA_PERMISSION);
 				}
 			} else {
 				cameraManager.openCamera(cameraID, cameraDeviceStateCallback, backgroundHandler);
@@ -439,7 +474,8 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 							@Override
 							public void onConfigured(@NonNull CameraCaptureSession cameraCaptureSession) {
 								try {
-									cameraCaptureSession.setRepeatingRequest(captureRequestBuilder.build(), null, null);
+									cameraCaptureSession.setRepeatingRequest(captureRequestBuilder.build(), null,
+											null);
 								} catch (CameraAccessException e) {
 									e.printStackTrace();
 								}
@@ -473,7 +509,8 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 						public void onConfigured(@NonNull CameraCaptureSession session) {
 							previewCaptureSession = session;
 							try {
-								previewCaptureSession.setRepeatingRequest(captureRequestBuilder.build(), null, backgroundHandler);
+								previewCaptureSession.setRepeatingRequest(captureRequestBuilder.build(), null,
+										backgroundHandler);
 							} catch (CameraAccessException e) {
 								e.printStackTrace();
 							}
@@ -492,24 +529,24 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	public void createImageFolder() {
 		File imageFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
 		imageFolder = new File(imageFile, "Code4Africa");
-		if(!imageFolder.exists()) {
+		if (!imageFolder.exists()) {
 			boolean result = imageFolder.mkdirs();
-			if(result) {
+			if (result) {
 				Log.d(TAG, "C4A images folder created successfully!");
 			} else {
 				Log.d(TAG, "Oops, C4A images folder not created!!");
 			}
 		} else {
-				Log.d(TAG, "Image directory already exists!");
+			Log.d(TAG, "Image directory already exists!");
 		}
 	}
 
 	public void createVideoFolder() {
 		File videoFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES);
 		videoFolder = new File(videoFile, "Code4Africa");
-		if(!videoFolder.exists()) {
+		if (!videoFolder.exists()) {
 			boolean result = videoFolder.mkdir();
-			if(result){
+			if (result) {
 				Log.d(TAG, "C4A video folder created successfully!");
 			} else {
 				Log.d(TAG, "C4A video directory already exists");
@@ -532,7 +569,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	}
 
 	private void checkWriteStoragePermission() {
-		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 			if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
 					== PackageManager.PERMISSION_GRANTED) {
 				if (isRecording) {
@@ -566,27 +603,29 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 				requestPermissions(new String[] { Manifest.permission.WRITE_EXTERNAL_STORAGE },
 						REQUEST_STORAGE_PERMISSION);
 			}
-		} else{
-				if (isRecording) {
-					try {
-						createVideoFileName();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-					startRecord();
-					mediaRecorder.start();
-					chronometer.setBase(SystemClock.elapsedRealtime());
-					chronometer.setVisibility(View.VISIBLE);
-					chronometer.start();
+		} else {
+			if (isRecording) {
+				try {
+					createVideoFileName();
+				} catch (IOException e) {
+					e.printStackTrace();
 				}
+				startRecord();
+				mediaRecorder.start();
+				chronometer.setBase(SystemClock.elapsedRealtime());
+				chronometer.setVisibility(View.VISIBLE);
+				chronometer.start();
 			}
+		}
 	}
 
 	private void lockFocus() {
 		captureState = STATE_WAIT_LOCK;
-		captureRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER, CaptureRequest.CONTROL_AF_TRIGGER_START);
+		captureRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
+				CaptureRequest.CONTROL_AF_TRIGGER_START);
 		try {
-			previewCaptureSession.capture(captureRequestBuilder.build(), previewCaptureCallback, backgroundHandler);
+			previewCaptureSession.capture(captureRequestBuilder.build(), previewCaptureCallback,
+					backgroundHandler);
 		} catch (CameraAccessException e) {
 			e.printStackTrace();
 		}
@@ -594,9 +633,11 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 
 	private void unLockFocus() {
 		captureState = STATE_PREVIEW;
-		captureRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER, CaptureRequest.CONTROL_AF_TRIGGER_CANCEL);
+		captureRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
+				CaptureRequest.CONTROL_AF_TRIGGER_CANCEL);
 		try {
-			previewCaptureSession.capture(captureRequestBuilder.build(), previewCaptureCallback, backgroundHandler);
+			previewCaptureSession.capture(captureRequestBuilder.build(), previewCaptureCallback,
+					backgroundHandler);
 		} catch (CameraAccessException e) {
 			e.printStackTrace();
 		}
@@ -604,17 +645,17 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 
 	@Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
-		switch(requestCode) {
+		switch (requestCode) {
 			case PREVIEW_IMAGE_RESULT:
 				// Get result from the preview screen
 				// Set the absolute image path as the return value for the camera intent
-				if(resultCode == Activity.RESULT_OK) {
+				if (resultCode == Activity.RESULT_OK) {
 					cameraPreviewResult = data.getStringExtra(IMAGE_SAVED_PATH);
 					Intent resultIntent = new Intent();
 					resultIntent.putExtra(IMAGE_SAVED_PATH, cameraPreviewResult);
 					setResult(Activity.RESULT_OK, resultIntent);
 					Log.d(TAG, "Success: " + cameraPreviewResult);
-				} else if(resultCode == Activity.RESULT_CANCELED) {
+				} else if (resultCode == Activity.RESULT_CANCELED) {
 					// Set the response of the camera intent to result canceled.
 					setResult(Activity.RESULT_CANCELED);
 					Log.d(TAG, "Image deleted by user!");
@@ -629,54 +670,63 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 
 		switch (requestCode) {
 			case REQUEST_CAMERA_PERMISSION:
-				if(grantResults[0] != PackageManager.PERMISSION_GRANTED){
-					Toast.makeText(getApplicationContext(), "App can't run without camera permissions.", Toast.LENGTH_SHORT).show();
+				if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+					Toast.makeText(getApplicationContext(), "App can't run without camera permissions.",
+							Toast.LENGTH_SHORT).show();
 				} else {
 					Log.d(TAG, "Camera permission granted successfully");
 				}
 				break;
 			case REQUEST_STORAGE_PERMISSION:
-				if(grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+				if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 					try {
-						if(isRecording)
+						if (isRecording) {
 							createVideoFileName();
+						}
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
-					Log.d(TAG,"Storage permission granted successfully");
+					Log.d(TAG, "Storage permission granted successfully");
 				} else {
-					Toast.makeText(getApplicationContext(), "App can't run without storage permissions.", Toast.LENGTH_SHORT).show();
+					Toast.makeText(getApplicationContext(), "App can't run without storage permissions.",
+							Toast.LENGTH_SHORT).show();
 					Log.d(TAG, "Storage permissions denied.");
 				}
 				break;
 			case REQUEST_AUDIO_PERMISSION:
-				if(grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-					Log.d(TAG,"Audio permission granted successfully");
+				if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+					Log.d(TAG, "Audio permission granted successfully");
 				} else {
-					Toast.makeText(getApplicationContext(), "App needs to record audio.", Toast.LENGTH_SHORT).show();
+					Toast.makeText(getApplicationContext(), "App needs to record audio.", Toast.LENGTH_SHORT)
+							.show();
 					Log.d(TAG, "Audio permissions denied.");
 				}
 				break;
 		}
 	}
 
-	private void startStillCapture(){
+	private void startStillCapture() {
 		try {
-			captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
+			captureRequestBuilder =
+					cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
 			captureRequestBuilder.addTarget(imageReader.getSurface());
-			captureRequestBuilder.set(CaptureRequest.JPEG_ORIENTATION, totalRotation); // Fix orientation skews
+			captureRequestBuilder.set(CaptureRequest.JPEG_ORIENTATION,
+					totalRotation); // Fix orientation skews
 
-			switch(flashStatus) {
+			switch (flashStatus) {
 				case 0:
-					captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_ON);
+					captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
+							CameraMetadata.CONTROL_AE_MODE_ON);
 					captureRequestBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_OFF);
 					break;
 				case 1:
-					captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_ON_ALWAYS_FLASH);
+					captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
+							CameraMetadata.CONTROL_AE_MODE_ON_ALWAYS_FLASH);
 					captureRequestBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_SINGLE);
 					break;
 				case 2:
-					captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
+					captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
+							CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
 					captureRequestBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_OFF);
 					break;
 			}
@@ -684,21 +734,23 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 			captureRequestBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoom);
 			captureRequestBuilder.set(CaptureRequest.CONTROL_AE_LOCK, false);
 			captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_ON);
-			captureRequestBuilder.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION, (int) progressValue);
+			captureRequestBuilder.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION,
+					(int) progressValue);
 			captureRequestBuilder.set(CaptureRequest.CONTROL_AE_LOCK, true);
 
-			CameraCaptureSession.CaptureCallback stillCaptureCallback = new CameraCaptureSession.CaptureCallback() {
-				@Override
-				public void onCaptureStarted(@NonNull CameraCaptureSession session,
-						@NonNull CaptureRequest request, long timestamp, long frameNumber) {
-					super.onCaptureStarted(session, request, timestamp, frameNumber);
-					try {
-						createImageFileName();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-			};
+			CameraCaptureSession.CaptureCallback stillCaptureCallback =
+					new CameraCaptureSession.CaptureCallback() {
+						@Override
+						public void onCaptureStarted(@NonNull CameraCaptureSession session,
+								@NonNull CaptureRequest request, long timestamp, long frameNumber) {
+							super.onCaptureStarted(session, request, timestamp, frameNumber);
+							try {
+								createImageFileName();
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
+						}
+					};
 			previewCaptureSession.capture(captureRequestBuilder.build(), stillCaptureCallback, null);
 		} catch (CameraAccessException e) {
 			e.printStackTrace();
@@ -725,8 +777,8 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 		mediaRecorder.prepare();
 	}
 
-	private void swapCamID(){
-		if(camLensFacing == CameraCharacteristics.LENS_FACING_BACK) {
+	private void swapCamID() {
+		if (camLensFacing == CameraCharacteristics.LENS_FACING_BACK) {
 			camLensFacing = CameraCharacteristics.LENS_FACING_FRONT;
 		} else {
 			camLensFacing = CameraCharacteristics.LENS_FACING_BACK;
@@ -741,7 +793,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 			@Override public View makeView() {
 				ImageView imageView = new ImageView(getApplicationContext());
 				imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-				return  imageView;
+				return imageView;
 			}
 		});
 
@@ -749,7 +801,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 			@Override public View makeView() {
 				ImageView imageView = new ImageView(getApplicationContext());
 				imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-				return  imageView;
+				return imageView;
 			}
 		});
 
@@ -757,7 +809,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 			@Override public View makeView() {
 				ImageView imageView = new ImageView(getApplicationContext());
 				imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-				return  imageView;
+				return imageView;
 			}
 		});
 
@@ -765,7 +817,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 			@Override public View makeView() {
 				ImageView imageView = new ImageView(getApplicationContext());
 				imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-				return  imageView;
+				return imageView;
 			}
 		});
 
@@ -773,7 +825,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 			@Override public View makeView() {
 				ImageView imageView = new ImageView(getApplicationContext());
 				imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-				return  imageView;
+				return imageView;
 			}
 		});
 
@@ -786,7 +838,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	}
 
 	private void transformImage(int width, int height) {
-		if(prevScene == null || textureView == null) {
+		if (prevScene == null || textureView == null) {
 			return;
 		}
 
@@ -797,10 +849,11 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 		float centerX = textureRectF.centerX();
 		float centerY = textureRectF.centerY();
 
-		if(rotation == Surface.ROTATION_90 || rotation == Surface.ROTATION_270) {
+		if (rotation == Surface.ROTATION_90 || rotation == Surface.ROTATION_270) {
 			previewRectF.offset(centerX - previewRectF.centerX(), centerY - previewRectF.centerY());
 			matrix.setRectToRect(textureRectF, previewRectF, Matrix.ScaleToFit.FILL);
-			float scale = Math.max((float) width / previewSize.getWidth(), (float) height / previewSize.getHeight());
+			float scale = Math.max((float) width / previewSize.getWidth(),
+					(float) height / previewSize.getHeight());
 			matrix.postScale(scale, scale, centerX, centerY);
 			matrix.postRotate(90 * (rotation - 2), centerX, centerY);
 		}
@@ -811,25 +864,25 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	public void onWindowFocusChanged(boolean hasFocus) {
 		super.onWindowFocusChanged(hasFocus);
 		View decorView = getWindow().getDecorView();
-		if(hasFocus){
+		if (hasFocus) {
 			decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-			| View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-			| View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-			| View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-			| View.SYSTEM_UI_FLAG_FULLSCREEN
-			| View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+					| View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+					| View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+					| View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+					| View.SYSTEM_UI_FLAG_FULLSCREEN
+					| View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
 		}
 	}
 
 	@Override public boolean onTouchEvent(MotionEvent event) {
 		this.gestureObject.onTouchEvent(event);
-		if(!isRecording) {
+		if (!isRecording) {
 			this.scaleGestureDetector.onTouchEvent(event);
 		}
 		return super.onTouchEvent(event);
 	}
 
-	public void openImage(){
+	public void openImage() {
 		Intent sendFileAddressIntent = new Intent(this, ViewImageActivity.class);
 		sendFileAddressIntent.putExtra(IMAGE_FILE_LOCATION, imageFileName);
 		startActivityForResult(sendFileAddressIntent, PREVIEW_IMAGE_RESULT);
@@ -845,7 +898,8 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 
 		cropWidth -= cropHeight & 3;
 		cropHeight -= cropHeight & 3;
-		zoom = new Rect(cropWidth, cropHeight, activePixesAfter.width() - cropWidth, activePixesAfter.height() - cropHeight);
+		zoom = new Rect(cropWidth, cropHeight, activePixesAfter.width() - cropWidth,
+				activePixesAfter.height() - cropHeight);
 		captureRequestBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoom);
 		applySettings();
 	}
@@ -855,8 +909,12 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 		float onScaleEnd = 0;
 
 		@Override public boolean onScale(ScaleGestureDetector scaleGestureDetector) {
-			if(scale > maxDigitalZoom) {
-				scale = 10f;
+			if (scale >= maxDigitalZoom) {
+				scale = maxDigitalZoom;
+				onScaleBegin = 0;
+				onScaleEnd = 0;
+			} else if (scale < 1) {
+				scale = 1f;
 				onScaleBegin = 0;
 				onScaleEnd = 0;
 			}
@@ -873,11 +931,11 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 
 		@Override public void onScaleEnd(ScaleGestureDetector scaleGestureDetector) {
 			onScaleEnd = scale;
-			if(onScaleEnd > onScaleBegin){
-				Log.d(TAG, "Scaled up by: " + String.valueOf(onScaleEnd/onScaleBegin));
+			if (onScaleEnd > onScaleBegin) {
+				Log.d(TAG, "Scaled up by: " + String.valueOf(onScaleEnd / onScaleBegin));
 				Log.d(TAG, "Max Zoom: " + String.valueOf(maxDigitalZoom));
 			} else {
-				Log.d(TAG, "Scaled down by: " + String.valueOf(onScaleBegin/onScaleEnd));
+				Log.d(TAG, "Scaled down by: " + String.valueOf(onScaleBegin / onScaleEnd));
 			}
 			zoomIn((int) onScaleEnd);
 			zoomCaption.setVisibility(View.INVISIBLE);
@@ -907,11 +965,9 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 
 		lightSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 			@Override public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-				progressValue = round(((double)(progress - PROGRESS_MIN) / PROGRESS_MIN) * aeRange, 2);
-				//compesationStep.doubleValue() * progressValue;
+				progressValue = round(((double) (progress - PROGRESS_MIN) / PROGRESS_MIN) * aeRange, 2);
 				seekBarProgressText.setText(String.format("%s", Double.toString(progressValue)));
 			}
-
 
 			@Override public void onStartTrackingTouch(SeekBar seekBar) {
 				seekBarProgressText.setVisibility(View.VISIBLE);
@@ -973,7 +1029,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 				// Record a video for long press
 				hideSceneIcons();
 
-				if(moreScenes) {
+				if (moreScenes) {
 					hideSceneSwitcher();
 				}
 
@@ -992,7 +1048,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 
 		capturePictureBtn.setOnClickListener(new View.OnClickListener() {
 			@Override public void onClick(View view) {
-				if(!isRecording) {
+				if (!isRecording) {
 					// Take a picture if the user just clicks
 					checkWriteStoragePermission();
 					lockFocus();
@@ -1041,7 +1097,6 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 				swapFlashMode();
 			}
 		});
-
 	}
 
 	private void initializeObjects() {
@@ -1098,7 +1153,8 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 	private void setSceneAdapter(String scene) {
 		swipeScenes(selectedScene, prevScene);
 		showSceneSwitcher();
-		sceneSelectorAdapter = new SceneSelectorAdapter(CameraActivity.this, scene, overlayScenes.get(scene));
+		sceneSelectorAdapter =
+				new SceneSelectorAdapter(CameraActivity.this, scene, overlayScenes.get(scene));
 		sceneRecyclerView.setAdapter(sceneSelectorAdapter);
 	}
 
@@ -1179,7 +1235,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 			}
 		};
 
-		overlayScenes = new HashMap<String, ArrayList<Integer>>(){
+		overlayScenes = new HashMap<String, ArrayList<Integer>>() {
 			{
 				put(PORTRAIT_SCENE, portrait);
 				put(SIGNATURE_SCENE, signature);
@@ -1210,7 +1266,7 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 
 		startBackgroundThread();
 
-		if(textureView.isAvailable()) {
+		if (textureView.isAvailable()) {
 			setUpCamera(textureView.getWidth(), textureView.getHeight());
 			transformImage(textureView.getWidth(), textureView.getHeight());
 			connectCamera();
@@ -1219,153 +1275,162 @@ public class CameraActivity extends AppCompatActivity implements SceneSelectorAd
 		}
 	}
 
-		public class LearnGesture extends GestureDetector.SimpleOnGestureListener {
+	public class LearnGesture extends GestureDetector.SimpleOnGestureListener {
 
-			@Override
-			public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-				if(moreScenes) {
-					hideSceneSwitcher();
-				}
+		@Override
+		public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+			if (moreScenes) {
+				hideSceneSwitcher();
+			}
 
-				if(!isRecording) {
-					prevScene = selectedScene;
-					if (e2.getX() > e1.getX()) {
-						// Left to Right swipe
-						selectedScene += 1;
-						swipeScenes(selectedScene, prevScene);
-					} else if (e2.getX() < e1.getX()) {
-						// Right to Left swipe
-						selectedScene -= 1;
-						if (selectedScene < 0) {
-							selectedScene = 4;
-						}
-						swipeScenes(selectedScene, prevScene);
+			if (!isRecording) {
+				prevScene = selectedScene;
+				if (e2.getX() > e1.getX()) {
+					// Left to Right swipe
+					selectedScene += 1;
+					swipeScenes(selectedScene, prevScene);
+				} else if (e2.getX() < e1.getX()) {
+					// Right to Left swipe
+					selectedScene -= 1;
+					if (selectedScene < 0) {
+						selectedScene = 4;
 					}
+					swipeScenes(selectedScene, prevScene);
 				}
-				return super.onFling(e1, e2, velocityX, velocityY);
 			}
-
-			@Override public void onLongPress(MotionEvent e) {
-				// Show child scenes on long pressing the screen.;
-				super.onLongPress(e);
-				showSceneSwitcher();
-				sceneSelectorAdapter = new SceneSelectorAdapter(CameraActivity.this, currentScene, overlayScenes.get(currentScene));
-				sceneRecyclerView.setAdapter(sceneSelectorAdapter);
-			}
-
-			private float getFingerSpacing(MotionEvent e) {
-				float x = e.getX(0) - e.getX(1);
-				float y = e.getY(0) - e.getY(1);
-				return (float) Math.sqrt(x * x + y * y);
-			}
-
-			@Override public boolean onSingleTapUp(MotionEvent e) {
-				float maxZoom;
-				int action;
-				float currentFingerPlacing;
-
-				try {
-					CameraCharacteristics cameraCharacteristics = cameraManager.getCameraCharacteristics(cameraID);
-					maxZoom = cameraCharacteristics.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM) * 10;
-					Rect activePixesAfter = cameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
-					action = e.getAction();
-
-					if(e.getPointerCount() > 1) {
-						// Multitouch logic
-						currentFingerPlacing = getFingerSpacing(e);
-						if(fingerSpacing != 0) {
-							if (currentFingerPlacing > fingerSpacing && maxZoom > zoomLevel) {
-								zoomLevel++;
-							} else if (currentFingerPlacing < fingerSpacing && maxZoom > 1) {
-								zoomLevel--;
-							}
-							int minWidth = (int) (activePixesAfter.width() / maxZoom);
-							int minHeight = (int) (activePixesAfter.height() / maxZoom);
-							int widthDiff = activePixesAfter.width() - minWidth;
-							int heightDiff = activePixesAfter.height() - minHeight;
-							int cropWidth = widthDiff / 100 * (int) zoomLevel;
-							int cropHeight = heightDiff / 100 * (int) zoomLevel;
-
-							cropWidth -= cropHeight & 3;
-							cropHeight -= cropHeight & 3;
-							Rect zoom = new Rect(cropWidth, cropHeight, activePixesAfter.width() - cropWidth, activePixesAfter.height() - cropHeight);
-							captureRequestBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoom);
-						}
-						fingerSpacing = currentFingerPlacing;
-					} else {
-						if(action == MotionEvent.ACTION_UP) {
-							// Single touch event action
-						}
-					}
-					applySettings();
-				} catch (CameraAccessException e1) {
-					e1.printStackTrace();
-				}
-				return super.onSingleTapUp(e);
-			}
+			return super.onFling(e1, e2, velocityX, velocityY);
 		}
 
-		public void swipeScenes(Integer nextScene, Integer prevScene) {
-			switch (prevScene) {
-				case 0:
-					switcher1.setImageResource(R.drawable.ic_circular);
-					break;
-				case 1:
-					switcher2.setImageResource(R.drawable.ic_circular);
-					break;
-				case 2:
-					switcher3.setImageResource(R.drawable.ic_circular);
-					break;
-				case 3:
-					switcher4.setImageResource(R.drawable.ic_circular);
-					break;
-				case 4:
-					switcher5.setImageResource(R.drawable.ic_circular);
-					break;
-				default:
-					selectedScene = 0;
-					switcher1.setImageResource(R.drawable.ic_circular);
-					break;
+		@Override public void onLongPress(MotionEvent e) {
+			// Show child scenes on long pressing the screen.;
+			super.onLongPress(e);
+			showSceneSwitcher();
+			sceneSelectorAdapter = new SceneSelectorAdapter(CameraActivity.this, currentScene,
+					overlayScenes.get(currentScene));
+			sceneRecyclerView.setAdapter(sceneSelectorAdapter);
+		}
+
+		@Override public boolean onSingleTapUp(MotionEvent e) {
+			if (manualFocusEnguaged) {
+				Log.d(TAG, "Manual focus already engaged!");
+				return true;
 			}
 
-			switch(nextScene) {
-				case 0:
-					switcher1.setImageResource(R.drawable.ic_selected_circular);
-					swipeText.setText(PORTRAIT_SCENE);
-					imgOverlay.setImageResource(overlayScenes.get(PORTRAIT_SCENE).get(0));
-					currentScene = PORTRAIT_SCENE;
-					break;
-				case 1:
-					switcher2.setImageResource(R.drawable.ic_selected_circular);
-					swipeText.setText(SIGNATURE_SCENE);
-					imgOverlay.setImageResource(overlayScenes.get(SIGNATURE_SCENE).get(0));
-					currentScene = SIGNATURE_SCENE;
-					break;
-				case 2:
-					switcher3.setImageResource(R.drawable.ic_selected_circular);
-					swipeText.setText(INTERACTION_SCENE);
-					imgOverlay.setImageResource(overlayScenes.get(INTERACTION_SCENE).get(0));
-					currentScene = INTERACTION_SCENE;
-					break;
-				case 3:
-					switcher4.setImageResource(R.drawable.ic_selected_circular);
-					swipeText.setText(CANDID_SCENE);
-					imgOverlay.setImageResource(overlayScenes.get(CANDID_SCENE).get(0));
-					currentScene = CANDID_SCENE;
-					break;
-				case 4:
-					switcher5.setImageResource(R.drawable.ic_selected_circular);
-					swipeText.setText(ENVIRONMENT_SCENE);
-					imgOverlay.setImageResource(overlayScenes.get(ENVIRONMENT_SCENE).get(0));
-					currentScene = ENVIRONMENT_SCENE;
-					break;
-				default:
-					selectedScene = 0;
-					switcher1.setImageResource(R.drawable.ic_selected_circular);
-					swipeText.setText(PORTRAIT_SCENE);
-					imgOverlay.setImageResource(overlayScenes.get(PORTRAIT_SCENE).get(0));
-					currentScene = PORTRAIT_SCENE;
-					break;
+			final int y =
+					(int) ((e.getX() / (float) textureView.getWidth()) * (float) sensorArraySize.height());
+			final int x =
+					(int) ((e.getY() / (float) textureView.getHeight()) * (float) sensorArraySize.width());
+			final int halfTouchWidth = (int) e.getTouchMajor(); // 150;
+			final int halfTouchHeight = (int) e.getTouchMinor(); //150;
+			MeteringRectangle focusArea = new MeteringRectangle(
+					Math.max(x - halfTouchWidth, 0),
+					Math.max(y - halfTouchHeight, 0),
+					halfTouchWidth * 2,
+					halfTouchHeight * 2,
+					MeteringRectangle.METERING_WEIGHT_MAX - 1
+			);
+
+			try {
+				previewCaptureSession.stopRepeating();
+			} catch (CameraAccessException e1) {
+				e1.printStackTrace();
 			}
+
+			captureRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
+					CameraMetadata.CONTROL_AF_TRIGGER_CANCEL);
+			captureRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CameraMetadata.CONTROL_AF_MODE_OFF);
+
+			try {
+				previewCaptureSession.capture(captureRequestBuilder.build(), previewCaptureCallback,
+						backgroundHandler);
+			} catch (CameraAccessException e1) {
+				e1.printStackTrace();
+			}
+
+			if (isMeteringAFAreaSuppported) {
+				captureRequestBuilder.set(CaptureRequest.CONTROL_AF_REGIONS,
+						new MeteringRectangle[] { focusArea });
+			}
+
+			captureRequestBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
+			captureRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE,
+					CameraMetadata.CONTROL_AF_MODE_AUTO);
+			captureRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
+					CameraMetadata.CONTROL_AF_TRIGGER_START);
+			captureRequestBuilder.setTag("FOCUS_TAG");
+
+			try {
+				previewCaptureSession.capture(captureRequestBuilder.build(), previewCaptureCallback,
+						backgroundHandler);
+			} catch (CameraAccessException e1) {
+				e1.printStackTrace();
+			}
+			manualFocusEnguaged = true;
+			return true;
 		}
+	}
+
+	public void swipeScenes(Integer nextScene, Integer prevScene) {
+		switch (prevScene) {
+			case 0:
+				switcher1.setImageResource(R.drawable.ic_circular);
+				break;
+			case 1:
+				switcher2.setImageResource(R.drawable.ic_circular);
+				break;
+			case 2:
+				switcher3.setImageResource(R.drawable.ic_circular);
+				break;
+			case 3:
+				switcher4.setImageResource(R.drawable.ic_circular);
+				break;
+			case 4:
+				switcher5.setImageResource(R.drawable.ic_circular);
+				break;
+			default:
+				selectedScene = 0;
+				switcher1.setImageResource(R.drawable.ic_circular);
+				break;
+		}
+
+		switch (nextScene) {
+			case 0:
+				switcher1.setImageResource(R.drawable.ic_selected_circular);
+				swipeText.setText(PORTRAIT_SCENE);
+				imgOverlay.setImageResource(overlayScenes.get(PORTRAIT_SCENE).get(0));
+				currentScene = PORTRAIT_SCENE;
+				break;
+			case 1:
+				switcher2.setImageResource(R.drawable.ic_selected_circular);
+				swipeText.setText(SIGNATURE_SCENE);
+				imgOverlay.setImageResource(overlayScenes.get(SIGNATURE_SCENE).get(0));
+				currentScene = SIGNATURE_SCENE;
+				break;
+			case 2:
+				switcher3.setImageResource(R.drawable.ic_selected_circular);
+				swipeText.setText(INTERACTION_SCENE);
+				imgOverlay.setImageResource(overlayScenes.get(INTERACTION_SCENE).get(0));
+				currentScene = INTERACTION_SCENE;
+				break;
+			case 3:
+				switcher4.setImageResource(R.drawable.ic_selected_circular);
+				swipeText.setText(CANDID_SCENE);
+				imgOverlay.setImageResource(overlayScenes.get(CANDID_SCENE).get(0));
+				currentScene = CANDID_SCENE;
+				break;
+			case 4:
+				switcher5.setImageResource(R.drawable.ic_selected_circular);
+				swipeText.setText(ENVIRONMENT_SCENE);
+				imgOverlay.setImageResource(overlayScenes.get(ENVIRONMENT_SCENE).get(0));
+				currentScene = ENVIRONMENT_SCENE;
+				break;
+			default:
+				selectedScene = 0;
+				switcher1.setImageResource(R.drawable.ic_selected_circular);
+				swipeText.setText(PORTRAIT_SCENE);
+				imgOverlay.setImageResource(overlayScenes.get(PORTRAIT_SCENE).get(0));
+				currentScene = PORTRAIT_SCENE;
+				break;
+		}
+	}
 }
