@@ -55,6 +55,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewSwitcher;
+import com.bumptech.glide.Glide;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;

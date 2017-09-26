@@ -242,7 +242,7 @@
       app:layout_constraintTop_toBottomOf="@+id/img_flash_btn"
       />
   <ImageView
-      android:id="@+id/imageView"
+      android:id="@+id/img_settings_btn"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
       android:layout_marginBottom="8dp"
