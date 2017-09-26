@@ -82,6 +82,8 @@ public class CameraActivity extends AppCompatActivity
 	private static final int STATE_WAIT_LOCK = 1;
 	private static final int PREVIEW_IMAGE_RESULT = 3;
 	private static final int PROGRESS_MIN = 50;
+	private static final int unSelected = R.drawable.ic_circular;
+	private static final int selected = R.drawable.ic_selected_circular;
 	private static String PORTRAIT_SCENE = "Portrait";
 	private static String CANDID_SCENE = "Candid";
 	private static String INTERACTION_SCENE = "Interaction";
@@ -1365,64 +1367,58 @@ public class CameraActivity extends AppCompatActivity
 	public void swipeScenes(Integer nextScene, Integer prevScene) {
 		switch (prevScene) {
 			case 0:
-				switcher1.setImageResource(R.drawable.ic_circular);
+				switcher1.setImageResource(unSelected);
 				break;
 			case 1:
-				switcher2.setImageResource(R.drawable.ic_circular);
+				switcher2.setImageResource(unSelected);
 				break;
 			case 2:
-				switcher3.setImageResource(R.drawable.ic_circular);
+				switcher3.setImageResource(unSelected);
 				break;
 			case 3:
-				switcher4.setImageResource(R.drawable.ic_circular);
+				switcher4.setImageResource(unSelected);
 				break;
 			case 4:
-				switcher5.setImageResource(R.drawable.ic_circular);
+				switcher5.setImageResource(unSelected);
 				break;
 			default:
 				selectedScene = 0;
-				switcher1.setImageResource(R.drawable.ic_circular);
+				switcher1.setImageResource(unSelected);
 				break;
 		}
-
 		switch (nextScene) {
 			case 0:
-				switcher1.setImageResource(R.drawable.ic_selected_circular);
-				swipeText.setText(PORTRAIT_SCENE);
-				imgOverlay.setImageResource(overlayScenes.get(PORTRAIT_SCENE).get(0));
-				currentScene = PORTRAIT_SCENE;
+				switcher1.setImageResource(selected);
+				loadOverlayImage(PORTRAIT_SCENE);
 				break;
 			case 1:
-				switcher2.setImageResource(R.drawable.ic_selected_circular);
-				swipeText.setText(SIGNATURE_SCENE);
-				imgOverlay.setImageResource(overlayScenes.get(SIGNATURE_SCENE).get(0));
-				currentScene = SIGNATURE_SCENE;
+				switcher2.setImageResource(selected);
+				loadOverlayImage(SIGNATURE_SCENE);
 				break;
 			case 2:
-				switcher3.setImageResource(R.drawable.ic_selected_circular);
-				swipeText.setText(INTERACTION_SCENE);
-				imgOverlay.setImageResource(overlayScenes.get(INTERACTION_SCENE).get(0));
-				currentScene = INTERACTION_SCENE;
+				switcher3.setImageResource(selected);
+				loadOverlayImage(INTERACTION_SCENE);
 				break;
 			case 3:
-				switcher4.setImageResource(R.drawable.ic_selected_circular);
-				swipeText.setText(CANDID_SCENE);
-				imgOverlay.setImageResource(overlayScenes.get(CANDID_SCENE).get(0));
-				currentScene = CANDID_SCENE;
+				switcher4.setImageResource(selected);
+				loadOverlayImage(CANDID_SCENE);
 				break;
 			case 4:
-				switcher5.setImageResource(R.drawable.ic_selected_circular);
-				swipeText.setText(ENVIRONMENT_SCENE);
-				imgOverlay.setImageResource(overlayScenes.get(ENVIRONMENT_SCENE).get(0));
-				currentScene = ENVIRONMENT_SCENE;
+				switcher5.setImageResource(selected);
+				loadOverlayImage(ENVIRONMENT_SCENE);
 				break;
 			default:
 				selectedScene = 0;
-				switcher1.setImageResource(R.drawable.ic_selected_circular);
-				swipeText.setText(PORTRAIT_SCENE);
-				imgOverlay.setImageResource(overlayScenes.get(PORTRAIT_SCENE).get(0));
-				currentScene = PORTRAIT_SCENE;
+				switcher1.setImageResource(selected);
+				loadOverlayImage(PORTRAIT_SCENE);
 				break;
 		}
+	}
+
+	private void loadOverlayImage(String scene) {
+		int imgID = overlayScenes.get(scene).get(0);
+		currentScene = scene;
+		swipeText.setText(scene);
+		GlideApp.with(this).load(imgID).placeholder(imgID).centerCrop().into(imgOverlay);
 	}
 }
