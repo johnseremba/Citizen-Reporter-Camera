@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Environment;
+import android.os.StrictMode;
 import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -40,6 +41,10 @@ public class ViewImageActivity extends AppCompatActivity {
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+		if(BuildConfig.DEBUG){
+			StrictMode.VmPolicy vmPolicy = new StrictMode.VmPolicy.Builder().detectActivityLeaks().penaltyLog().build();
+			StrictMode.setVmPolicy(vmPolicy);
+		}
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_view_image);
 

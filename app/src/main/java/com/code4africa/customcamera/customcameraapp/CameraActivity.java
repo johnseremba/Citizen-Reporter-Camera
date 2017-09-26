@@ -29,6 +29,7 @@ import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.StrictMode;
 import android.os.SystemClock;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
@@ -55,7 +56,6 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewSwitcher;
-import com.bumptech.glide.Glide;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -82,13 +82,11 @@ public class CameraActivity extends AppCompatActivity
 	private static final int STATE_WAIT_LOCK = 1;
 	private static final int PREVIEW_IMAGE_RESULT = 3;
 	private static final int PROGRESS_MIN = 50;
-	private static final int unSelected = R.drawable.ic_circular;
-	private static final int selected = R.drawable.ic_selected_circular;
-	private static String PORTRAIT_SCENE = "Portrait";
-	private static String CANDID_SCENE = "Candid";
-	private static String INTERACTION_SCENE = "Interaction";
-	private static String ENVIRONMENT_SCENE = "Environment";
-	private static String SIGNATURE_SCENE = "Signature";
+	private static final String PORTRAIT_SCENE = "Portrait";
+	private static final String CANDID_SCENE = "Candid";
+	private static final String INTERACTION_SCENE = "Interaction";
+	private static final String ENVIRONMENT_SCENE = "Environment";
+	private static final String SIGNATURE_SCENE = "Signature";
 	private int captureState = STATE_PREVIEW;
 	private TextureView textureView;
 	private ImageView capturePictureBtn;
@@ -133,7 +131,7 @@ public class CameraActivity extends AppCompatActivity
 	private boolean isRecording = false;
 	private Chronometer chronometer;
 	private String cameraPreviewResult;
-	private Integer flashStatus = 0;
+	private int flashStatus = 0;
 
 	private RecyclerView sceneRecyclerView;
 	private LinearLayoutManager layoutManager;
@@ -146,7 +144,7 @@ public class CameraActivity extends AppCompatActivity
 	private TextView seekBarProgressText;
 	private int aeRange;
 	private CameraManager cameraManager;
-	private Float maxDigitalZoom;
+	private float maxDigitalZoom;
 	private ScaleGestureDetector scaleGestureDetector;
 	private float scale = 10f;
 	private TextView zoomCaption;
@@ -292,7 +290,7 @@ public class CameraActivity extends AppCompatActivity
 		@Override public void onError(@NonNull CameraDevice camera, int i) {
 			camera.close();
 			cameraDevice = null;
-			Log.d(TAG, "Error opening camera: ");
+			Log.d(TAG, "Error opening camera");
 		}
 	};
 
@@ -433,7 +431,7 @@ public class CameraActivity extends AppCompatActivity
 					cameraManager.openCamera(cameraID, cameraDeviceStateCallback, backgroundHandler);
 				} else {
 					if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
-						Toast.makeText(this, "Code4Africa custom camera required access to the camera.",
+						Toast.makeText(this, "Code4Africa custom camera requires access to the camera.",
 								Toast.LENGTH_SHORT).show();
 					}
 					requestPermissions(new String[] { Manifest.permission.CAMERA },
@@ -520,14 +518,7 @@ public class CameraActivity extends AppCompatActivity
 		File imageFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
 		imageFolder = new File(imageFile, "Code4Africa");
 		if (!imageFolder.exists()) {
-			boolean result = imageFolder.mkdirs();
-			if (result) {
-				Log.d(TAG, "C4A images folder created successfully!");
-			} else {
-				Log.d(TAG, "Oops, C4A images folder not created!!");
-			}
-		} else {
-			Log.d(TAG, "Image directory already exists!");
+			imageFolder.mkdirs();
 		}
 	}
 
@@ -535,12 +526,7 @@ public class CameraActivity extends AppCompatActivity
 		File videoFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES);
 		videoFolder = new File(videoFile, "Code4Africa");
 		if (!videoFolder.exists()) {
-			boolean result = videoFolder.mkdir();
-			if (result) {
-				Log.d(TAG, "C4A video folder created successfully!");
-			} else {
-				Log.d(TAG, "C4A video directory already exists");
-			}
+			videoFolder.mkdir();
 		}
 	}
 
@@ -651,11 +637,9 @@ public class CameraActivity extends AppCompatActivity
 					Intent resultIntent = new Intent();
 					resultIntent.putExtra(IMAGE_SAVED_PATH, cameraPreviewResult);
 					setResult(Activity.RESULT_OK, resultIntent);
-					Log.d(TAG, "Success: " + cameraPreviewResult);
 				} else if (resultCode == Activity.RESULT_CANCELED) {
 					// Set the response of the camera intent to result canceled.
 					setResult(Activity.RESULT_CANCELED);
-					Log.d(TAG, "Image deleted by user!");
 				}
 				break;
 		}
@@ -670,8 +654,7 @@ public class CameraActivity extends AppCompatActivity
 				if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
 					Toast.makeText(getApplicationContext(), "App can't run without camera permissions.",
 							Toast.LENGTH_SHORT).show();
-				} else {
-					Log.d(TAG, "Camera permission granted successfully");
+					Log.d(TAG, "App can't run without camera permissions.");
 				}
 				break;
 			case REQUEST_STORAGE_PERMISSION:
@@ -691,9 +674,7 @@ public class CameraActivity extends AppCompatActivity
 				}
 				break;
 			case REQUEST_AUDIO_PERMISSION:
-				if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-					Log.d(TAG, "Audio permission granted successfully");
-				} else {
+				if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
 					Toast.makeText(getApplicationContext(), "App needs to record audio.", Toast.LENGTH_SHORT)
 							.show();
 					Log.d(TAG, "Audio permissions denied.");
@@ -941,6 +922,10 @@ public class CameraActivity extends AppCompatActivity
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+		if(BuildConfig.DEBUG) {
+			StrictMode.VmPolicy vmPolicy = new StrictMode.VmPolicy.Builder().penaltyLog().penaltyDeath().build();
+			StrictMode.setVmPolicy(vmPolicy);
+		}
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_camera);
 
@@ -1365,51 +1350,53 @@ public class CameraActivity extends AppCompatActivity
 	}
 
 	public void swipeScenes(Integer nextScene, Integer prevScene) {
+		final int UN_SELECTED = R.drawable.ic_circular;
+		final int SELECTED = R.drawable.ic_selected_circular;
 		switch (prevScene) {
 			case 0:
-				switcher1.setImageResource(unSelected);
+				switcher1.setImageResource(UN_SELECTED);
 				break;
 			case 1:
-				switcher2.setImageResource(unSelected);
+				switcher2.setImageResource(UN_SELECTED);
 				break;
 			case 2:
-				switcher3.setImageResource(unSelected);
+				switcher3.setImageResource(UN_SELECTED);
 				break;
 			case 3:
-				switcher4.setImageResource(unSelected);
+				switcher4.setImageResource(UN_SELECTED);
 				break;
 			case 4:
-				switcher5.setImageResource(unSelected);
+				switcher5.setImageResource(UN_SELECTED);
 				break;
 			default:
 				selectedScene = 0;
-				switcher1.setImageResource(unSelected);
+				switcher1.setImageResource(UN_SELECTED);
 				break;
 		}
 		switch (nextScene) {
 			case 0:
-				switcher1.setImageResource(selected);
+				switcher1.setImageResource(SELECTED);
 				loadOverlayImage(PORTRAIT_SCENE);
 				break;
 			case 1:
-				switcher2.setImageResource(selected);
+				switcher2.setImageResource(SELECTED);
 				loadOverlayImage(SIGNATURE_SCENE);
 				break;
 			case 2:
-				switcher3.setImageResource(selected);
+				switcher3.setImageResource(SELECTED);
 				loadOverlayImage(INTERACTION_SCENE);
 				break;
 			case 3:
-				switcher4.setImageResource(selected);
+				switcher4.setImageResource(SELECTED);
 				loadOverlayImage(CANDID_SCENE);
 				break;
 			case 4:
-				switcher5.setImageResource(selected);
+				switcher5.setImageResource(SELECTED);
 				loadOverlayImage(ENVIRONMENT_SCENE);
 				break;
 			default:
 				selectedScene = 0;
-				switcher1.setImageResource(selected);
+				switcher1.setImageResource(SELECTED);
 				loadOverlayImage(PORTRAIT_SCENE);
 				break;
 		}
