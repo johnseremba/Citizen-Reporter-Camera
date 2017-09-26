@@ -61,8 +61,7 @@ public class ViewImageActivity extends AppCompatActivity {
 				getIntent().getStringExtra(IMAGE_FILE_LOCATION)
 		);
 
-		SingleImageBitmapWorkerTask workerTask = new SingleImageBitmapWorkerTask(imageView, width, height);
-		workerTask.execute(imageFile);
+		GlideApp.with(this).load(imageFile).override(width, height).into(imageView);
 
 		closeBtn.setOnClickListener(new View.OnClickListener() {
 			@Override public void onClick(View view) {
