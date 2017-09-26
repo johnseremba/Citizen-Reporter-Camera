@@ -39,7 +39,6 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.util.Rational;
 import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.GestureDetector;
@@ -56,7 +55,6 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewSwitcher;
-import com.bumptech.glide.Glide;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -109,7 +107,6 @@ public class CameraActivity extends AppCompatActivity
 	}
 
 	private CaptureRequest.Builder captureRequestBuilder;
-
 	private File imageFolder;
 	private File videoFolder;
 	private String imageFileName;
@@ -124,7 +121,6 @@ public class CameraActivity extends AppCompatActivity
 
 	private ImageSwitcher switcher1, switcher2, switcher3, switcher4, switcher5;
 	private ImageView imgOverlay;
-	private ImageView imgSceneBg;
 	private HashMap<String, ArrayList<Integer>> overlayScenes;
 	private ArrayList<Integer> portrait, signature, interaction, candid, environment;
 	private GestureDetectorCompat gestureObject;
@@ -147,11 +143,7 @@ public class CameraActivity extends AppCompatActivity
 	private TextView seekBarProgressText;
 	private int aeRange;
 	private CameraManager cameraManager;
-	private float fingerSpacing = 0;
-	private int zoomLevel = 1;
-	private float[] availableFocalLengths;
 	private Float maxDigitalZoom;
-
 	private ScaleGestureDetector scaleGestureDetector;
 	private float scale = 10f;
 	private TextView zoomCaption;
@@ -165,10 +157,9 @@ public class CameraActivity extends AppCompatActivity
 					backgroundHandler.post(new ImageSaver(reader.acquireLatestImage()));
 				}
 			};
-	private Rational compesationStep;
-	private boolean manualFocusEnguaged = false;
+	private boolean manualFocusEngaged = false;
 	private Rect sensorArraySize;
-	private boolean isMeteringAFAreaSuppported;
+	private boolean isMeteringAFAreaSupported;
 
 	@Override public void OnClickScene(String sceneKey, Integer position) {
 		imgOverlay.setImageResource(overlayScenes.get(sceneKey).get(position));
@@ -178,7 +169,7 @@ public class CameraActivity extends AppCompatActivity
 	private class ImageSaver implements Runnable {
 		private final Image image;
 
-		public ImageSaver(Image image) {
+		private ImageSaver(Image image) {
 			this.image = image;
 		}
 
@@ -218,7 +209,7 @@ public class CameraActivity extends AppCompatActivity
 				public void onCaptureCompleted(@NonNull CameraCaptureSession session,
 						@NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
 					super.onCaptureCompleted(session, request, result);
-					manualFocusEnguaged = false;
+					manualFocusEngaged = false;
 
 					if (request.getTag() == "FOCUS_TAG") {
 						captureRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER, null);
@@ -346,17 +337,13 @@ public class CameraActivity extends AppCompatActivity
 					cameraID = camID;
 					aeRange = cameraCharacteristics.get(CameraCharacteristics.CONTROL_AE_COMPENSATION_RANGE)
 							.getUpper();
-					compesationStep =
-							cameraCharacteristics.get(CameraCharacteristics.CONTROL_AE_COMPENSATION_STEP);
 					sensorArraySize =
 							cameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
-					availableFocalLengths =
-							cameraCharacteristics.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS);
 					activePixesAfter =
 							cameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
 					maxDigitalZoom =
 							cameraCharacteristics.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM);
-					isMeteringAFAreaSuppported =
+					isMeteringAFAreaSupported =
 							cameraCharacteristics.get(CameraCharacteristics.CONTROL_MAX_REGIONS_AF) >= 1;
 					maxDigitalZoom *= 10;
 					return;
@@ -1311,7 +1298,7 @@ public class CameraActivity extends AppCompatActivity
 		}
 
 		@Override public boolean onSingleTapUp(MotionEvent e) {
-			if (manualFocusEnguaged) {
+			if (manualFocusEngaged) {
 				Log.d(TAG, "Manual focus already engaged!");
 				return true;
 			}
@@ -1347,7 +1334,7 @@ public class CameraActivity extends AppCompatActivity
 				e1.printStackTrace();
 			}
 
-			if (isMeteringAFAreaSuppported) {
+			if (isMeteringAFAreaSupported) {
 				captureRequestBuilder.set(CaptureRequest.CONTROL_AF_REGIONS,
 						new MeteringRectangle[] { focusArea });
 			}
@@ -1365,7 +1352,7 @@ public class CameraActivity extends AppCompatActivity
 			} catch (CameraAccessException e1) {
 				e1.printStackTrace();
 			}
-			manualFocusEnguaged = true;
+			manualFocusEngaged = true;
 			return true;
 		}
 	}
