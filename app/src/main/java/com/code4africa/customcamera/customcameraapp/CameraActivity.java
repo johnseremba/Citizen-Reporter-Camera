@@ -1145,6 +1145,7 @@ public class CameraActivity extends AppCompatActivity
 				// Record a video for long press
 				if(!showOverlays) {
 					hideOverlayDetails();
+					hideFlashAndToggle();
 					swipeText.setVisibility(View.VISIBLE);
 				} else {
 					hideSceneIcons();
@@ -1180,8 +1181,8 @@ public class CameraActivity extends AppCompatActivity
 				} else {
 					// Stop video recording, set back the capture icon
 					if(!showOverlays) {
-						hideSpecialEffects();
 						swipeText.setVisibility(View.INVISIBLE);
+						showFlashAndToggle();
 					} else {
 						showSceneIcons();
 						swipeText.setText(R.string.scene_changer_text);
@@ -1232,6 +1233,16 @@ public class CameraActivity extends AppCompatActivity
 				swapFlashMode();
 			}
 		});
+	}
+
+	private void hideFlashAndToggle() {
+		flashModeBtn.setVisibility(View.INVISIBLE);
+		overlayToggle.setVisibility(View.INVISIBLE);
+	}
+
+	private void showFlashAndToggle() {
+		flashModeBtn.setVisibility(View.VISIBLE);
+		overlayToggle.setVisibility(View.VISIBLE);
 	}
 
 	private void hideOverlayDetails() {
