@@ -71,6 +71,8 @@ public class ViewImageActivity extends AppCompatActivity {
 							new String[]{getIntent().getStringExtra(IMAGE_FILE_LOCATION)}, null, null);
 					setResult(Activity.RESULT_CANCELED);
 					ViewImageActivity.super.finish();
+				} else {
+					Toast.makeText(getApplicationContext(), "Problem deleting picture", Toast.LENGTH_SHORT).show();
 				}
 			}
 		});

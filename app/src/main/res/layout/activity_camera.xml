@@ -253,4 +253,16 @@
       app:layout_constraintStart_toEndOf="@+id/img_gallery"
       app:srcCompat="@drawable/ic_gear_thin"
       />
+  <ImageView
+      android:id="@+id/img_iso_btn"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_marginBottom="8dp"
+      android:layout_marginEnd="8dp"
+      android:layout_marginStart="8dp"
+      app:layout_constraintBottom_toBottomOf="parent"
+      app:layout_constraintEnd_toStartOf="@+id/img_switch_camera"
+      app:layout_constraintStart_toEndOf="@+id/img_capture"
+      app:srcCompat="@drawable/ic_iso"
+      />
 </android.support.constraint.ConstraintLayout>

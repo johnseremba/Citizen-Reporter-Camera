@@ -99,6 +99,7 @@ public class CameraActivity extends AppCompatActivity
 	private ImageView openGalleryBtn;
 	private ImageView swapCameraBtn;
 	private ImageView flashModeBtn;
+	private ImageView isoBtn;
 	private TextView swipeText;
 	private CameraDevice cameraDevice;
 	private String cameraID;
@@ -171,7 +172,9 @@ public class CameraActivity extends AppCompatActivity
 	private boolean manualFocusEngaged = false;
 	private Rect sensorArraySize;
 	private boolean isMeteringAFAreaSupported;
-	private String[] wbScenes = {"Auto", "Incandescent", "Daylight", "Fluorescent", "Cloudy", "Twilight", "Shade"};
+	private static final String[] WB_SCENES = {"Auto", "Incandescent", "Daylight", "Fluorescent", "Cloudy", "Twilight", "Shade"};
+	private static final String[] COLOR_EFFECTS = {"Off", "Mono", "Negative", "Solarize", "Sepia", "Posterize", "Whiteboard", "Blackboard", "Aqua"};
+	private HashMap<String, Integer> availableEffects = new HashMap<>();
 
 	@Override public void OnClickScene(String sceneKey, Integer position) {
 		imgOverlay.setImageResource(overlayScenes.get(sceneKey).get(position));
@@ -358,6 +361,17 @@ public class CameraActivity extends AppCompatActivity
 					isMeteringAFAreaSupported =
 							cameraCharacteristics.get(CameraCharacteristics.CONTROL_MAX_REGIONS_AF) >= 1;
 					maxDigitalZoom *= 10;
+
+					if (availableEffects.size() < 1) {
+						int[] colorModes =
+								cameraCharacteristics.get(CameraCharacteristics.CONTROL_AVAILABLE_EFFECTS);
+						if(colorModes != null) {
+							for (int mode : colorModes) {
+								availableEffects.put(COLOR_EFFECTS[mode], mode);
+							}
+						}
+					}
+
 					return;
 				}
 			}
@@ -617,18 +631,6 @@ public class CameraActivity extends AppCompatActivity
 		captureState = STATE_WAIT_LOCK;
 		captureRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
 				CaptureRequest.CONTROL_AF_TRIGGER_START);
-		try {
-			previewCaptureSession.capture(captureRequestBuilder.build(), previewCaptureCallback,
-					backgroundHandler);
-		} catch (CameraAccessException e) {
-			e.printStackTrace();
-		}
-	}
-
-	private void unLockFocus() {
-		captureState = STATE_PREVIEW;
-		captureRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
-				CaptureRequest.CONTROL_AF_TRIGGER_CANCEL);
 		try {
 			previewCaptureSession.capture(captureRequestBuilder.build(), previewCaptureCallback,
 					backgroundHandler);
@@ -938,7 +940,7 @@ public class CameraActivity extends AppCompatActivity
 	private void showWBList() {
 		AlertDialog.Builder builder = new AlertDialog.Builder(CameraActivity.this);
 		builder.setCancelable(true);
-		builder.setItems(wbScenes, new DialogInterface.OnClickListener() {
+		builder.setItems(WB_SCENES, new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int which) {
 				// The 'which' argument contains the index position
 				// of the selected item
@@ -951,7 +953,7 @@ public class CameraActivity extends AppCompatActivity
 	}
 
 	private void setWBMode(int index) {
-		//private String[] wbScenes = {"Auto", "Incandescent", "Daylight", "Fluorescent", "Cloudy", "Twilight", "Shade"};
+		//private String[] WB_SCENES = {"Auto", "Incandescent", "Daylight", "Fluorescent", "Cloudy", "Twilight", "Shade"};
 		switch(index) {
 			case 0:
 				captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_AUTO);
@@ -1009,6 +1011,14 @@ public class CameraActivity extends AppCompatActivity
 		imgToggleWB.setOnClickListener(new View.OnClickListener() {
 			@Override public void onClick(View view) {
 				showWBList();
+			}
+		});
+
+		isoBtn.setOnClickListener(new View.OnClickListener() {
+			@Override public void onClick(View view) {
+					captureRequestBuilder.set(CaptureRequest.CONTROL_EFFECT_MODE, CameraMetadata.CONTROL_EFFECT_MODE_NEGATIVE);
+					applySettings();
+				Toast.makeText(getApplicationContext(), "Getting iso", Toast.LENGTH_SHORT).show();
 			}
 		});
 
@@ -1175,6 +1185,7 @@ public class CameraActivity extends AppCompatActivity
 
 		whiteBalanceList = new ListView(this);
 		imgToggleWB = (ImageView) findViewById(R.id.img_settings_btn);
+		isoBtn = (ImageView) findViewById(R.id.img_iso_btn);
 	}
 
 	private void increaseBrightness(double progressValue) {
