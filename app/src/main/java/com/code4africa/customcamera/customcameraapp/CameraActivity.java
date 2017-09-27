@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Camera;
 import android.graphics.ImageFormat;
 import android.graphics.Matrix;
 import android.graphics.Rect;
@@ -176,8 +175,12 @@ public class CameraActivity extends AppCompatActivity
 	private boolean manualFocusEngaged = false;
 	private Rect sensorArraySize;
 	private boolean isMeteringAFAreaSupported;
-	private static final String[] WB_SCENES = {"Auto", "Incandescent", "Daylight", "Fluorescent", "Cloudy", "Twilight", "Shade"};
-	private static final String[] COLOR_EFFECTS = {"Off", "Mono", "Negative", "Solarize", "Sepia", "Posterize", "Whiteboard", "Blackboard", "Aqua"};
+	private static final String[] WB_SCENES =
+			{ "Auto", "Incandescent", "Daylight", "Fluorescent", "Cloudy", "Twilight", "Shade" };
+	private static final String[] COLOR_EFFECTS = {
+			"Off", "Mono", "Negative", "Solarize", "Sepia", "Posterize", "Whiteboard", "Blackboard",
+			"Aqua"
+	};
 	private HashMap<String, Integer> availableEffects = new HashMap<>();
 	private String currentCameraEffect;
 
@@ -371,7 +374,7 @@ public class CameraActivity extends AppCompatActivity
 					if (availableEffects.size() < 1) {
 						int[] colorModes =
 								cameraCharacteristics.get(CameraCharacteristics.CONTROL_AVAILABLE_EFFECTS);
-						if(colorModes != null) {
+						if (colorModes != null) {
 							for (int mode : colorModes) {
 								availableEffects.put(COLOR_EFFECTS[mode], mode);
 							}
@@ -442,13 +445,25 @@ public class CameraActivity extends AppCompatActivity
 
 		switch (flashStatus) {
 			case 0:
-				GlideApp.with(this).load(R.drawable.ic_flash_off).placeholder(R.drawable.ic_flash_off).centerCrop().into(flashModeBtn);
+				GlideApp.with(this)
+						.load(R.drawable.ic_flash_off)
+						.placeholder(R.drawable.ic_flash_off)
+						.centerCrop()
+						.into(flashModeBtn);
 				break;
 			case 1:
-				GlideApp.with(this).load(R.drawable.ic_flash_on).placeholder(R.drawable.ic_flash_on).centerCrop().into(flashModeBtn);
+				GlideApp.with(this)
+						.load(R.drawable.ic_flash_on)
+						.placeholder(R.drawable.ic_flash_on)
+						.centerCrop()
+						.into(flashModeBtn);
 				break;
 			case 2:
-				GlideApp.with(this).load(R.drawable.ic_flash_auto).placeholder(R.drawable.ic_flash_auto).centerCrop().into(flashModeBtn);
+				GlideApp.with(this)
+						.load(R.drawable.ic_flash_auto)
+						.placeholder(R.drawable.ic_flash_auto)
+						.centerCrop()
+						.into(flashModeBtn);
 				break;
 		}
 	}
@@ -522,7 +537,7 @@ public class CameraActivity extends AppCompatActivity
 			captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
 			captureRequestBuilder.addTarget(previewSurface);
 
-			if(!isRecording) {
+			if (!isRecording) {
 				applyCaptureSettings();
 			}
 
@@ -901,7 +916,7 @@ public class CameraActivity extends AppCompatActivity
 		applySettings();
 	}
 
-	private void applyZoom(){
+	private void applyZoom() {
 		captureRequestBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoom);
 	}
 
@@ -966,27 +981,34 @@ public class CameraActivity extends AppCompatActivity
 	}
 
 	private void setWBMode(int index) {
-		switch(index) {
+		switch (index) {
 			case 0:
-				captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_AUTO);
+				captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE,
+						CameraMetadata.CONTROL_AWB_MODE_AUTO);
 				break;
 			case 1:
-				captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_INCANDESCENT);
+				captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE,
+						CameraMetadata.CONTROL_AWB_MODE_INCANDESCENT);
 				break;
 			case 2:
-				captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_DAYLIGHT);
+				captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE,
+						CameraMetadata.CONTROL_AWB_MODE_DAYLIGHT);
 				break;
 			case 3:
-				captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_FLUORESCENT);
+				captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE,
+						CameraMetadata.CONTROL_AWB_MODE_FLUORESCENT);
 				break;
 			case 4:
-				captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_CLOUDY_DAYLIGHT);
+				captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE,
+						CameraMetadata.CONTROL_AWB_MODE_CLOUDY_DAYLIGHT);
 				break;
 			case 5:
-				captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_TWILIGHT);
+				captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE,
+						CameraMetadata.CONTROL_AWB_MODE_TWILIGHT);
 				break;
 			case 6:
-				captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_SHADE);
+				captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE,
+						CameraMetadata.CONTROL_AWB_MODE_SHADE);
 		}
 	}
 
@@ -1007,19 +1029,29 @@ public class CameraActivity extends AppCompatActivity
 		initializeScenes();
 		initializeCameraInterface(); // Creates the swipe buttons
 
-		String[] wbScenes = {"Auto", "Incadescent", "Daylight", "Fluorescent", "Cloudy", "Twilight", "Shade"};
-		final ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.wb_scenes_list, R.id.txt_scene_id, wbScenes);
+		String[] wbScenes =
+				{ "Auto", "Incadescent", "Daylight", "Fluorescent", "Cloudy", "Twilight", "Shade" };
+		final ArrayAdapter<String> adapter =
+				new ArrayAdapter<String>(this, R.layout.wb_scenes_list, R.id.txt_scene_id, wbScenes);
 		whiteBalanceList.setAdapter(adapter);
 
 		overlayToggle.setOnClickListener(new View.OnClickListener() {
 			@Override public void onClick(View view) {
-				if(showOverlays) {
+				if (showOverlays) {
 					showOverlays = false;
-					GlideApp.with(CameraActivity.this).load(R.drawable.ic_not_visible).placeholder(R.drawable.ic_not_visible).centerCrop().into(overlayToggle);
+					GlideApp.with(CameraActivity.this)
+							.load(R.drawable.ic_not_visible)
+							.placeholder(R.drawable.ic_not_visible)
+							.centerCrop()
+							.into(overlayToggle);
 					hideOverlayDetails();
 				} else {
 					showOverlays = true;
-					GlideApp.with(CameraActivity.this).load(R.drawable.ic_visible).placeholder(R.drawable.ic_visible).centerCrop().into(overlayToggle);
+					GlideApp.with(CameraActivity.this)
+							.load(R.drawable.ic_visible)
+							.placeholder(R.drawable.ic_visible)
+							.centerCrop()
+							.into(overlayToggle);
 					showOverlayDetails();
 				}
 			}
@@ -1029,7 +1061,8 @@ public class CameraActivity extends AppCompatActivity
 			@Override public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
 				ViewGroup vg = (ViewGroup) view;
 				TextView txt = (TextView) findViewById(R.id.txt_scene_id);
-				Toast.makeText(getApplicationContext(), txt.getText().toString(), Toast.LENGTH_SHORT).show();
+				Toast.makeText(getApplicationContext(), txt.getText().toString(), Toast.LENGTH_SHORT)
+						.show();
 			}
 		});
 
@@ -1123,7 +1156,11 @@ public class CameraActivity extends AppCompatActivity
 				imgOverlay.setImageDrawable(null);
 				swipeText.setText(R.string.recording_status);
 
-				GlideApp.with(CameraActivity.this).load(R.drawable.ic_video_record).placeholder(R.drawable.ic_video_record).centerCrop().into(capturePictureBtn);
+				GlideApp.with(CameraActivity.this)
+						.load(R.drawable.ic_video_record)
+						.placeholder(R.drawable.ic_video_record)
+						.centerCrop()
+						.into(capturePictureBtn);
 				checkWriteStoragePermission();
 				return true;
 			}
@@ -1146,7 +1183,11 @@ public class CameraActivity extends AppCompatActivity
 					chronometer.setVisibility(View.INVISIBLE);
 
 					isRecording = false;
-					GlideApp.with(CameraActivity.this).load(R.drawable.camera_capture).placeholder(R.drawable.camera_capture).centerCrop().into(capturePictureBtn);
+					GlideApp.with(CameraActivity.this)
+							.load(R.drawable.camera_capture)
+							.placeholder(R.drawable.camera_capture)
+							.centerCrop()
+							.into(capturePictureBtn);
 					swipeScenes(selectedScene, prevScene);
 
 					startPreview();
@@ -1200,8 +1241,8 @@ public class CameraActivity extends AppCompatActivity
 		final String[] elements = new String[availableEffects.size()];
 		int i = 1;
 		elements[0] = "Off";
-		for(String name : availableEffects.keySet()){
-			if(!Objects.equals(name, "Off")) {
+		for (String name : availableEffects.keySet()) {
+			if (!Objects.equals(name, "Off")) {
 				elements[i] = name;
 				i++;
 			}
@@ -1405,7 +1446,7 @@ public class CameraActivity extends AppCompatActivity
 	public class LearnGesture extends GestureDetector.SimpleOnGestureListener {
 		@Override
 		public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-			if(!showOverlays){
+			if (!showOverlays) {
 				return false;
 			}
 
@@ -1433,7 +1474,7 @@ public class CameraActivity extends AppCompatActivity
 
 		@Override public void onLongPress(MotionEvent e) {
 			// Show child scenes on long pressing the screen.;
-			if(!showOverlays) {
+			if (!showOverlays) {
 				return;
 			}
 			super.onLongPress(e);
@@ -1444,7 +1485,7 @@ public class CameraActivity extends AppCompatActivity
 		}
 
 		@Override public boolean onSingleTapUp(MotionEvent e) {
-			if(isRecording) {
+			if (isRecording) {
 				return false;
 			}
 			if (manualFocusEngaged) {
