@@ -100,7 +100,7 @@ public class CameraActivity extends AppCompatActivity
 	private ImageView openGalleryBtn;
 	private ImageView swapCameraBtn;
 	private ImageView flashModeBtn;
-	private ImageView isoBtn;
+	private ImageView effectsBtn;
 	private TextView swipeText;
 	private CameraDevice cameraDevice;
 	private String cameraID;
@@ -147,7 +147,7 @@ public class CameraActivity extends AppCompatActivity
 	private boolean moreScenes = false;
 	private String currentScene;
 
-	private double progressValue;
+	private double progressValue = 50;
 	private SeekBar lightSeekBar;
 	private TextView seekBarProgressText;
 	private int aeRange;
@@ -517,6 +517,7 @@ public class CameraActivity extends AppCompatActivity
 		try {
 			captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
 			captureRequestBuilder.addTarget(previewSurface);
+			applyCaptureSettings();
 
 			cameraDevice.createCaptureSession(Arrays.asList(previewSurface, imageReader.getSurface()),
 					new CameraCaptureSession.StateCallback() {
@@ -705,16 +706,7 @@ public class CameraActivity extends AppCompatActivity
 			captureRequestBuilder.addTarget(imageReader.getSurface());
 			captureRequestBuilder.set(CaptureRequest.JPEG_ORIENTATION,
 					totalRotation); // Fix orientation skews
-			setFlashMode();
-			setWBMode(wbMode);
-			setCameraEffectMode(currentCameraEffect);
-
-			captureRequestBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoom);
-			captureRequestBuilder.set(CaptureRequest.CONTROL_AE_LOCK, false);
-			captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_ON);
-			captureRequestBuilder.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION,
-					(int) progressValue);
-			captureRequestBuilder.set(CaptureRequest.CONTROL_AE_LOCK, true);
+			applyCaptureSettings();
 
 			CameraCaptureSession.CaptureCallback stillCaptureCallback =
 					new CameraCaptureSession.CaptureCallback() {
@@ -898,8 +890,20 @@ public class CameraActivity extends AppCompatActivity
 		cropHeight -= cropHeight & 3;
 		zoom = new Rect(cropWidth, cropHeight, activePixesAfter.width() - cropWidth,
 				activePixesAfter.height() - cropHeight);
-		captureRequestBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoom);
+		applyZoom();
 		applySettings();
+	}
+
+	private void applyZoom(){
+		captureRequestBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoom);
+	}
+
+	private void applyCaptureSettings() {
+		applyZoom();
+		setFlashMode();
+		setWBMode(wbMode);
+		setCameraEffectMode(currentCameraEffect);
+		increaseBrightness(progressValue);
 	}
 
 	private class ScaleListener implements ScaleGestureDetector.OnScaleGestureListener {
@@ -947,6 +951,7 @@ public class CameraActivity extends AppCompatActivity
 			public void onClick(DialogInterface dialog, int index) {
 				wbMode = index;
 				setWBMode(index);
+				applySettings();
 			}
 		});
 		AlertDialog dialog = builder.create();
@@ -976,7 +981,6 @@ public class CameraActivity extends AppCompatActivity
 			case 6:
 				captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_SHADE);
 		}
-		applySettings();
 	}
 
 	@Override
@@ -1014,7 +1018,7 @@ public class CameraActivity extends AppCompatActivity
 			}
 		});
 
-		isoBtn.setOnClickListener(new View.OnClickListener() {
+		effectsBtn.setOnClickListener(new View.OnClickListener() {
 			@Override public void onClick(View view) {
 				showColorEffectsList();
 			}
@@ -1033,6 +1037,7 @@ public class CameraActivity extends AppCompatActivity
 			@Override public void onStopTrackingTouch(SeekBar seekBar) {
 				increaseBrightness(progressValue);
 				seekBarProgressText.setVisibility(View.INVISIBLE);
+				applySettings();
 			}
 		});
 
@@ -1172,6 +1177,7 @@ public class CameraActivity extends AppCompatActivity
 			public void onClick(DialogInterface dialog, int index) {
 				currentCameraEffect = elements[index];
 				setCameraEffectMode(elements[index]);
+				applySettings();
 			}
 		});
 		AlertDialog dialog = builder.create();
@@ -1180,7 +1186,6 @@ public class CameraActivity extends AppCompatActivity
 
 	private void setCameraEffectMode(String effect) {
 		captureRequestBuilder.set(CaptureRequest.CONTROL_EFFECT_MODE, availableEffects.get(effect));
-		applySettings();
 	}
 
 	private void initializeObjects() {
@@ -1209,8 +1214,8 @@ public class CameraActivity extends AppCompatActivity
 		zoomCaption = (TextView) findViewById(R.id.txt_zoom_caption);
 
 		whiteBalanceList = new ListView(this);
-		imgToggleWB = (ImageView) findViewById(R.id.img_settings_btn);
-		isoBtn = (ImageView) findViewById(R.id.img_iso_btn);
+		imgToggleWB = (ImageView) findViewById(R.id.img_wb_btn);
+		effectsBtn = (ImageView) findViewById(R.id.img_effects_btn);
 	}
 
 	private void increaseBrightness(double progressValue) {
@@ -1218,7 +1223,6 @@ public class CameraActivity extends AppCompatActivity
 		captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_ON);
 		captureRequestBuilder.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION, (int) progressValue);
 		captureRequestBuilder.set(CaptureRequest.CONTROL_AE_LOCK, true);
-		applySettings();
 	}
 
 	private void applySettings() {
