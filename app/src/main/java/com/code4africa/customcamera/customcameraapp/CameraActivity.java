@@ -101,6 +101,7 @@ public class CameraActivity extends AppCompatActivity
 	private ImageView swapCameraBtn;
 	private ImageView flashModeBtn;
 	private ImageView effectsBtn;
+	private ImageView overlayToggle;
 	private TextView swipeText;
 	private CameraDevice cameraDevice;
 	private String cameraID;
@@ -162,6 +163,7 @@ public class CameraActivity extends AppCompatActivity
 	public ListView whiteBalanceList;
 	private ImageView imgToggleWB;
 	private int wbMode = 0;
+	private boolean showOverlays = true;
 
 	private final ImageReader.OnImageAvailableListener onImageAvailableListener =
 			new ImageReader.OnImageAvailableListener() {
@@ -517,7 +519,10 @@ public class CameraActivity extends AppCompatActivity
 		try {
 			captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
 			captureRequestBuilder.addTarget(previewSurface);
-			applyCaptureSettings();
+
+			if(!isRecording) {
+				applyCaptureSettings();
+			}
 
 			cameraDevice.createCaptureSession(Arrays.asList(previewSurface, imageReader.getSurface()),
 					new CameraCaptureSession.StateCallback() {
@@ -1004,6 +1009,20 @@ public class CameraActivity extends AppCompatActivity
 		final ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.wb_scenes_list, R.id.txt_scene_id, wbScenes);
 		whiteBalanceList.setAdapter(adapter);
 
+		overlayToggle.setOnClickListener(new View.OnClickListener() {
+			@Override public void onClick(View view) {
+				if(showOverlays) {
+					showOverlays = false;
+					overlayToggle.setImageResource(R.drawable.ic_not_visible);
+					hideOverlayDetails();
+				} else {
+					showOverlays = true;
+					overlayToggle.setImageResource(R.drawable.ic_visible);
+					showOverlayDetails();
+				}
+			}
+		});
+
 		whiteBalanceList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 			@Override public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
 				ViewGroup vg = (ViewGroup) view;
@@ -1161,6 +1180,20 @@ public class CameraActivity extends AppCompatActivity
 		});
 	}
 
+	private void hideOverlayDetails() {
+		hideSceneSwitcher();
+		hideSceneIcons();
+		flashModeBtn.setVisibility(View.VISIBLE);
+		swipeText.setVisibility(View.GONE);
+		imgOverlay.setVisibility(View.GONE);
+	}
+
+	private void showOverlayDetails() {
+		showSceneIcons();
+		imgOverlay.setVisibility(View.VISIBLE);
+		swipeText.setVisibility(View.VISIBLE);
+	}
+
 	private void showColorEffectsList() {
 		final String[] elements = new String[availableEffects.size()];
 		int i = 1;
@@ -1216,6 +1249,7 @@ public class CameraActivity extends AppCompatActivity
 		whiteBalanceList = new ListView(this);
 		imgToggleWB = (ImageView) findViewById(R.id.img_wb_btn);
 		effectsBtn = (ImageView) findViewById(R.id.img_effects_btn);
+		overlayToggle = (ImageView) findViewById(R.id.img_overlay_toggle);
 	}
 
 	private void increaseBrightness(double progressValue) {
@@ -1369,6 +1403,10 @@ public class CameraActivity extends AppCompatActivity
 	public class LearnGesture extends GestureDetector.SimpleOnGestureListener {
 		@Override
 		public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+			if(!showOverlays){
+				return false;
+			}
+
 			if (moreScenes) {
 				hideSceneSwitcher();
 			}
@@ -1393,6 +1431,9 @@ public class CameraActivity extends AppCompatActivity
 
 		@Override public void onLongPress(MotionEvent e) {
 			// Show child scenes on long pressing the screen.;
+			if(!showOverlays) {
+				return;
+			}
 			super.onLongPress(e);
 			showSceneSwitcher();
 			sceneSelectorAdapter = new SceneSelectorAdapter(CameraActivity.this, currentScene,
