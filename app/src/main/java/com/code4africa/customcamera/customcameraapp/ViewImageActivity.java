@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Environment;
+import android.os.StrictMode;
 import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -40,6 +41,10 @@ public class ViewImageActivity extends AppCompatActivity {
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+		if(BuildConfig.DEBUG){
+			StrictMode.VmPolicy vmPolicy = new StrictMode.VmPolicy.Builder().detectActivityLeaks().penaltyLog().build();
+			StrictMode.setVmPolicy(vmPolicy);
+		}
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_view_image);
 
@@ -56,8 +61,7 @@ public class ViewImageActivity extends AppCompatActivity {
 				getIntent().getStringExtra(IMAGE_FILE_LOCATION)
 		);
 
-		SingleImageBitmapWorkerTask workerTask = new SingleImageBitmapWorkerTask(imageView, width, height);
-		workerTask.execute(imageFile);
+		GlideApp.with(this).load(imageFile).override(width, height).into(imageView);
 
 		closeBtn.setOnClickListener(new View.OnClickListener() {
 			@Override public void onClick(View view) {
@@ -67,6 +71,8 @@ public class ViewImageActivity extends AppCompatActivity {
 							new String[]{getIntent().getStringExtra(IMAGE_FILE_LOCATION)}, null, null);
 					setResult(Activity.RESULT_CANCELED);
 					ViewImageActivity.super.finish();
+				} else {
+					Toast.makeText(getApplicationContext(), "Problem deleting picture", Toast.LENGTH_SHORT).show();
 				}
 			}
 		});

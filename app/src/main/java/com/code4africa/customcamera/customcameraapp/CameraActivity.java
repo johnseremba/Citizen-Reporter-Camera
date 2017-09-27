@@ -2,7 +2,9 @@ package com.code4africa.customcamera.customcameraapp;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.ImageFormat;
@@ -29,6 +31,7 @@ import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.StrictMode;
 import android.os.SystemClock;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
@@ -39,7 +42,6 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.util.Rational;
 import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.GestureDetector;
@@ -49,14 +51,17 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.hardware.camera2.CameraDevice;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Chronometer;
 import android.widget.ImageSwitcher;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewSwitcher;
-import com.bumptech.glide.Glide;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -69,6 +74,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 
 public class CameraActivity extends AppCompatActivity
 		implements SceneSelectorAdapter.OnClickThumbListener {
@@ -83,17 +89,19 @@ public class CameraActivity extends AppCompatActivity
 	private static final int STATE_WAIT_LOCK = 1;
 	private static final int PREVIEW_IMAGE_RESULT = 3;
 	private static final int PROGRESS_MIN = 50;
-	private static String PORTRAIT_SCENE = "Portrait";
-	private static String CANDID_SCENE = "Candid";
-	private static String INTERACTION_SCENE = "Interaction";
-	private static String ENVIRONMENT_SCENE = "Environment";
-	private static String SIGNATURE_SCENE = "Signature";
+	private static final String PORTRAIT_SCENE = "Portrait";
+	private static final String CANDID_SCENE = "Candid";
+	private static final String INTERACTION_SCENE = "Interaction";
+	private static final String ENVIRONMENT_SCENE = "Environment";
+	private static final String SIGNATURE_SCENE = "Signature";
 	private int captureState = STATE_PREVIEW;
 	private TextureView textureView;
 	private ImageView capturePictureBtn;
 	private ImageView openGalleryBtn;
 	private ImageView swapCameraBtn;
 	private ImageView flashModeBtn;
+	private ImageView effectsBtn;
+	private ImageView overlayToggle;
 	private TextView swipeText;
 	private CameraDevice cameraDevice;
 	private String cameraID;
@@ -109,7 +117,6 @@ public class CameraActivity extends AppCompatActivity
 	}
 
 	private CaptureRequest.Builder captureRequestBuilder;
-
 	private File imageFolder;
 	private File videoFolder;
 	private String imageFileName;
@@ -124,7 +131,6 @@ public class CameraActivity extends AppCompatActivity
 
 	private ImageSwitcher switcher1, switcher2, switcher3, switcher4, switcher5;
 	private ImageView imgOverlay;
-	private ImageView imgSceneBg;
 	private HashMap<String, ArrayList<Integer>> overlayScenes;
 	private ArrayList<Integer> portrait, signature, interaction, candid, environment;
 	private GestureDetectorCompat gestureObject;
@@ -134,7 +140,7 @@ public class CameraActivity extends AppCompatActivity
 	private boolean isRecording = false;
 	private Chronometer chronometer;
 	private String cameraPreviewResult;
-	private Integer flashStatus = 0;
+	private int flashStatus = 0;
 
 	private RecyclerView sceneRecyclerView;
 	private LinearLayoutManager layoutManager;
@@ -142,21 +148,22 @@ public class CameraActivity extends AppCompatActivity
 	private boolean moreScenes = false;
 	private String currentScene;
 
-	private double progressValue;
+	private double progressValue = 50;
 	private SeekBar lightSeekBar;
 	private TextView seekBarProgressText;
 	private int aeRange;
 	private CameraManager cameraManager;
-	private float fingerSpacing = 0;
-	private int zoomLevel = 1;
-	private float[] availableFocalLengths;
-	private Float maxDigitalZoom;
-
+	private float maxDigitalZoom;
 	private ScaleGestureDetector scaleGestureDetector;
 	private float scale = 10f;
 	private TextView zoomCaption;
 	private Rect activePixesAfter;
 	private Rect zoom;
+
+	public ListView whiteBalanceList;
+	private ImageView imgToggleWB;
+	private int wbMode = 0;
+	private boolean showOverlays = true;
 
 	private final ImageReader.OnImageAvailableListener onImageAvailableListener =
 			new ImageReader.OnImageAvailableListener() {
@@ -165,10 +172,13 @@ public class CameraActivity extends AppCompatActivity
 					backgroundHandler.post(new ImageSaver(reader.acquireLatestImage()));
 				}
 			};
-	private Rational compesationStep;
-	private boolean manualFocusEnguaged = false;
+	private boolean manualFocusEngaged = false;
 	private Rect sensorArraySize;
-	private boolean isMeteringAFAreaSuppported;
+	private boolean isMeteringAFAreaSupported;
+	private static final String[] WB_SCENES = {"Auto", "Incandescent", "Daylight", "Fluorescent", "Cloudy", "Twilight", "Shade"};
+	private static final String[] COLOR_EFFECTS = {"Off", "Mono", "Negative", "Solarize", "Sepia", "Posterize", "Whiteboard", "Blackboard", "Aqua"};
+	private HashMap<String, Integer> availableEffects = new HashMap<>();
+	private String currentCameraEffect;
 
 	@Override public void OnClickScene(String sceneKey, Integer position) {
 		imgOverlay.setImageResource(overlayScenes.get(sceneKey).get(position));
@@ -178,7 +188,7 @@ public class CameraActivity extends AppCompatActivity
 	private class ImageSaver implements Runnable {
 		private final Image image;
 
-		public ImageSaver(Image image) {
+		private ImageSaver(Image image) {
 			this.image = image;
 		}
 
@@ -218,7 +228,7 @@ public class CameraActivity extends AppCompatActivity
 				public void onCaptureCompleted(@NonNull CameraCaptureSession session,
 						@NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
 					super.onCaptureCompleted(session, request, result);
-					manualFocusEnguaged = false;
+					manualFocusEngaged = false;
 
 					if (request.getTag() == "FOCUS_TAG") {
 						captureRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER, null);
@@ -298,7 +308,7 @@ public class CameraActivity extends AppCompatActivity
 		@Override public void onError(@NonNull CameraDevice camera, int i) {
 			camera.close();
 			cameraDevice = null;
-			Log.d(TAG, "Error opening camera: ");
+			Log.d(TAG, "Error opening camera");
 		}
 	};
 
@@ -346,19 +356,26 @@ public class CameraActivity extends AppCompatActivity
 					cameraID = camID;
 					aeRange = cameraCharacteristics.get(CameraCharacteristics.CONTROL_AE_COMPENSATION_RANGE)
 							.getUpper();
-					compesationStep =
-							cameraCharacteristics.get(CameraCharacteristics.CONTROL_AE_COMPENSATION_STEP);
 					sensorArraySize =
 							cameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
-					availableFocalLengths =
-							cameraCharacteristics.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS);
 					activePixesAfter =
 							cameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
 					maxDigitalZoom =
 							cameraCharacteristics.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM);
-					isMeteringAFAreaSuppported =
+					isMeteringAFAreaSupported =
 							cameraCharacteristics.get(CameraCharacteristics.CONTROL_MAX_REGIONS_AF) >= 1;
 					maxDigitalZoom *= 10;
+
+					if (availableEffects.size() < 1) {
+						int[] colorModes =
+								cameraCharacteristics.get(CameraCharacteristics.CONTROL_AVAILABLE_EFFECTS);
+						if(colorModes != null) {
+							for (int mode : colorModes) {
+								availableEffects.put(COLOR_EFFECTS[mode], mode);
+							}
+						}
+					}
+
 					return;
 				}
 			}
@@ -443,7 +460,7 @@ public class CameraActivity extends AppCompatActivity
 					cameraManager.openCamera(cameraID, cameraDeviceStateCallback, backgroundHandler);
 				} else {
 					if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
-						Toast.makeText(this, "Code4Africa custom camera required access to the camera.",
+						Toast.makeText(this, "Code4Africa custom camera requires access to the camera.",
 								Toast.LENGTH_SHORT).show();
 					}
 					requestPermissions(new String[] { Manifest.permission.CAMERA },
@@ -503,6 +520,10 @@ public class CameraActivity extends AppCompatActivity
 			captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
 			captureRequestBuilder.addTarget(previewSurface);
 
+			if(!isRecording) {
+				applyCaptureSettings();
+			}
+
 			cameraDevice.createCaptureSession(Arrays.asList(previewSurface, imageReader.getSurface()),
 					new CameraCaptureSession.StateCallback() {
 						@Override
@@ -530,14 +551,7 @@ public class CameraActivity extends AppCompatActivity
 		File imageFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
 		imageFolder = new File(imageFile, "Code4Africa");
 		if (!imageFolder.exists()) {
-			boolean result = imageFolder.mkdirs();
-			if (result) {
-				Log.d(TAG, "C4A images folder created successfully!");
-			} else {
-				Log.d(TAG, "Oops, C4A images folder not created!!");
-			}
-		} else {
-			Log.d(TAG, "Image directory already exists!");
+			imageFolder.mkdirs();
 		}
 	}
 
@@ -545,12 +559,7 @@ public class CameraActivity extends AppCompatActivity
 		File videoFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES);
 		videoFolder = new File(videoFile, "Code4Africa");
 		if (!videoFolder.exists()) {
-			boolean result = videoFolder.mkdir();
-			if (result) {
-				Log.d(TAG, "C4A video folder created successfully!");
-			} else {
-				Log.d(TAG, "C4A video directory already exists");
-			}
+			videoFolder.mkdir();
 		}
 	}
 
@@ -572,6 +581,7 @@ public class CameraActivity extends AppCompatActivity
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 			if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
 					== PackageManager.PERMISSION_GRANTED) {
+				createMediaFolders();
 				if (isRecording) {
 					if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
 							== PackageManager.PERMISSION_GRANTED) {
@@ -604,6 +614,7 @@ public class CameraActivity extends AppCompatActivity
 						REQUEST_STORAGE_PERMISSION);
 			}
 		} else {
+			createMediaFolders();
 			if (isRecording) {
 				try {
 					createVideoFileName();
@@ -619,22 +630,15 @@ public class CameraActivity extends AppCompatActivity
 		}
 	}
 
+	private void createMediaFolders() {
+		createImageFolder();
+		createVideoFolder();
+	}
+
 	private void lockFocus() {
 		captureState = STATE_WAIT_LOCK;
 		captureRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
 				CaptureRequest.CONTROL_AF_TRIGGER_START);
-		try {
-			previewCaptureSession.capture(captureRequestBuilder.build(), previewCaptureCallback,
-					backgroundHandler);
-		} catch (CameraAccessException e) {
-			e.printStackTrace();
-		}
-	}
-
-	private void unLockFocus() {
-		captureState = STATE_PREVIEW;
-		captureRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
-				CaptureRequest.CONTROL_AF_TRIGGER_CANCEL);
 		try {
 			previewCaptureSession.capture(captureRequestBuilder.build(), previewCaptureCallback,
 					backgroundHandler);
@@ -654,11 +658,9 @@ public class CameraActivity extends AppCompatActivity
 					Intent resultIntent = new Intent();
 					resultIntent.putExtra(IMAGE_SAVED_PATH, cameraPreviewResult);
 					setResult(Activity.RESULT_OK, resultIntent);
-					Log.d(TAG, "Success: " + cameraPreviewResult);
 				} else if (resultCode == Activity.RESULT_CANCELED) {
 					// Set the response of the camera intent to result canceled.
 					setResult(Activity.RESULT_CANCELED);
-					Log.d(TAG, "Image deleted by user!");
 				}
 				break;
 		}
@@ -673,8 +675,7 @@ public class CameraActivity extends AppCompatActivity
 				if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
 					Toast.makeText(getApplicationContext(), "App can't run without camera permissions.",
 							Toast.LENGTH_SHORT).show();
-				} else {
-					Log.d(TAG, "Camera permission granted successfully");
+					Log.d(TAG, "App can't run without camera permissions.");
 				}
 				break;
 			case REQUEST_STORAGE_PERMISSION:
@@ -694,9 +695,7 @@ public class CameraActivity extends AppCompatActivity
 				}
 				break;
 			case REQUEST_AUDIO_PERMISSION:
-				if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-					Log.d(TAG, "Audio permission granted successfully");
-				} else {
+				if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
 					Toast.makeText(getApplicationContext(), "App needs to record audio.", Toast.LENGTH_SHORT)
 							.show();
 					Log.d(TAG, "Audio permissions denied.");
@@ -712,31 +711,7 @@ public class CameraActivity extends AppCompatActivity
 			captureRequestBuilder.addTarget(imageReader.getSurface());
 			captureRequestBuilder.set(CaptureRequest.JPEG_ORIENTATION,
 					totalRotation); // Fix orientation skews
-
-			switch (flashStatus) {
-				case 0:
-					captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
-							CameraMetadata.CONTROL_AE_MODE_ON);
-					captureRequestBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_OFF);
-					break;
-				case 1:
-					captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
-							CameraMetadata.CONTROL_AE_MODE_ON_ALWAYS_FLASH);
-					captureRequestBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_SINGLE);
-					break;
-				case 2:
-					captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
-							CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
-					captureRequestBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_OFF);
-					break;
-			}
-
-			captureRequestBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoom);
-			captureRequestBuilder.set(CaptureRequest.CONTROL_AE_LOCK, false);
-			captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_ON);
-			captureRequestBuilder.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION,
-					(int) progressValue);
-			captureRequestBuilder.set(CaptureRequest.CONTROL_AE_LOCK, true);
+			applyCaptureSettings();
 
 			CameraCaptureSession.CaptureCallback stillCaptureCallback =
 					new CameraCaptureSession.CaptureCallback() {
@@ -754,6 +729,26 @@ public class CameraActivity extends AppCompatActivity
 			previewCaptureSession.capture(captureRequestBuilder.build(), stillCaptureCallback, null);
 		} catch (CameraAccessException e) {
 			e.printStackTrace();
+		}
+	}
+
+	private void setFlashMode() {
+		switch (flashStatus) {
+			case 0:
+				captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
+						CameraMetadata.CONTROL_AE_MODE_ON);
+				captureRequestBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_OFF);
+				break;
+			case 1:
+				captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
+						CameraMetadata.CONTROL_AE_MODE_ON_ALWAYS_FLASH);
+				captureRequestBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_SINGLE);
+				break;
+			case 2:
+				captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
+						CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
+				captureRequestBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_OFF);
+				break;
 		}
 	}
 
@@ -900,8 +895,20 @@ public class CameraActivity extends AppCompatActivity
 		cropHeight -= cropHeight & 3;
 		zoom = new Rect(cropWidth, cropHeight, activePixesAfter.width() - cropWidth,
 				activePixesAfter.height() - cropHeight);
-		captureRequestBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoom);
+		applyZoom();
 		applySettings();
+	}
+
+	private void applyZoom(){
+		captureRequestBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoom);
+	}
+
+	private void applyCaptureSettings() {
+		applyZoom();
+		setFlashMode();
+		setWBMode(wbMode);
+		setCameraEffectMode(currentCameraEffect);
+		increaseBrightness(progressValue);
 	}
 
 	private class ScaleListener implements ScaleGestureDetector.OnScaleGestureListener {
@@ -942,26 +949,99 @@ public class CameraActivity extends AppCompatActivity
 		}
 	}
 
+	private void showWBList() {
+		AlertDialog.Builder builder = new AlertDialog.Builder(CameraActivity.this);
+		builder.setCancelable(true);
+		builder.setItems(WB_SCENES, new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int index) {
+				wbMode = index;
+				setWBMode(index);
+				applySettings();
+			}
+		});
+		AlertDialog dialog = builder.create();
+		dialog.show();
+	}
+
+	private void setWBMode(int index) {
+		switch(index) {
+			case 0:
+				captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_AUTO);
+				break;
+			case 1:
+				captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_INCANDESCENT);
+				break;
+			case 2:
+				captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_DAYLIGHT);
+				break;
+			case 3:
+				captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_FLUORESCENT);
+				break;
+			case 4:
+				captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_CLOUDY_DAYLIGHT);
+				break;
+			case 5:
+				captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_TWILIGHT);
+				break;
+			case 6:
+				captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_SHADE);
+		}
+	}
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+		if (BuildConfig.DEBUG) {
+			StrictMode.VmPolicy vmPolicy =
+					new StrictMode.VmPolicy.Builder().penaltyLog().penaltyDeath().build();
+			StrictMode.setVmPolicy(vmPolicy);
+		}
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_camera);
 
+		currentScene = INTERACTION_SCENE;
 		gestureObject = new GestureDetectorCompat(this, new LearnGesture());
 		scaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener());
-
 		initializeObjects();
-		// Initializes the scenes with the relevant scene images
 		initializeScenes();
+		initializeCameraInterface(); // Creates the swipe buttons
 
-		createImageFolder();
-		createVideoFolder();
+		String[] wbScenes = {"Auto", "Incadescent", "Daylight", "Fluorescent", "Cloudy", "Twilight", "Shade"};
+		final ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.wb_scenes_list, R.id.txt_scene_id, wbScenes);
+		whiteBalanceList.setAdapter(adapter);
 
-		Toast.makeText(getApplicationContext(), R.string.interaction_scene, Toast.LENGTH_SHORT).show();
-		currentScene = INTERACTION_SCENE;
+		overlayToggle.setOnClickListener(new View.OnClickListener() {
+			@Override public void onClick(View view) {
+				if(showOverlays) {
+					showOverlays = false;
+					overlayToggle.setImageResource(R.drawable.ic_not_visible);
+					hideOverlayDetails();
+				} else {
+					showOverlays = true;
+					overlayToggle.setImageResource(R.drawable.ic_visible);
+					showOverlayDetails();
+				}
+			}
+		});
 
-		// Creates the swipe buttons and initializes the initial overlay image
-		initializeCameraInterface();
+		whiteBalanceList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+			@Override public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+				ViewGroup vg = (ViewGroup) view;
+				TextView txt = (TextView) findViewById(R.id.txt_scene_id);
+				Toast.makeText(getApplicationContext(), txt.getText().toString(), Toast.LENGTH_SHORT).show();
+			}
+		});
+
+		imgToggleWB.setOnClickListener(new View.OnClickListener() {
+			@Override public void onClick(View view) {
+				showWBList();
+			}
+		});
+
+		effectsBtn.setOnClickListener(new View.OnClickListener() {
+			@Override public void onClick(View view) {
+				showColorEffectsList();
+			}
+		});
 
 		lightSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 			@Override public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -976,6 +1056,7 @@ public class CameraActivity extends AppCompatActivity
 			@Override public void onStopTrackingTouch(SeekBar seekBar) {
 				increaseBrightness(progressValue);
 				seekBarProgressText.setVisibility(View.INVISIBLE);
+				applySettings();
 			}
 		});
 
@@ -1099,6 +1180,47 @@ public class CameraActivity extends AppCompatActivity
 		});
 	}
 
+	private void hideOverlayDetails() {
+		hideSceneSwitcher();
+		hideSceneIcons();
+		flashModeBtn.setVisibility(View.VISIBLE);
+		swipeText.setVisibility(View.GONE);
+		imgOverlay.setVisibility(View.GONE);
+	}
+
+	private void showOverlayDetails() {
+		showSceneIcons();
+		imgOverlay.setVisibility(View.VISIBLE);
+		swipeText.setVisibility(View.VISIBLE);
+	}
+
+	private void showColorEffectsList() {
+		final String[] elements = new String[availableEffects.size()];
+		int i = 1;
+		elements[0] = "Off";
+		for(String name : availableEffects.keySet()){
+			if(!Objects.equals(name, "Off")) {
+				elements[i] = name;
+				i++;
+			}
+		}
+		AlertDialog.Builder builder = new AlertDialog.Builder(CameraActivity.this);
+		builder.setCancelable(true);
+		builder.setItems(elements, new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int index) {
+				currentCameraEffect = elements[index];
+				setCameraEffectMode(elements[index]);
+				applySettings();
+			}
+		});
+		AlertDialog dialog = builder.create();
+		dialog.show();
+	}
+
+	private void setCameraEffectMode(String effect) {
+		captureRequestBuilder.set(CaptureRequest.CONTROL_EFFECT_MODE, availableEffects.get(effect));
+	}
+
 	private void initializeObjects() {
 		mediaRecorder = new MediaRecorder();
 		sceneRecyclerView = (RecyclerView) findViewById(R.id.scene_recylcer_view);
@@ -1123,6 +1245,11 @@ public class CameraActivity extends AppCompatActivity
 		seekBarProgressText = (TextView) findViewById(R.id.txt_seekbar_progress);
 		lightSeekBar = (SeekBar) findViewById(R.id.seekbar_light);
 		zoomCaption = (TextView) findViewById(R.id.txt_zoom_caption);
+
+		whiteBalanceList = new ListView(this);
+		imgToggleWB = (ImageView) findViewById(R.id.img_wb_btn);
+		effectsBtn = (ImageView) findViewById(R.id.img_effects_btn);
+		overlayToggle = (ImageView) findViewById(R.id.img_overlay_toggle);
 	}
 
 	private void increaseBrightness(double progressValue) {
@@ -1130,7 +1257,6 @@ public class CameraActivity extends AppCompatActivity
 		captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_ON);
 		captureRequestBuilder.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION, (int) progressValue);
 		captureRequestBuilder.set(CaptureRequest.CONTROL_AE_LOCK, true);
-		applySettings();
 	}
 
 	private void applySettings() {
@@ -1263,7 +1389,6 @@ public class CameraActivity extends AppCompatActivity
 
 	@Override protected void onResume() {
 		super.onResume();
-
 		startBackgroundThread();
 
 		if (textureView.isAvailable()) {
@@ -1276,9 +1401,12 @@ public class CameraActivity extends AppCompatActivity
 	}
 
 	public class LearnGesture extends GestureDetector.SimpleOnGestureListener {
-
 		@Override
 		public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+			if(!showOverlays){
+				return false;
+			}
+
 			if (moreScenes) {
 				hideSceneSwitcher();
 			}
@@ -1303,6 +1431,9 @@ public class CameraActivity extends AppCompatActivity
 
 		@Override public void onLongPress(MotionEvent e) {
 			// Show child scenes on long pressing the screen.;
+			if(!showOverlays) {
+				return;
+			}
 			super.onLongPress(e);
 			showSceneSwitcher();
 			sceneSelectorAdapter = new SceneSelectorAdapter(CameraActivity.this, currentScene,
@@ -1311,7 +1442,10 @@ public class CameraActivity extends AppCompatActivity
 		}
 
 		@Override public boolean onSingleTapUp(MotionEvent e) {
-			if (manualFocusEnguaged) {
+			if(isRecording) {
+				return false;
+			}
+			if (manualFocusEngaged) {
 				Log.d(TAG, "Manual focus already engaged!");
 				return true;
 			}
@@ -1339,6 +1473,7 @@ public class CameraActivity extends AppCompatActivity
 			captureRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
 					CameraMetadata.CONTROL_AF_TRIGGER_CANCEL);
 			captureRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CameraMetadata.CONTROL_AF_MODE_OFF);
+			setFlashMode();
 
 			try {
 				previewCaptureSession.capture(captureRequestBuilder.build(), previewCaptureCallback,
@@ -1347,7 +1482,7 @@ public class CameraActivity extends AppCompatActivity
 				e1.printStackTrace();
 			}
 
-			if (isMeteringAFAreaSuppported) {
+			if (isMeteringAFAreaSupported) {
 				captureRequestBuilder.set(CaptureRequest.CONTROL_AF_REGIONS,
 						new MeteringRectangle[] { focusArea });
 			}
@@ -1365,72 +1500,68 @@ public class CameraActivity extends AppCompatActivity
 			} catch (CameraAccessException e1) {
 				e1.printStackTrace();
 			}
-			manualFocusEnguaged = true;
+			manualFocusEngaged = true;
 			return true;
 		}
 	}
 
 	public void swipeScenes(Integer nextScene, Integer prevScene) {
+		final int UN_SELECTED = R.drawable.ic_circular;
+		final int SELECTED = R.drawable.ic_selected_circular;
 		switch (prevScene) {
 			case 0:
-				switcher1.setImageResource(R.drawable.ic_circular);
+				switcher1.setImageResource(UN_SELECTED);
 				break;
 			case 1:
-				switcher2.setImageResource(R.drawable.ic_circular);
+				switcher2.setImageResource(UN_SELECTED);
 				break;
 			case 2:
-				switcher3.setImageResource(R.drawable.ic_circular);
+				switcher3.setImageResource(UN_SELECTED);
 				break;
 			case 3:
-				switcher4.setImageResource(R.drawable.ic_circular);
+				switcher4.setImageResource(UN_SELECTED);
 				break;
 			case 4:
-				switcher5.setImageResource(R.drawable.ic_circular);
+				switcher5.setImageResource(UN_SELECTED);
 				break;
 			default:
 				selectedScene = 0;
-				switcher1.setImageResource(R.drawable.ic_circular);
+				switcher1.setImageResource(UN_SELECTED);
 				break;
 		}
-
 		switch (nextScene) {
 			case 0:
-				switcher1.setImageResource(R.drawable.ic_selected_circular);
-				swipeText.setText(PORTRAIT_SCENE);
-				imgOverlay.setImageResource(overlayScenes.get(PORTRAIT_SCENE).get(0));
-				currentScene = PORTRAIT_SCENE;
+				switcher1.setImageResource(SELECTED);
+				loadOverlayImage(PORTRAIT_SCENE);
 				break;
 			case 1:
-				switcher2.setImageResource(R.drawable.ic_selected_circular);
-				swipeText.setText(SIGNATURE_SCENE);
-				imgOverlay.setImageResource(overlayScenes.get(SIGNATURE_SCENE).get(0));
-				currentScene = SIGNATURE_SCENE;
+				switcher2.setImageResource(SELECTED);
+				loadOverlayImage(SIGNATURE_SCENE);
 				break;
 			case 2:
-				switcher3.setImageResource(R.drawable.ic_selected_circular);
-				swipeText.setText(INTERACTION_SCENE);
-				imgOverlay.setImageResource(overlayScenes.get(INTERACTION_SCENE).get(0));
-				currentScene = INTERACTION_SCENE;
+				switcher3.setImageResource(SELECTED);
+				loadOverlayImage(INTERACTION_SCENE);
 				break;
 			case 3:
-				switcher4.setImageResource(R.drawable.ic_selected_circular);
-				swipeText.setText(CANDID_SCENE);
-				imgOverlay.setImageResource(overlayScenes.get(CANDID_SCENE).get(0));
-				currentScene = CANDID_SCENE;
+				switcher4.setImageResource(SELECTED);
+				loadOverlayImage(CANDID_SCENE);
 				break;
 			case 4:
-				switcher5.setImageResource(R.drawable.ic_selected_circular);
-				swipeText.setText(ENVIRONMENT_SCENE);
-				imgOverlay.setImageResource(overlayScenes.get(ENVIRONMENT_SCENE).get(0));
-				currentScene = ENVIRONMENT_SCENE;
+				switcher5.setImageResource(SELECTED);
+				loadOverlayImage(ENVIRONMENT_SCENE);
 				break;
 			default:
 				selectedScene = 0;
-				switcher1.setImageResource(R.drawable.ic_selected_circular);
-				swipeText.setText(PORTRAIT_SCENE);
-				imgOverlay.setImageResource(overlayScenes.get(PORTRAIT_SCENE).get(0));
-				currentScene = PORTRAIT_SCENE;
+				switcher1.setImageResource(SELECTED);
+				loadOverlayImage(PORTRAIT_SCENE);
 				break;
 		}
+	}
+
+	private void loadOverlayImage(String scene) {
+		int imgID = overlayScenes.get(scene).get(0);
+		currentScene = scene;
+		swipeText.setText(scene);
+		GlideApp.with(this).load(imgID).placeholder(imgID).centerCrop().into(imgOverlay);
 	}
 }
