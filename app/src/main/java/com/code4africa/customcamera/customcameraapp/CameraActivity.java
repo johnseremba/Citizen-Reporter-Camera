@@ -74,6 +74,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 
 public class CameraActivity extends AppCompatActivity
 		implements SceneSelectorAdapter.OnClickThumbListener {
@@ -175,6 +176,7 @@ public class CameraActivity extends AppCompatActivity
 	private static final String[] WB_SCENES = {"Auto", "Incandescent", "Daylight", "Fluorescent", "Cloudy", "Twilight", "Shade"};
 	private static final String[] COLOR_EFFECTS = {"Off", "Mono", "Negative", "Solarize", "Sepia", "Posterize", "Whiteboard", "Blackboard", "Aqua"};
 	private HashMap<String, Integer> availableEffects = new HashMap<>();
+	private String currentCameraEffect;
 
 	@Override public void OnClickScene(String sceneKey, Integer position) {
 		imgOverlay.setImageResource(overlayScenes.get(sceneKey).get(position));
@@ -705,6 +707,7 @@ public class CameraActivity extends AppCompatActivity
 					totalRotation); // Fix orientation skews
 			setFlashMode();
 			setWBMode(wbMode);
+			setCameraEffectMode(currentCameraEffect);
 
 			captureRequestBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoom);
 			captureRequestBuilder.set(CaptureRequest.CONTROL_AE_LOCK, false);
@@ -941,11 +944,9 @@ public class CameraActivity extends AppCompatActivity
 		AlertDialog.Builder builder = new AlertDialog.Builder(CameraActivity.this);
 		builder.setCancelable(true);
 		builder.setItems(WB_SCENES, new DialogInterface.OnClickListener() {
-			public void onClick(DialogInterface dialog, int which) {
-				// The 'which' argument contains the index position
-				// of the selected item
-				wbMode = which;
-				setWBMode(which);
+			public void onClick(DialogInterface dialog, int index) {
+				wbMode = index;
+				setWBMode(index);
 			}
 		});
 		AlertDialog dialog = builder.create();
@@ -953,7 +954,6 @@ public class CameraActivity extends AppCompatActivity
 	}
 
 	private void setWBMode(int index) {
-		//private String[] WB_SCENES = {"Auto", "Incandescent", "Daylight", "Fluorescent", "Cloudy", "Twilight", "Shade"};
 		switch(index) {
 			case 0:
 				captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_AUTO);
@@ -1016,9 +1016,7 @@ public class CameraActivity extends AppCompatActivity
 
 		isoBtn.setOnClickListener(new View.OnClickListener() {
 			@Override public void onClick(View view) {
-					captureRequestBuilder.set(CaptureRequest.CONTROL_EFFECT_MODE, CameraMetadata.CONTROL_EFFECT_MODE_NEGATIVE);
-					applySettings();
-				Toast.makeText(getApplicationContext(), "Getting iso", Toast.LENGTH_SHORT).show();
+				showColorEffectsList();
 			}
 		});
 
@@ -1156,6 +1154,33 @@ public class CameraActivity extends AppCompatActivity
 				swapFlashMode();
 			}
 		});
+	}
+
+	private void showColorEffectsList() {
+		final String[] elements = new String[availableEffects.size()];
+		int i = 1;
+		elements[0] = "Off";
+		for(String name : availableEffects.keySet()){
+			if(!Objects.equals(name, "Off")) {
+				elements[i] = name;
+				i++;
+			}
+		}
+		AlertDialog.Builder builder = new AlertDialog.Builder(CameraActivity.this);
+		builder.setCancelable(true);
+		builder.setItems(elements, new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int index) {
+				currentCameraEffect = elements[index];
+				setCameraEffectMode(elements[index]);
+			}
+		});
+		AlertDialog dialog = builder.create();
+		dialog.show();
+	}
+
+	private void setCameraEffectMode(String effect) {
+		captureRequestBuilder.set(CaptureRequest.CONTROL_EFFECT_MODE, availableEffects.get(effect));
+		applySettings();
 	}
 
 	private void initializeObjects() {
