@@ -1143,8 +1143,14 @@ public class CameraActivity extends AppCompatActivity
 		capturePictureBtn.setOnLongClickListener(new View.OnLongClickListener() {
 			@Override public boolean onLongClick(View view) {
 				// Record a video for long press
-				hideSceneIcons();
-
+				if(!showOverlays) {
+					hideOverlayDetails();
+					hideFlashAndToggle();
+					swipeText.setVisibility(View.VISIBLE);
+				} else {
+					hideSceneIcons();
+				}
+				hideSpecialEffects();
 				if (moreScenes) {
 					hideSceneSwitcher();
 				}
@@ -1174,10 +1180,16 @@ public class CameraActivity extends AppCompatActivity
 					lockFocus();
 				} else {
 					// Stop video recording, set back the capture icon
-					showSceneIcons();
+					if(!showOverlays) {
+						swipeText.setVisibility(View.INVISIBLE);
+						showFlashAndToggle();
+					} else {
+						showSceneIcons();
+						swipeText.setText(R.string.scene_changer_text);
+					}
+					showSpecialEffects();
 					MediaActionSound sound = new MediaActionSound();
 					sound.play(MediaActionSound.STOP_VIDEO_RECORDING);
-					swipeText.setText(R.string.scene_changer_text);
 
 					chronometer.stop();
 					chronometer.setVisibility(View.INVISIBLE);
@@ -1223,18 +1235,39 @@ public class CameraActivity extends AppCompatActivity
 		});
 	}
 
+	private void hideFlashAndToggle() {
+		flashModeBtn.setVisibility(View.INVISIBLE);
+		overlayToggle.setVisibility(View.INVISIBLE);
+	}
+
+	private void showFlashAndToggle() {
+		flashModeBtn.setVisibility(View.VISIBLE);
+		overlayToggle.setVisibility(View.VISIBLE);
+	}
+
 	private void hideOverlayDetails() {
 		hideSceneSwitcher();
 		hideSceneIcons();
 		flashModeBtn.setVisibility(View.VISIBLE);
 		swipeText.setVisibility(View.GONE);
 		imgOverlay.setVisibility(View.GONE);
+		overlayToggle.setVisibility(View.VISIBLE);
 	}
 
 	private void showOverlayDetails() {
 		showSceneIcons();
 		imgOverlay.setVisibility(View.VISIBLE);
 		swipeText.setVisibility(View.VISIBLE);
+	}
+
+	private void hideSpecialEffects() {
+		imgToggleWB.setVisibility(View.GONE);
+		effectsBtn.setVisibility(View.GONE);
+	}
+
+	private void showSpecialEffects() {
+		imgToggleWB.setVisibility(View.VISIBLE);
+		effectsBtn.setVisibility(View.VISIBLE);
 	}
 
 	private void showColorEffectsList() {
@@ -1342,6 +1375,7 @@ public class CameraActivity extends AppCompatActivity
 		switcher5.setVisibility(View.INVISIBLE);
 		flashModeBtn.setVisibility(View.INVISIBLE);
 		lightSeekBar.setVisibility(View.INVISIBLE);
+		overlayToggle.setVisibility(View.INVISIBLE);
 	}
 
 	private void showSceneIcons() {
@@ -1352,6 +1386,7 @@ public class CameraActivity extends AppCompatActivity
 		switcher5.setVisibility(View.VISIBLE);
 		flashModeBtn.setVisibility(View.VISIBLE);
 		lightSeekBar.setVisibility(View.VISIBLE);
+		overlayToggle.setVisibility(View.VISIBLE);
 	}
 
 	private void initializeScenes() {
