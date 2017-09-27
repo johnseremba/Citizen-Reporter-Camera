@@ -39,16 +39,31 @@ Videos are stored under `.../Movies/Code4Africa/` folder.
 * Touch to Focus
 
 ## Screenshots
-### Camera Preview Activity
-![Camera Preview](https://github.com/SerryJohns/CustomCameraApp/blob/master/img/Screenshot_20170917-010351.png)
+### Camera Preview Activity (With Overlays)
+Use the overlay toggle button to switch between a view with overlays, or one without.
+![Camera Preview](https://github.com/SerryJohns/Code4Africa-Custom-Camera/blob/master/img/with_overlays.jpg)
+
+### Swipe through Child scenes
+When the user long presses the screen or clicks/touches any of the environment icons, the child scenes menu is displayed with a list of scenes belonging to a particular category. The user can choose from any of them.
+![Child Scenes](https://github.com/SerryJohns/Code4Africa-Custom-Camera/blob/master/img/multiple_scenes.png)
+
+### Camera Preview Activity (Without Overlays)
+![Camera Preview 2](https://github.com/SerryJohns/Code4Africa-Custom-Camera/blob/master/img/no_overlays.jpg)
+
+### Capture Preview Activity
+The user can choose to save, or discard the picture taken.
+![Capture preview](https://github.com/SerryJohns/Code4Africa-Custom-Camera/blob/master/img/preview.jpg)
+
+### White Balance options
+![White balance](https://github.com/SerryJohns/Code4Africa-Custom-Camera/blob/master/img/white_balance.jpg)
+
+### Color Effects options
+![Color Effects](https://github.com/SerryJohns/Code4Africa-Custom-Camera/blob/master/img/color_effects.jpg)
+
 
 ### Video Recording interface
 Hold down the capture button and release to record. Tap the record button to stop.
-![Video Recording](https://github.com/SerryJohns/CustomCameraApp/blob/master/img/Screenshot_20170917-010749.png)
-
-### Swipe through Child scenes
-When the user clicks/touches any of the environment icons, the child scenes menu is displayed with a list of scenes belonging to a particular category. The user can choose from any of them.
-![Child Scenes](https://github.com/SerryJohns/Code4Africa-Custom-Camera/blob/master/img/multiple_scenes.png)
+![Video Recording](https://github.com/SerryJohns/Code4Africa-Custom-Camera/blob/master/img/record_video.jpg)
 
 ## Known Issues
 * Taking pictures could be faster
