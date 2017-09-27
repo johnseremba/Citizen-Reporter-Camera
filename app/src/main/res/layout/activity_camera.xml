@@ -193,12 +193,13 @@
       android:layout_height="wrap_content"
       android:layout_marginEnd="8dp"
       android:layout_marginStart="8dp"
-      android:layout_marginTop="4dp"
+      android:layout_marginTop="8dp"
       android:clickable="true"
       android:focusable="true"
       app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintHorizontal_bias="0.077"
       app:layout_constraintStart_toStartOf="parent"
-      app:layout_constraintTop_toTopOf="@+id/chronometer2"
+      app:layout_constraintTop_toTopOf="parent"
       app:srcCompat="@drawable/ic_flash_off"
       />
   <android.support.v7.widget.RecyclerView
