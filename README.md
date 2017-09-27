@@ -32,6 +32,11 @@ Videos are stored under `.../Movies/Code4Africa/` folder.
 * Swipe through child scenes
 * Record Videos in .mp4 format
 * Support for ActivityForResult
+* Camera Color Effects {Sepia, Mono, Whiteboard, Posterize, Aqua, Blackboard, Negative}
+* White Balance {Auto, Incadescent, Daylight, Fluorescent, Cloudy, Twilight, Shade}
+* Adjust brightness
+* Hide/Show overlays
+* Touch to Focus
 
 ## Screenshots
 ### Camera Preview Activity
