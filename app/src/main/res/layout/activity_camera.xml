@@ -33,6 +33,16 @@
       tools:layout_editor_absoluteY="407dp"
       />
   <ImageView
+      android:id="@+id/img_top_bg"
+      android:layout_width="0dp"
+      android:layout_height="44dp"
+      android:alpha="0.5"
+      android:background="@color/black"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toTopOf="parent"
+      />
+  <ImageView
       android:id="@+id/img_overlay"
       android:layout_width="match_parent"
       android:layout_height="match_parent"
@@ -183,13 +193,13 @@
       android:layout_height="wrap_content"
       android:layout_marginEnd="8dp"
       android:layout_marginStart="8dp"
-      android:layout_marginTop="8dp"
+      android:layout_marginTop="4dp"
+      android:clickable="true"
+      android:focusable="true"
       app:layout_constraintEnd_toEndOf="parent"
       app:layout_constraintStart_toStartOf="parent"
       app:layout_constraintTop_toTopOf="@+id/chronometer2"
       app:srcCompat="@drawable/ic_flash_off"
-      android:clickable="true"
-      android:focusable="true"
       />
   <android.support.v7.widget.RecyclerView
       android:id="@+id/scene_recylcer_view"
@@ -208,7 +218,7 @@
   <SeekBar
       android:id="@+id/seekbar_light"
       android:layout_width="0dp"
-      android:layout_height="16dp"
+      android:layout_height="21dp"
       android:layout_marginBottom="8dp"
       android:layout_marginEnd="8dp"
       android:layout_marginStart="8dp"
@@ -217,6 +227,8 @@
       app:layout_constraintBottom_toTopOf="@+id/scene_recylcer_view"
       app:layout_constraintEnd_toEndOf="parent"
       app:layout_constraintStart_toStartOf="parent"
+      tools:layout_editor_absoluteX="117dp"
+      tools:layout_editor_absoluteY="294dp"
       style="@android:style/Widget.Material.SeekBar"
       />
   <TextView
@@ -274,5 +286,16 @@
       app:layout_constraintEnd_toStartOf="@+id/img_switch_camera"
       app:layout_constraintStart_toEndOf="@+id/img_capture"
       app:srcCompat="@drawable/ic_enhance_effect"
+      />
+  <ImageView
+      android:id="@+id/img_overlay_toggle"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_marginEnd="24dp"
+      android:layout_marginTop="4dp"
+      app:layout_constraintBottom_toTopOf="@+id/txt_zoom_caption"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintTop_toTopOf="parent"
+      app:srcCompat="@drawable/ic_visible"
       />
 </android.support.constraint.ConstraintLayout>
