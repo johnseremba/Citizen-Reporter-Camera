@@ -1442,6 +1442,9 @@ public class CameraActivity extends AppCompatActivity
 		}
 
 		@Override public boolean onSingleTapUp(MotionEvent e) {
+			if(isRecording) {
+				return false;
+			}
 			if (manualFocusEngaged) {
 				Log.d(TAG, "Manual focus already engaged!");
 				return true;
