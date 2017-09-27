@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Camera;
 import android.graphics.ImageFormat;
 import android.graphics.Matrix;
 import android.graphics.Rect;
@@ -181,7 +182,8 @@ public class CameraActivity extends AppCompatActivity
 	private String currentCameraEffect;
 
 	@Override public void OnClickScene(String sceneKey, Integer position) {
-		imgOverlay.setImageResource(overlayScenes.get(sceneKey).get(position));
+		int imgID = overlayScenes.get(sceneKey).get(position);
+		GlideApp.with(this).load(imgID).placeholder(imgID).centerCrop().into(imgOverlay);
 		hideSceneSwitcher();
 	}
 
@@ -440,13 +442,13 @@ public class CameraActivity extends AppCompatActivity
 
 		switch (flashStatus) {
 			case 0:
-				flashModeBtn.setImageResource(R.drawable.ic_flash_off);
+				GlideApp.with(this).load(R.drawable.ic_flash_off).placeholder(R.drawable.ic_flash_off).centerCrop().into(flashModeBtn);
 				break;
 			case 1:
-				flashModeBtn.setImageResource(R.drawable.ic_flash_on);
+				GlideApp.with(this).load(R.drawable.ic_flash_on).placeholder(R.drawable.ic_flash_on).centerCrop().into(flashModeBtn);
 				break;
 			case 2:
-				flashModeBtn.setImageResource(R.drawable.ic_flash_auto);
+				GlideApp.with(this).load(R.drawable.ic_flash_auto).placeholder(R.drawable.ic_flash_auto).centerCrop().into(flashModeBtn);
 				break;
 		}
 	}
@@ -1013,11 +1015,11 @@ public class CameraActivity extends AppCompatActivity
 			@Override public void onClick(View view) {
 				if(showOverlays) {
 					showOverlays = false;
-					overlayToggle.setImageResource(R.drawable.ic_not_visible);
+					GlideApp.with(CameraActivity.this).load(R.drawable.ic_not_visible).placeholder(R.drawable.ic_not_visible).centerCrop().into(overlayToggle);
 					hideOverlayDetails();
 				} else {
 					showOverlays = true;
-					overlayToggle.setImageResource(R.drawable.ic_visible);
+					GlideApp.with(CameraActivity.this).load(R.drawable.ic_visible).placeholder(R.drawable.ic_visible).centerCrop().into(overlayToggle);
 					showOverlayDetails();
 				}
 			}
@@ -1121,7 +1123,7 @@ public class CameraActivity extends AppCompatActivity
 				imgOverlay.setImageDrawable(null);
 				swipeText.setText(R.string.recording_status);
 
-				capturePictureBtn.setImageResource(R.drawable.ic_video_record);
+				GlideApp.with(CameraActivity.this).load(R.drawable.ic_video_record).placeholder(R.drawable.ic_video_record).centerCrop().into(capturePictureBtn);
 				checkWriteStoragePermission();
 				return true;
 			}
@@ -1144,7 +1146,7 @@ public class CameraActivity extends AppCompatActivity
 					chronometer.setVisibility(View.INVISIBLE);
 
 					isRecording = false;
-					capturePictureBtn.setImageResource(R.drawable.camera_capture);
+					GlideApp.with(CameraActivity.this).load(R.drawable.camera_capture).placeholder(R.drawable.camera_capture).centerCrop().into(capturePictureBtn);
 					swipeScenes(selectedScene, prevScene);
 
 					startPreview();
