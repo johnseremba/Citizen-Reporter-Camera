@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.graphics.ImageFormat;
 import android.graphics.Matrix;
 import android.graphics.Rect;
@@ -1009,6 +1010,14 @@ public class CameraActivity extends AppCompatActivity
 			case 6:
 				captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE,
 						CameraMetadata.CONTROL_AWB_MODE_SHADE);
+		}
+	}
+
+	@Override public void onConfigurationChanged(Configuration newConfig) {
+		super.onConfigurationChanged(newConfig);
+		setContentView(R.layout.activity_camera);
+		if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE){
+			Log.d(TAG, "Device in Landscape mode");
 		}
 	}
 
