@@ -964,8 +964,9 @@ public class CameraActivity extends AppCompatActivity
 
 	private void showWBList() {
 		AlertDialog.Builder builder = new AlertDialog.Builder(CameraActivity.this);
-		builder.setCancelable(true);
-		builder.setItems(WB_SCENES, new DialogInterface.OnClickListener() {
+		builder.setCancelable(true)
+				.setTitle("White Balance")
+				.setItems(WB_SCENES, new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int index) {
 				wbMode = index;
 				setWBMode(index);
@@ -1007,14 +1008,6 @@ public class CameraActivity extends AppCompatActivity
 						CameraMetadata.CONTROL_AWB_MODE_SHADE);
 		}
 	}
-
-	//@Override public void onConfigurationChanged(Configuration newConfig) {
-	//	super.onConfigurationChanged(newConfig);
-	//	setContentView(R.layout.activity_camera);
-	//	if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE){
-	//		Log.d(TAG, "Device in Landscape mode");
-	//	}
-	//}
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -1285,8 +1278,9 @@ public class CameraActivity extends AppCompatActivity
 			}
 		}
 		AlertDialog.Builder builder = new AlertDialog.Builder(CameraActivity.this);
-		builder.setCancelable(true);
-		builder.setItems(elements, new DialogInterface.OnClickListener() {
+		builder.setCancelable(true)
+				.setTitle("Color Filters")
+				.setItems(elements, new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int index) {
 				currentCameraEffect = elements[index];
 				setCameraEffectMode(elements[index]);
