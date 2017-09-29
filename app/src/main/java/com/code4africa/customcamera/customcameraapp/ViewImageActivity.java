@@ -24,6 +24,7 @@ public class ViewImageActivity extends AppCompatActivity {
 	private ImageView imageView;
 	private ImageView saveBtn;
 	private ImageView closeBtn;
+	private ImageView rotateBtn;
 
 	@Override
 	public void onWindowFocusChanged(boolean hasFocus) {
@@ -56,12 +57,19 @@ public class ViewImageActivity extends AppCompatActivity {
 		imageView = (ImageView) findViewById(R.id.img_view);
 		closeBtn = (ImageView) findViewById(R.id.img_close_btn);
 		saveBtn = (ImageView) findViewById(R.id.img_save_btn);
+		rotateBtn = (ImageView) findViewById(R.id.btn_rotate);
 
 		imageFile = new File(
 				getIntent().getStringExtra(IMAGE_FILE_LOCATION)
 		);
 
 		GlideApp.with(this).load(imageFile).override(width, height).into(imageView);
+
+		rotateBtn.setOnClickListener(new View.OnClickListener() {
+			@Override public void onClick(View view) {
+				Toast.makeText(getApplicationContext(), "Rotatiing", Toast.LENGTH_SHORT).show();
+			}
+		});
 
 		closeBtn.setOnClickListener(new View.OnClickListener() {
 			@Override public void onClick(View view) {
