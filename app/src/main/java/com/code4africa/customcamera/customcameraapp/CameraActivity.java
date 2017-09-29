@@ -250,7 +250,7 @@ public class CameraActivity extends AppCompatActivity
 						case STATE_WAIT_LOCK:
 							captureState = STATE_PREVIEW;
 							MediaActionSound sound = new MediaActionSound();
-							//sound.play(MediaActionSound.SHUTTER_CLICK);
+							sound.play(MediaActionSound.SHUTTER_CLICK);
 							startStillCapture();
 							break;
 					}
@@ -338,7 +338,12 @@ public class CameraActivity extends AppCompatActivity
 				if (cameraCharacteristics.get(CameraCharacteristics.LENS_FACING) ==
 						camLensFacing) {
 					//int deviceOrientation = getWindowManager().getDefaultDisplay().getRotation();
-					int deviceOrientation = 3;
+					int deviceOrientation;
+					if(camLensFacing == CameraCharacteristics.LENS_FACING_FRONT){
+						deviceOrientation = 1;
+					} else {
+						deviceOrientation = 3;
+					}
 					totalRotation = sensorToDeviceOrientation(cameraCharacteristics, deviceOrientation);
 					int rotatedWidth = height;
 					int rotatedHeight = width;
