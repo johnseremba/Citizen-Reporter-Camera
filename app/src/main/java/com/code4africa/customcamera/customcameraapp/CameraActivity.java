@@ -1013,13 +1013,13 @@ public class CameraActivity extends AppCompatActivity
 		}
 	}
 
-	@Override public void onConfigurationChanged(Configuration newConfig) {
-		super.onConfigurationChanged(newConfig);
-		setContentView(R.layout.activity_camera);
-		if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE){
-			Log.d(TAG, "Device in Landscape mode");
-		}
-	}
+	//@Override public void onConfigurationChanged(Configuration newConfig) {
+	//	super.onConfigurationChanged(newConfig);
+	//	setContentView(R.layout.activity_camera);
+	//	if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE){
+	//		Log.d(TAG, "Device in Landscape mode");
+	//	}
+	//}
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
