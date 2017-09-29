@@ -336,16 +336,11 @@ public class CameraActivity extends AppCompatActivity
 				CameraCharacteristics cameraCharacteristics = cameraManager.getCameraCharacteristics(camID);
 				if (cameraCharacteristics.get(CameraCharacteristics.LENS_FACING) ==
 						camLensFacing) {
-					int deviceOrientation = getWindowManager().getDefaultDisplay().getRotation();
+					//int deviceOrientation = getWindowManager().getDefaultDisplay().getRotation();
+					int deviceOrientation = 3;
 					totalRotation = sensorToDeviceOrientation(cameraCharacteristics, deviceOrientation);
-					int rotatedWidth = width;
-					int rotatedHeight = height;
-					boolean swapRotation = totalRotation == 90 || totalRotation == 270;
-
-					if (swapRotation) {
-						rotatedWidth = height;
-						rotatedHeight = width;
-					}
+					int rotatedWidth = height;
+					int rotatedHeight = width;
 
 					StreamConfigurationMap map =
 							cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
