@@ -184,6 +184,7 @@ public class CameraActivity extends AppCompatActivity
 	};
 	private HashMap<String, Integer> availableEffects = new HashMap<>();
 	private String currentCameraEffect;
+	private MeteringRectangle focusArea;
 
 	@Override public void OnClickScene(String sceneKey, Integer position) {
 		int imgID = overlayScenes.get(sceneKey).get(position);
@@ -249,7 +250,7 @@ public class CameraActivity extends AppCompatActivity
 						case STATE_WAIT_LOCK:
 							captureState = STATE_PREVIEW;
 							MediaActionSound sound = new MediaActionSound();
-							sound.play(MediaActionSound.SHUTTER_CLICK);
+							//sound.play(MediaActionSound.SHUTTER_CLICK);
 							startStillCapture();
 							break;
 					}
@@ -1530,7 +1531,7 @@ public class CameraActivity extends AppCompatActivity
 					(int) ((e.getY() / (float) textureView.getHeight()) * (float) sensorArraySize.width());
 			final int halfTouchWidth = (int) e.getTouchMajor(); // 150;
 			final int halfTouchHeight = (int) e.getTouchMinor(); //150;
-			MeteringRectangle focusArea = new MeteringRectangle(
+			focusArea = new MeteringRectangle(
 					Math.max(x - halfTouchWidth, 0),
 					Math.max(y - halfTouchHeight, 0),
 					halfTouchWidth * 2,
@@ -1547,6 +1548,7 @@ public class CameraActivity extends AppCompatActivity
 			captureRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
 					CameraMetadata.CONTROL_AF_TRIGGER_CANCEL);
 			captureRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CameraMetadata.CONTROL_AF_MODE_OFF);
+
 			setFlashMode();
 
 			try {
