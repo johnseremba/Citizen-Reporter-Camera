@@ -1327,10 +1327,8 @@ public class CameraActivity extends AppCompatActivity
 	}
 
 	private void increaseBrightness(double progressValue) {
-		captureRequestBuilder.set(CaptureRequest.CONTROL_AE_LOCK, false);
 		captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_ON);
 		captureRequestBuilder.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION, (int) progressValue);
-		captureRequestBuilder.set(CaptureRequest.CONTROL_AE_LOCK, true);
 	}
 
 	private void applySettings() {
