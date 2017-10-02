@@ -1,6 +1,7 @@
 package com.code4africa.customcamera.customcameraapp;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -12,7 +13,9 @@ import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.Toast;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import java.io.File;
 import java.io.FileOutputStream;
 
@@ -27,6 +30,7 @@ public class ViewImageActivity extends AppCompatActivity {
 	private ImageView rotateClockwise;
 	private float rotationAngle;
 	private ImageView rotateCounterClockwise;
+	private ProgressDialog dialog;
 
 	@Override
 	public void onWindowFocusChanged(boolean hasFocus) {
@@ -69,6 +73,7 @@ public class ViewImageActivity extends AppCompatActivity {
 		GlideApp.with(this)
 				.load(imageFile)
 				.override(width, height)
+				.diskCacheStrategy(DiskCacheStrategy.NONE)
 				.into(imageView);
 
 		closeBtn.setOnClickListener(new View.OnClickListener() {
@@ -96,15 +101,35 @@ public class ViewImageActivity extends AppCompatActivity {
 
 		rotateClockwise.setOnClickListener(new View.OnClickListener() {
 			@Override public void onClick(View view) {
-				Toast.makeText(getApplicationContext(), "Rotating", Toast.LENGTH_SHORT).show();
-				GlideApp.with(ViewImageActivity.this)
-						.load(imageFile)
-						.into(imageView);
-				rotationAngle = 90;
-				saveImage();
+				dialog = ProgressDialog.show(ViewImageActivity.this, "Please wait ...", "Rotating picture");
+				dialog.setCancelable(true);
+				dialog.show();
+				loadRotation(90);
+			//	Runnable runInBackground = new Runnable() {
+			//		@Override public void run() {
+			//			loadRotation(90);
+			//			dialog.hide();
+			//		}
+			//	};
+			//	new Thread(runInBackground).start();
 			}
 		});
 
+		rotateCounterClockwise.setOnClickListener(new View.OnClickListener() {
+			@Override public void onClick(View view) {
+				loadRotation(-90);
+			}
+		});
+
+	}
+
+	private void loadRotation(float angle) {
+		rotationAngle = angle;
+		saveImage();
+		GlideApp.with(ViewImageActivity.this)
+				.load(imageFile)
+				.diskCacheStrategy(DiskCacheStrategy.NONE)
+				.into(imageView);
 	}
 
 	private void saveImage() {
@@ -119,6 +144,7 @@ public class ViewImageActivity extends AppCompatActivity {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		dialog.hide();
 	}
 
 	public static Bitmap rotate(Bitmap source, float angle) {
