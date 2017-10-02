@@ -8,8 +8,13 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.ImageFormat;
 import android.graphics.Matrix;
+import android.graphics.Paint;
+import android.graphics.PixelFormat;
+import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
@@ -50,6 +55,7 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.Surface;
+import android.view.SurfaceView;
 import android.view.TextureView;
 import android.view.View;
 import android.hardware.camera2.CameraDevice;
@@ -64,6 +70,8 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewSwitcher;
+import com.google.android.gms.vision.Frame;
+import com.google.android.gms.vision.face.FaceDetector;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -187,6 +195,12 @@ public class CameraActivity extends AppCompatActivity
 	private String currentCameraEffect;
 	private MeteringRectangle focusArea;
 	private int[] faceDetectionModes;
+	private Paint yellowPaint;
+	private Rect cameraBounds;
+	private int cameraWidth;
+	private int cameraHeight;
+	private Face detectedFace;
+	private Rect rectangleFace;
 
 	@Override public void OnClickScene(String sceneKey, Integer position) {
 		int imgID = overlayScenes.get(sceneKey).get(position);
@@ -255,12 +269,14 @@ public class CameraActivity extends AppCompatActivity
 							sound.play(MediaActionSound.SHUTTER_CLICK);
 							startStillCapture();
 
-							Face face[] = captureResult.get(CaptureResult.STATISTICS_FACES);
-							if(face.length > 0) {
-								for(Face f : face) {
-									Log.d(TAG, "FACE: " + f);
-								}
-							}
+							//Face faces[] = captureResult.get(CaptureResult.STATISTICS_FACES);
+							//if(faces.length > 0) {
+							//	detectedFace = faces[0];
+							//	rectangleFace = detectedFace.getBounds();
+							//	for(Face f : faces) {
+							//		Log.d(TAG, "FACE: " + f);
+							//	}
+							//}
 							break;
 					}
 				}
@@ -286,7 +302,40 @@ public class CameraActivity extends AppCompatActivity
 				}
 
 				@Override public void onSurfaceTextureUpdated(SurfaceTexture surfaceTexture) {
-
+					//Face faces[] =  captureResult.get(CaptureResult.STATISTICS_FACES);
+					//FaceDetector faceDetector = new FaceDetector.Builder(getApplicationContext())
+					//		.setTrackingEnabled(true)
+					//		.setLandmarkType(FaceDetector.ALL_LANDMARKS)
+					//		.setMode(FaceDetector.FAST_MODE)
+					//		.build();
+					//
+					//if(!faceDetector.isOperational()) {
+					//	Log.d(TAG, "Face detection is not operational!");
+					//	Toast.makeText(getApplicationContext(), "Face detection is not operational", Toast.LENGTH_SHORT).show();
+					//	return;
+					//}
+					//
+					//Frame frame = new Frame.Builder().setBitmap().build();
+					//
+					//if (detectedFace != null && rectangleFace.height() > 0) {
+					//	Canvas currentCanvas = faceRectangle.getHolder().lockCanvas();
+					//	if (currentCanvas != null) {
+					//		currentCanvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
+					//		int canvasWidth = currentCanvas.getWidth();
+					//		int canvasHeight = currentCanvas.getHeight();
+					//		int l = rectangleFace.right;
+					//		int t = rectangleFace.bottom;
+					//		int r = rectangleFace.left;
+					//		int b = rectangleFace.top;
+					//		int left = (canvasWidth*l)/cameraWidth;
+					//		int top  = (canvasHeight*t)/cameraHeight;
+					//		int right = (canvasWidth*r)/cameraWidth;
+					//		int bottom = (canvasHeight*b)/cameraHeight;
+					//
+					//		currentCanvas.drawRect(left, top, right, bottom, yellowPaint);
+					//	}
+					//	faceRectangle.getHolder().unlockCanvasAndPost(currentCanvas);
+					//}
 				}
 			};
 
@@ -384,6 +433,9 @@ public class CameraActivity extends AppCompatActivity
 
 					faceDetectionModes = cameraCharacteristics.get(
 							CameraCharacteristics.STATISTICS_INFO_AVAILABLE_FACE_DETECT_MODES);
+					cameraBounds = cameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
+					cameraWidth = cameraBounds.right;
+					cameraHeight = cameraBounds.bottom;
 
 					if (availableEffects.size() < 1) {
 						int[] colorModes =
@@ -566,6 +618,15 @@ public class CameraActivity extends AppCompatActivity
 			if (!isRecording) {
 				applyCaptureSettings();
 			}
+
+			//Face faces[] =  captureResult.get(CaptureResult.STATISTICS_FACES);
+			//if(faces.length > 0) {
+			//	detectedFace = faces[0];
+			//	rectangleFace = detectedFace.getBounds();
+			//	for(Face f : faces) {
+			//		Log.d(TAG, "FACE: " + f);
+			//	}
+			//}
 
 			cameraDevice.createCaptureSession(Arrays.asList(previewSurface, imageReader.getSurface()),
 					new CameraCaptureSession.StateCallback() {
@@ -1338,6 +1399,12 @@ public class CameraActivity extends AppCompatActivity
 		imgToggleWB = (ImageView) findViewById(R.id.img_wb_btn);
 		effectsBtn = (ImageView) findViewById(R.id.img_effects_btn);
 		overlayToggle = (ImageView) findViewById(R.id.img_overlay_toggle);
+
+		yellowPaint = new Paint();
+		yellowPaint.setStrokeWidth(5);
+		yellowPaint.setColor(Color.YELLOW);
+		yellowPaint.setStyle(Paint.Style.STROKE);
+
 	}
 
 	private void increaseBrightness(double progressValue) {

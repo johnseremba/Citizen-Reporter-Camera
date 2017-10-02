@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.media.MediaScannerConnection;
+import android.os.AsyncTask;
 import android.os.StrictMode;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -30,7 +31,6 @@ public class ViewImageActivity extends AppCompatActivity {
 	private ImageView rotateClockwise;
 	private float rotationAngle;
 	private ImageView rotateCounterClockwise;
-	private ProgressDialog dialog;
 
 	@Override
 	public void onWindowFocusChanged(boolean hasFocus) {
@@ -74,7 +74,8 @@ public class ViewImageActivity extends AppCompatActivity {
 		GlideApp.with(this)
 				.load(imageFile)
 				.override(width, height)
-				.diskCacheStrategy(DiskCacheStrategy.ALL)
+				.skipMemoryCache(true)
+				.diskCacheStrategy(DiskCacheStrategy.NONE)
 				.into(imageView);
 
 		closeBtn.setOnClickListener(new View.OnClickListener() {
@@ -103,9 +104,6 @@ public class ViewImageActivity extends AppCompatActivity {
 
 		rotateClockwise.setOnClickListener(new View.OnClickListener() {
 			@Override public void onClick(View view) {
-				dialog = ProgressDialog.show(ViewImageActivity.this, "Please wait ...", "Rotating picture");
-				dialog.setCancelable(true);
-				dialog.show();
 				loadRotation(90);
 			}
 		});
@@ -119,32 +117,48 @@ public class ViewImageActivity extends AppCompatActivity {
 
 	private void loadRotation(float angle) {
 		rotationAngle = angle;
-		saveImage();
-		GlideApp.with(ViewImageActivity.this)
-				.load(imageFile)
-				.diskCacheStrategy(DiskCacheStrategy.ALL)
-				.into(imageView);
-	}
-
-	private void saveImage() {
-		String dir = imageFile.getAbsolutePath();
-		Bitmap bmp = BitmapFactory.decodeFile(dir);
-		try {
-			Bitmap finalBitmap = rotate(bmp, rotationAngle);
-			FileOutputStream out = new FileOutputStream(imageFile);
-			finalBitmap.compress(Bitmap.CompressFormat.JPEG, 90, out);
-			out.flush();
-			out.close();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		dialog.hide();
+		new RotateBitmapTask().execute(angle);
 	}
 
 	public static Bitmap rotate(Bitmap source, float angle) {
 		Matrix matrix = new Matrix();
 		matrix.postRotate(angle);
 		return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, false);
+	}
+
+	private class RotateBitmapTask extends AsyncTask<Float, Void, Void> {
+		ProgressDialog dialog;
+		@Override protected Void doInBackground(Float... rotation) {
+			String dir = imageFile.getAbsolutePath();
+			Bitmap bmp = BitmapFactory.decodeFile(dir);
+			try {
+				Bitmap finalBitmap = rotate(bmp, rotationAngle);
+				FileOutputStream out = new FileOutputStream(imageFile);
+				finalBitmap.compress(Bitmap.CompressFormat.JPEG, 40, out);
+				out.flush();
+				out.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			return null;
+		}
+
+		@Override protected void onPreExecute() {
+			super.onPreExecute();
+			dialog = ProgressDialog.show(ViewImageActivity.this, "Please wait ...", "rotating");
+			dialog.setCancelable(true);
+			dialog.show();
+		}
+
+		@Override protected void onPostExecute(Void aVoid) {
+			super.onPostExecute(aVoid);
+			GlideApp.with(getApplicationContext())
+					.load(imageFile)
+					.skipMemoryCache(true)
+					.diskCacheStrategy(DiskCacheStrategy.NONE)
+					.into(imageView);
+			dialog.dismiss();
+		}
 	}
 
 	@Override
