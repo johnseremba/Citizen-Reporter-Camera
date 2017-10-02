@@ -163,7 +163,6 @@ public class CameraActivity extends AppCompatActivity
 	private Rect activePixesAfter;
 	private Rect zoom;
 
-	public ListView whiteBalanceList;
 	private ImageView imgToggleWB;
 	private int wbMode = 0;
 	private boolean showOverlays = true;
@@ -1057,12 +1056,6 @@ public class CameraActivity extends AppCompatActivity
 		initializeScenes();
 		initializeCameraInterface(); // Creates the swipe buttons
 
-		String[] wbScenes =
-				{ "Auto", "Incadescent", "Daylight", "Fluorescent", "Cloudy", "Twilight", "Shade" };
-		final ArrayAdapter<String> adapter =
-				new ArrayAdapter<String>(this, R.layout.wb_scenes_list, R.id.txt_scene_id, wbScenes);
-		whiteBalanceList.setAdapter(adapter);
-
 		overlayToggle.setOnClickListener(new View.OnClickListener() {
 			@Override public void onClick(View view) {
 				if (showOverlays) {
@@ -1082,15 +1075,6 @@ public class CameraActivity extends AppCompatActivity
 							.into(overlayToggle);
 					showOverlayDetails();
 				}
-			}
-		});
-
-		whiteBalanceList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-			@Override public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-				ViewGroup vg = (ViewGroup) view;
-				TextView txt = (TextView) findViewById(R.id.txt_scene_id);
-				Toast.makeText(getApplicationContext(), txt.getText().toString(), Toast.LENGTH_SHORT)
-						.show();
 			}
 		});
 
@@ -1351,7 +1335,6 @@ public class CameraActivity extends AppCompatActivity
 		lightSeekBar = (SeekBar) findViewById(R.id.seekbar_light);
 		zoomCaption = (TextView) findViewById(R.id.txt_zoom_caption);
 
-		whiteBalanceList = new ListView(this);
 		imgToggleWB = (ImageView) findViewById(R.id.img_wb_btn);
 		effectsBtn = (ImageView) findViewById(R.id.img_effects_btn);
 		overlayToggle = (ImageView) findViewById(R.id.img_overlay_toggle);
