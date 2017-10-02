@@ -2,6 +2,9 @@ package com.code4africa.customcamera.customcameraapp;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Environment;
@@ -14,7 +17,12 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.util.Random;
+
+import static java.util.Collections.rotate;
 
 public class ViewImageActivity extends AppCompatActivity {
 	private static final String IMAGE_FILE_LOCATION = "image_file_location";
@@ -25,6 +33,7 @@ public class ViewImageActivity extends AppCompatActivity {
 	private ImageView saveBtn;
 	private ImageView closeBtn;
 	private ImageView rotateBtn;
+	private float rotationAngle;
 
 	@Override
 	public void onWindowFocusChanged(boolean hasFocus) {
@@ -63,11 +72,19 @@ public class ViewImageActivity extends AppCompatActivity {
 				getIntent().getStringExtra(IMAGE_FILE_LOCATION)
 		);
 
-		GlideApp.with(this).load(imageFile).override(width, height).into(imageView);
+		GlideApp.with(this)
+				.load(imageFile)
+				.override(width, height)
+				.into(imageView);
 
 		rotateBtn.setOnClickListener(new View.OnClickListener() {
 			@Override public void onClick(View view) {
-				Toast.makeText(getApplicationContext(), "Rotatiing", Toast.LENGTH_SHORT).show();
+				Toast.makeText(getApplicationContext(), "Rotating", Toast.LENGTH_SHORT).show();
+				GlideApp.with(ViewImageActivity.this)
+						.load(imageFile)
+						.into(imageView);
+				rotationAngle = 90;
+				saveImage();
 			}
 		});
 
@@ -93,6 +110,29 @@ public class ViewImageActivity extends AppCompatActivity {
 				ViewImageActivity.super.finish();
 			}
 		});
+	}
+
+	public static Bitmap rotate(Bitmap source, float angle) {
+		Matrix matrix = new Matrix();
+		matrix.postRotate(angle);
+		return Bitmap.createBitmap(source, 0, 0, source.getWidth(),source.getHeight(), matrix, false);
+	}
+
+	private void saveImage() {
+		String dir = imageFile.getAbsolutePath();
+		Bitmap bmp = BitmapFactory.decodeFile(dir);
+
+		try {
+			Bitmap finalBitmap = rotate(bmp, rotationAngle);
+			FileOutputStream out = new FileOutputStream(imageFile);
+			finalBitmap.compress(Bitmap.CompressFormat.JPEG, 90, out);
+			out.flush();
+			out.close();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
 	}
 
 	@Override
