@@ -21,6 +21,7 @@ import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
+import android.hardware.camera2.params.Face;
 import android.hardware.camera2.params.MeteringRectangle;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
@@ -254,6 +255,13 @@ public class CameraActivity extends AppCompatActivity
 							MediaActionSound sound = new MediaActionSound();
 							sound.play(MediaActionSound.SHUTTER_CLICK);
 							startStillCapture();
+
+							Face face[] = captureResult.get(CaptureResult.STATISTICS_FACES);
+							if(face.length > 0) {
+								for(Face f : face) {
+									Log.d(TAG, "FACE: " + f);
+								}
+							}
 							break;
 					}
 				}
