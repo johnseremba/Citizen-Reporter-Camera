@@ -6,23 +6,15 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.media.MediaScannerConnection;
-import android.net.Uri;
-import android.os.Environment;
 import android.os.StrictMode;
-import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.util.Random;
-
-import static java.util.Collections.rotate;
 
 public class ViewImageActivity extends AppCompatActivity {
 	private static final String IMAGE_FILE_LOCATION = "image_file_location";
@@ -32,8 +24,9 @@ public class ViewImageActivity extends AppCompatActivity {
 	private ImageView imageView;
 	private ImageView saveBtn;
 	private ImageView closeBtn;
-	private ImageView rotateBtn;
+	private ImageView rotateClockwise;
 	private float rotationAngle;
+	private ImageView rotateCounterClockwise;
 
 	@Override
 	public void onWindowFocusChanged(boolean hasFocus) {
@@ -66,7 +59,8 @@ public class ViewImageActivity extends AppCompatActivity {
 		imageView = (ImageView) findViewById(R.id.img_view);
 		closeBtn = (ImageView) findViewById(R.id.img_close_btn);
 		saveBtn = (ImageView) findViewById(R.id.img_save_btn);
-		rotateBtn = (ImageView) findViewById(R.id.btn_rotate);
+		rotateClockwise = (ImageView) findViewById(R.id.btn_rotate_clockwise);
+		rotateCounterClockwise = (ImageView) findViewById(R.id.btn_rotate_anti_clockwise);
 
 		imageFile = new File(
 				getIntent().getStringExtra(IMAGE_FILE_LOCATION)
@@ -76,17 +70,6 @@ public class ViewImageActivity extends AppCompatActivity {
 				.load(imageFile)
 				.override(width, height)
 				.into(imageView);
-
-		rotateBtn.setOnClickListener(new View.OnClickListener() {
-			@Override public void onClick(View view) {
-				Toast.makeText(getApplicationContext(), "Rotating", Toast.LENGTH_SHORT).show();
-				GlideApp.with(ViewImageActivity.this)
-						.load(imageFile)
-						.into(imageView);
-				rotationAngle = 90;
-				saveImage();
-			}
-		});
 
 		closeBtn.setOnClickListener(new View.OnClickListener() {
 			@Override public void onClick(View view) {
@@ -110,29 +93,38 @@ public class ViewImageActivity extends AppCompatActivity {
 				ViewImageActivity.super.finish();
 			}
 		});
-	}
 
-	public static Bitmap rotate(Bitmap source, float angle) {
-		Matrix matrix = new Matrix();
-		matrix.postRotate(angle);
-		return Bitmap.createBitmap(source, 0, 0, source.getWidth(),source.getHeight(), matrix, false);
+		rotateClockwise.setOnClickListener(new View.OnClickListener() {
+			@Override public void onClick(View view) {
+				Toast.makeText(getApplicationContext(), "Rotating", Toast.LENGTH_SHORT).show();
+				GlideApp.with(ViewImageActivity.this)
+						.load(imageFile)
+						.into(imageView);
+				rotationAngle = 90;
+				saveImage();
+			}
+		});
+
 	}
 
 	private void saveImage() {
 		String dir = imageFile.getAbsolutePath();
 		Bitmap bmp = BitmapFactory.decodeFile(dir);
-
 		try {
 			Bitmap finalBitmap = rotate(bmp, rotationAngle);
 			FileOutputStream out = new FileOutputStream(imageFile);
 			finalBitmap.compress(Bitmap.CompressFormat.JPEG, 90, out);
 			out.flush();
 			out.close();
-
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
 
+	public static Bitmap rotate(Bitmap source, float angle) {
+		Matrix matrix = new Matrix();
+		matrix.postRotate(angle);
+		return Bitmap.createBitmap(source, 0, 0, source.getWidth(),source.getHeight(), matrix, false);
 	}
 
 	@Override
