@@ -73,7 +73,7 @@ public class ViewImageActivity extends AppCompatActivity {
 		GlideApp.with(this)
 				.load(imageFile)
 				.override(width, height)
-				.diskCacheStrategy(DiskCacheStrategy.NONE)
+				.diskCacheStrategy(DiskCacheStrategy.ALL)
 				.into(imageView);
 
 		closeBtn.setOnClickListener(new View.OnClickListener() {
@@ -105,13 +105,6 @@ public class ViewImageActivity extends AppCompatActivity {
 				dialog.setCancelable(true);
 				dialog.show();
 				loadRotation(90);
-			//	Runnable runInBackground = new Runnable() {
-			//		@Override public void run() {
-			//			loadRotation(90);
-			//			dialog.hide();
-			//		}
-			//	};
-			//	new Thread(runInBackground).start();
 			}
 		});
 
@@ -128,7 +121,7 @@ public class ViewImageActivity extends AppCompatActivity {
 		saveImage();
 		GlideApp.with(ViewImageActivity.this)
 				.load(imageFile)
-				.diskCacheStrategy(DiskCacheStrategy.NONE)
+				.diskCacheStrategy(DiskCacheStrategy.ALL)
 				.into(imageView);
 	}
 
