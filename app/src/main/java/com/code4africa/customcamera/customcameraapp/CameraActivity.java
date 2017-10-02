@@ -76,6 +76,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.IntStream;
 
 public class CameraActivity extends AppCompatActivity
 		implements SceneSelectorAdapter.OnClickThumbListener {
@@ -185,6 +186,7 @@ public class CameraActivity extends AppCompatActivity
 	private HashMap<String, Integer> availableEffects = new HashMap<>();
 	private String currentCameraEffect;
 	private MeteringRectangle focusArea;
+	private int[] faceDetectionModes;
 
 	@Override public void OnClickScene(String sceneKey, Integer position) {
 		int imgID = overlayScenes.get(sceneKey).get(position);
@@ -373,6 +375,9 @@ public class CameraActivity extends AppCompatActivity
 							cameraCharacteristics.get(CameraCharacteristics.CONTROL_MAX_REGIONS_AF) >= 1;
 					maxDigitalZoom *= 10;
 
+					faceDetectionModes = cameraCharacteristics.get(
+							CameraCharacteristics.STATISTICS_INFO_AVAILABLE_FACE_DETECT_MODES);
+
 					if (availableEffects.size() < 1) {
 						int[] colorModes =
 								cameraCharacteristics.get(CameraCharacteristics.CONTROL_AVAILABLE_EFFECTS);
@@ -538,6 +543,18 @@ public class CameraActivity extends AppCompatActivity
 		try {
 			captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
 			captureRequestBuilder.addTarget(previewSurface);
+
+			int mode = faceDetectionModes.length > 0 ? faceDetectionModes[faceDetectionModes.length - 1] : 0;
+			switch (mode) {
+				case 0:
+					captureRequestBuilder.set(CaptureRequest.STATISTICS_FACE_DETECT_MODE, CameraMetadata.STATISTICS_FACE_DETECT_MODE_OFF);
+					break;
+				case 1:
+					captureRequestBuilder.set(CaptureRequest.STATISTICS_FACE_DETECT_MODE, CameraMetadata.STATISTICS_FACE_DETECT_MODE_SIMPLE);
+					break;
+				case 2:
+					captureRequestBuilder.set(CaptureRequest.STATISTICS_FACE_DETECT_MODE, CameraMetadata.STATISTICS_FACE_DETECT_MODE_FULL);
+			}
 
 			if (!isRecording) {
 				applyCaptureSettings();
