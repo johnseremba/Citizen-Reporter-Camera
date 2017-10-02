@@ -36,7 +36,7 @@ public class ViewImageActivity extends AppCompatActivity {
 	public void onWindowFocusChanged(boolean hasFocus) {
 		super.onWindowFocusChanged(hasFocus);
 		View decorView = getWindow().getDecorView();
-		if(hasFocus){
+		if (hasFocus) {
 			decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE
 					| View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
 					| View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
@@ -48,8 +48,9 @@ public class ViewImageActivity extends AppCompatActivity {
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		if(BuildConfig.DEBUG){
-			StrictMode.VmPolicy vmPolicy = new StrictMode.VmPolicy.Builder().detectActivityLeaks().penaltyLog().build();
+		if (BuildConfig.DEBUG) {
+			StrictMode.VmPolicy vmPolicy =
+					new StrictMode.VmPolicy.Builder().detectActivityLeaks().penaltyLog().build();
 			StrictMode.setVmPolicy(vmPolicy);
 		}
 		super.onCreate(savedInstanceState);
@@ -79,13 +80,14 @@ public class ViewImageActivity extends AppCompatActivity {
 		closeBtn.setOnClickListener(new View.OnClickListener() {
 			@Override public void onClick(View view) {
 				boolean deleted = imageFile.delete();
-				if(deleted){
+				if (deleted) {
 					MediaScannerConnection.scanFile(getApplicationContext(),
-							new String[]{getIntent().getStringExtra(IMAGE_FILE_LOCATION)}, null, null);
+							new String[] { getIntent().getStringExtra(IMAGE_FILE_LOCATION) }, null, null);
 					setResult(Activity.RESULT_CANCELED);
 					ViewImageActivity.super.finish();
 				} else {
-					Toast.makeText(getApplicationContext(), "Problem deleting picture", Toast.LENGTH_SHORT).show();
+					Toast.makeText(getApplicationContext(), "Problem deleting picture", Toast.LENGTH_SHORT)
+							.show();
 				}
 			}
 		});
@@ -113,7 +115,6 @@ public class ViewImageActivity extends AppCompatActivity {
 				loadRotation(-90);
 			}
 		});
-
 	}
 
 	private void loadRotation(float angle) {
@@ -143,7 +144,7 @@ public class ViewImageActivity extends AppCompatActivity {
 	public static Bitmap rotate(Bitmap source, float angle) {
 		Matrix matrix = new Matrix();
 		matrix.postRotate(angle);
-		return Bitmap.createBitmap(source, 0, 0, source.getWidth(),source.getHeight(), matrix, false);
+		return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, false);
 	}
 
 	@Override

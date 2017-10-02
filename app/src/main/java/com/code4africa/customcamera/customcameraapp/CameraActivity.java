@@ -339,7 +339,7 @@ public class CameraActivity extends AppCompatActivity
 						camLensFacing) {
 					//int deviceOrientation = getWindowManager().getDefaultDisplay().getRotation();
 					int deviceOrientation;
-					if(camLensFacing == CameraCharacteristics.LENS_FACING_FRONT){
+					if (camLensFacing == CameraCharacteristics.LENS_FACING_FRONT) {
 						deviceOrientation = 1;
 					} else {
 						deviceOrientation = 3;
@@ -973,12 +973,12 @@ public class CameraActivity extends AppCompatActivity
 		builder.setCancelable(true)
 				.setTitle("White Balance")
 				.setItems(WB_SCENES, new DialogInterface.OnClickListener() {
-			public void onClick(DialogInterface dialog, int index) {
-				wbMode = index;
-				setWBMode(index);
-				applySettings();
-			}
-		});
+					public void onClick(DialogInterface dialog, int index) {
+						wbMode = index;
+						setWBMode(index);
+						applySettings();
+					}
+				});
 		AlertDialog dialog = builder.create();
 		dialog.show();
 	}
@@ -1146,7 +1146,7 @@ public class CameraActivity extends AppCompatActivity
 		capturePictureBtn.setOnLongClickListener(new View.OnLongClickListener() {
 			@Override public boolean onLongClick(View view) {
 				// Record a video for long press
-				if(!showOverlays) {
+				if (!showOverlays) {
 					hideOverlayDetails();
 					hideFlashAndToggle();
 					swipeText.setVisibility(View.VISIBLE);
@@ -1183,7 +1183,7 @@ public class CameraActivity extends AppCompatActivity
 					lockFocus();
 				} else {
 					// Stop video recording, set back the capture icon
-					if(!showOverlays) {
+					if (!showOverlays) {
 						swipeText.setVisibility(View.INVISIBLE);
 						showFlashAndToggle();
 					} else {
@@ -1287,12 +1287,12 @@ public class CameraActivity extends AppCompatActivity
 		builder.setCancelable(true)
 				.setTitle("Color Filters")
 				.setItems(elements, new DialogInterface.OnClickListener() {
-			public void onClick(DialogInterface dialog, int index) {
-				currentCameraEffect = elements[index];
-				setCameraEffectMode(elements[index]);
-				applySettings();
-			}
-		});
+					public void onClick(DialogInterface dialog, int index) {
+						currentCameraEffect = elements[index];
+						setCameraEffectMode(elements[index]);
+						applySettings();
+					}
+				});
 		AlertDialog dialog = builder.create();
 		dialog.show();
 	}
