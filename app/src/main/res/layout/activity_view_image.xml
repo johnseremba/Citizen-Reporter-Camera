@@ -37,6 +37,7 @@
       app:layout_constraintEnd_toEndOf="parent"
       app:srcCompat="@drawable/ic_circular_check"
       android:focusable="true"
+      android:background="?attr/selectableItemBackground"
       />
   <ImageView
       android:id="@+id/img_close_btn"
@@ -49,6 +50,7 @@
       app:layout_constraintBottom_toBottomOf="parent"
       app:layout_constraintStart_toStartOf="parent"
       app:srcCompat="@drawable/ic_close"
+      android:background="?attr/selectableItemBackground"
       />
   <ImageView
       android:id="@+id/btn_rotate_clockwise"
@@ -64,6 +66,7 @@
       app:layout_constraintHorizontal_bias="0.162"
       app:layout_constraintStart_toEndOf="@+id/btn_rotate_anti_clockwise"
       app:srcCompat="@drawable/ic_clockwise_circular_arrow"
+      android:background="?attr/selectableItemBackground"
       />
   <ImageView
       android:id="@+id/btn_rotate_anti_clockwise"
@@ -76,5 +79,6 @@
       app:srcCompat="@drawable/ic_counterclockwise_circular_arrow"
       android:clickable="true"
       android:focusable="true"
+      android:background="?attr/selectableItemBackground"
       />
 </android.support.constraint.ConstraintLayout>

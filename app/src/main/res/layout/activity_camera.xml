@@ -149,6 +149,7 @@
       app:layout_constraintEnd_toEndOf="parent"
       app:layout_constraintStart_toStartOf="parent"
       app:srcCompat="@drawable/camera_capture"
+      android:background="?attr/selectableItemBackground"
       />
   <ImageView
       android:id="@+id/img_switch_camera"
