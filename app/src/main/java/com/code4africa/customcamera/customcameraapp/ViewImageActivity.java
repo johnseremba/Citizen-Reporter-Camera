@@ -14,14 +14,11 @@ import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.Toast;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.signature.MediaStoreSignature;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 public class ViewImageActivity extends AppCompatActivity {
 	private static final String IMAGE_FILE_LOCATION = "image_file_location";
@@ -43,9 +40,7 @@ public class ViewImageActivity extends AppCompatActivity {
 			decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE
 					| View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
 					| View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-					| View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-					| View.SYSTEM_UI_FLAG_FULLSCREEN
-					| View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+					| View.SYSTEM_UI_FLAG_FULLSCREEN);
 		}
 	}
 
@@ -131,21 +126,17 @@ public class ViewImageActivity extends AppCompatActivity {
 
 	private class RotateBitmapTask extends AsyncTask<Float, Void, Void> {
 		ProgressDialog dialog;
-		File newFile;
 		@Override protected Void doInBackground(Float... rotation) {
-			newFile = new File(imageFile.getAbsolutePath());
 			Bitmap bmp = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
 			try {
 				Bitmap finalBitmap = rotate(bmp, rotationAngle);
 				FileOutputStream out = new FileOutputStream(imageFile);
 				finalBitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
-
 				out.flush();
 				out.close();
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-
 			return null;
 		}
 
