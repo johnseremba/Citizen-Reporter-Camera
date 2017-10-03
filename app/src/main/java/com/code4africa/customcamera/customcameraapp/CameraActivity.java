@@ -7,8 +7,14 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
+import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.ImageFormat;
 import android.graphics.Matrix;
+import android.graphics.Paint;
+import android.graphics.PixelFormat;
+import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
@@ -20,6 +26,7 @@ import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
+import android.hardware.camera2.params.Face;
 import android.hardware.camera2.params.MeteringRectangle;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
@@ -48,6 +55,7 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.Surface;
+import android.view.SurfaceView;
 import android.view.TextureView;
 import android.view.View;
 import android.hardware.camera2.CameraDevice;
@@ -62,6 +70,8 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewSwitcher;
+import com.google.android.gms.vision.Frame;
+import com.google.android.gms.vision.face.FaceDetector;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -75,6 +85,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.IntStream;
 
 public class CameraActivity extends AppCompatActivity
 		implements SceneSelectorAdapter.OnClickThumbListener {
@@ -160,7 +171,6 @@ public class CameraActivity extends AppCompatActivity
 	private Rect activePixesAfter;
 	private Rect zoom;
 
-	public ListView whiteBalanceList;
 	private ImageView imgToggleWB;
 	private int wbMode = 0;
 	private boolean showOverlays = true;
@@ -183,6 +193,14 @@ public class CameraActivity extends AppCompatActivity
 	};
 	private HashMap<String, Integer> availableEffects = new HashMap<>();
 	private String currentCameraEffect;
+	private MeteringRectangle focusArea;
+	private int[] faceDetectionModes;
+	private Paint yellowPaint;
+	private Rect cameraBounds;
+	private int cameraWidth;
+	private int cameraHeight;
+	private Face detectedFace;
+	private Rect rectangleFace;
 
 	@Override public void OnClickScene(String sceneKey, Integer position) {
 		int imgID = overlayScenes.get(sceneKey).get(position);
@@ -250,6 +268,15 @@ public class CameraActivity extends AppCompatActivity
 							MediaActionSound sound = new MediaActionSound();
 							sound.play(MediaActionSound.SHUTTER_CLICK);
 							startStillCapture();
+
+							//Face faces[] = captureResult.get(CaptureResult.STATISTICS_FACES);
+							//if(faces.length > 0) {
+							//	detectedFace = faces[0];
+							//	rectangleFace = detectedFace.getBounds();
+							//	for(Face f : faces) {
+							//		Log.d(TAG, "FACE: " + f);
+							//	}
+							//}
 							break;
 					}
 				}
@@ -275,7 +302,40 @@ public class CameraActivity extends AppCompatActivity
 				}
 
 				@Override public void onSurfaceTextureUpdated(SurfaceTexture surfaceTexture) {
-
+					//Face faces[] =  captureResult.get(CaptureResult.STATISTICS_FACES);
+					//FaceDetector faceDetector = new FaceDetector.Builder(getApplicationContext())
+					//		.setTrackingEnabled(true)
+					//		.setLandmarkType(FaceDetector.ALL_LANDMARKS)
+					//		.setMode(FaceDetector.FAST_MODE)
+					//		.build();
+					//
+					//if(!faceDetector.isOperational()) {
+					//	Log.d(TAG, "Face detection is not operational!");
+					//	Toast.makeText(getApplicationContext(), "Face detection is not operational", Toast.LENGTH_SHORT).show();
+					//	return;
+					//}
+					//
+					//Frame frame = new Frame.Builder().setBitmap().build();
+					//
+					//if (detectedFace != null && rectangleFace.height() > 0) {
+					//	Canvas currentCanvas = faceRectangle.getHolder().lockCanvas();
+					//	if (currentCanvas != null) {
+					//		currentCanvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
+					//		int canvasWidth = currentCanvas.getWidth();
+					//		int canvasHeight = currentCanvas.getHeight();
+					//		int l = rectangleFace.right;
+					//		int t = rectangleFace.bottom;
+					//		int r = rectangleFace.left;
+					//		int b = rectangleFace.top;
+					//		int left = (canvasWidth*l)/cameraWidth;
+					//		int top  = (canvasHeight*t)/cameraHeight;
+					//		int right = (canvasWidth*r)/cameraWidth;
+					//		int bottom = (canvasHeight*b)/cameraHeight;
+					//
+					//		currentCanvas.drawRect(left, top, right, bottom, yellowPaint);
+					//	}
+					//	faceRectangle.getHolder().unlockCanvasAndPost(currentCanvas);
+					//}
 				}
 			};
 
@@ -335,16 +395,16 @@ public class CameraActivity extends AppCompatActivity
 				CameraCharacteristics cameraCharacteristics = cameraManager.getCameraCharacteristics(camID);
 				if (cameraCharacteristics.get(CameraCharacteristics.LENS_FACING) ==
 						camLensFacing) {
-					int deviceOrientation = getWindowManager().getDefaultDisplay().getRotation();
-					totalRotation = sensorToDeviceOrientation(cameraCharacteristics, deviceOrientation);
-					int rotatedWidth = width;
-					int rotatedHeight = height;
-					boolean swapRotation = totalRotation == 90 || totalRotation == 270;
-
-					if (swapRotation) {
-						rotatedWidth = height;
-						rotatedHeight = width;
+					//int deviceOrientation = getWindowManager().getDefaultDisplay().getRotation();
+					int deviceOrientation;
+					if (camLensFacing == CameraCharacteristics.LENS_FACING_FRONT) {
+						deviceOrientation = 1;
+					} else {
+						deviceOrientation = 3;
 					}
+					totalRotation = sensorToDeviceOrientation(cameraCharacteristics, deviceOrientation);
+					int rotatedWidth = height;
+					int rotatedHeight = width;
 
 					StreamConfigurationMap map =
 							cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
@@ -370,6 +430,12 @@ public class CameraActivity extends AppCompatActivity
 					isMeteringAFAreaSupported =
 							cameraCharacteristics.get(CameraCharacteristics.CONTROL_MAX_REGIONS_AF) >= 1;
 					maxDigitalZoom *= 10;
+
+					faceDetectionModes = cameraCharacteristics.get(
+							CameraCharacteristics.STATISTICS_INFO_AVAILABLE_FACE_DETECT_MODES);
+					cameraBounds = cameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
+					cameraWidth = cameraBounds.right;
+					cameraHeight = cameraBounds.bottom;
 
 					if (availableEffects.size() < 1) {
 						int[] colorModes =
@@ -537,9 +603,30 @@ public class CameraActivity extends AppCompatActivity
 			captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
 			captureRequestBuilder.addTarget(previewSurface);
 
+			int mode = faceDetectionModes.length > 0 ? faceDetectionModes[faceDetectionModes.length - 1] : 0;
+			switch (mode) {
+				case 0:
+					captureRequestBuilder.set(CaptureRequest.STATISTICS_FACE_DETECT_MODE, CameraMetadata.STATISTICS_FACE_DETECT_MODE_OFF);
+					break;
+				case 1:
+					captureRequestBuilder.set(CaptureRequest.STATISTICS_FACE_DETECT_MODE, CameraMetadata.STATISTICS_FACE_DETECT_MODE_SIMPLE);
+					break;
+				case 2:
+					captureRequestBuilder.set(CaptureRequest.STATISTICS_FACE_DETECT_MODE, CameraMetadata.STATISTICS_FACE_DETECT_MODE_FULL);
+			}
+
 			if (!isRecording) {
 				applyCaptureSettings();
 			}
+
+			//Face faces[] =  captureResult.get(CaptureResult.STATISTICS_FACES);
+			//if(faces.length > 0) {
+			//	detectedFace = faces[0];
+			//	rectangleFace = detectedFace.getBounds();
+			//	for(Face f : faces) {
+			//		Log.d(TAG, "FACE: " + f);
+			//	}
+			//}
 
 			cameraDevice.createCaptureSession(Arrays.asList(previewSurface, imageReader.getSurface()),
 					new CameraCaptureSession.StateCallback() {
@@ -968,14 +1055,15 @@ public class CameraActivity extends AppCompatActivity
 
 	private void showWBList() {
 		AlertDialog.Builder builder = new AlertDialog.Builder(CameraActivity.this);
-		builder.setCancelable(true);
-		builder.setItems(WB_SCENES, new DialogInterface.OnClickListener() {
-			public void onClick(DialogInterface dialog, int index) {
-				wbMode = index;
-				setWBMode(index);
-				applySettings();
-			}
-		});
+		builder.setCancelable(true)
+				.setTitle("White Balance")
+				.setItems(WB_SCENES, new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int index) {
+						wbMode = index;
+						setWBMode(index);
+						applySettings();
+					}
+				});
 		AlertDialog dialog = builder.create();
 		dialog.show();
 	}
@@ -1029,12 +1117,6 @@ public class CameraActivity extends AppCompatActivity
 		initializeScenes();
 		initializeCameraInterface(); // Creates the swipe buttons
 
-		String[] wbScenes =
-				{ "Auto", "Incadescent", "Daylight", "Fluorescent", "Cloudy", "Twilight", "Shade" };
-		final ArrayAdapter<String> adapter =
-				new ArrayAdapter<String>(this, R.layout.wb_scenes_list, R.id.txt_scene_id, wbScenes);
-		whiteBalanceList.setAdapter(adapter);
-
 		overlayToggle.setOnClickListener(new View.OnClickListener() {
 			@Override public void onClick(View view) {
 				if (showOverlays) {
@@ -1054,15 +1136,6 @@ public class CameraActivity extends AppCompatActivity
 							.into(overlayToggle);
 					showOverlayDetails();
 				}
-			}
-		});
-
-		whiteBalanceList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-			@Override public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-				ViewGroup vg = (ViewGroup) view;
-				TextView txt = (TextView) findViewById(R.id.txt_scene_id);
-				Toast.makeText(getApplicationContext(), txt.getText().toString(), Toast.LENGTH_SHORT)
-						.show();
 			}
 		});
 
@@ -1143,7 +1216,7 @@ public class CameraActivity extends AppCompatActivity
 		capturePictureBtn.setOnLongClickListener(new View.OnLongClickListener() {
 			@Override public boolean onLongClick(View view) {
 				// Record a video for long press
-				if(!showOverlays) {
+				if (!showOverlays) {
 					hideOverlayDetails();
 					hideFlashAndToggle();
 					swipeText.setVisibility(View.VISIBLE);
@@ -1180,7 +1253,7 @@ public class CameraActivity extends AppCompatActivity
 					lockFocus();
 				} else {
 					// Stop video recording, set back the capture icon
-					if(!showOverlays) {
+					if (!showOverlays) {
 						swipeText.setVisibility(View.INVISIBLE);
 						showFlashAndToggle();
 					} else {
@@ -1281,14 +1354,15 @@ public class CameraActivity extends AppCompatActivity
 			}
 		}
 		AlertDialog.Builder builder = new AlertDialog.Builder(CameraActivity.this);
-		builder.setCancelable(true);
-		builder.setItems(elements, new DialogInterface.OnClickListener() {
-			public void onClick(DialogInterface dialog, int index) {
-				currentCameraEffect = elements[index];
-				setCameraEffectMode(elements[index]);
-				applySettings();
-			}
-		});
+		builder.setCancelable(true)
+				.setTitle("Color Filters")
+				.setItems(elements, new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int index) {
+						currentCameraEffect = elements[index];
+						setCameraEffectMode(elements[index]);
+						applySettings();
+					}
+				});
 		AlertDialog dialog = builder.create();
 		dialog.show();
 	}
@@ -1322,17 +1396,20 @@ public class CameraActivity extends AppCompatActivity
 		lightSeekBar = (SeekBar) findViewById(R.id.seekbar_light);
 		zoomCaption = (TextView) findViewById(R.id.txt_zoom_caption);
 
-		whiteBalanceList = new ListView(this);
 		imgToggleWB = (ImageView) findViewById(R.id.img_wb_btn);
 		effectsBtn = (ImageView) findViewById(R.id.img_effects_btn);
 		overlayToggle = (ImageView) findViewById(R.id.img_overlay_toggle);
+
+		yellowPaint = new Paint();
+		yellowPaint.setStrokeWidth(5);
+		yellowPaint.setColor(Color.YELLOW);
+		yellowPaint.setStyle(Paint.Style.STROKE);
+
 	}
 
 	private void increaseBrightness(double progressValue) {
-		captureRequestBuilder.set(CaptureRequest.CONTROL_AE_LOCK, false);
 		captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_ON);
 		captureRequestBuilder.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION, (int) progressValue);
-		captureRequestBuilder.set(CaptureRequest.CONTROL_AE_LOCK, true);
 	}
 
 	private void applySettings() {
@@ -1534,7 +1611,7 @@ public class CameraActivity extends AppCompatActivity
 					(int) ((e.getY() / (float) textureView.getHeight()) * (float) sensorArraySize.width());
 			final int halfTouchWidth = (int) e.getTouchMajor(); // 150;
 			final int halfTouchHeight = (int) e.getTouchMinor(); //150;
-			MeteringRectangle focusArea = new MeteringRectangle(
+			focusArea = new MeteringRectangle(
 					Math.max(x - halfTouchWidth, 0),
 					Math.max(y - halfTouchHeight, 0),
 					halfTouchWidth * 2,
@@ -1551,6 +1628,7 @@ public class CameraActivity extends AppCompatActivity
 			captureRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
 					CameraMetadata.CONTROL_AF_TRIGGER_CANCEL);
 			captureRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CameraMetadata.CONTROL_AF_MODE_OFF);
+
 			setFlashMode();
 
 			try {
