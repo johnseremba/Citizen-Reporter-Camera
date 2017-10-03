@@ -17,8 +17,11 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.signature.MediaStoreSignature;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class ViewImageActivity extends AppCompatActivity {
 	private static final String IMAGE_FILE_LOCATION = "image_file_location";
@@ -128,34 +131,37 @@ public class ViewImageActivity extends AppCompatActivity {
 
 	private class RotateBitmapTask extends AsyncTask<Float, Void, Void> {
 		ProgressDialog dialog;
+		File newFile;
 		@Override protected Void doInBackground(Float... rotation) {
-			String dir = imageFile.getAbsolutePath();
-			Bitmap bmp = BitmapFactory.decodeFile(dir);
+			newFile = new File(imageFile.getAbsolutePath());
+			Bitmap bmp = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
 			try {
 				Bitmap finalBitmap = rotate(bmp, rotationAngle);
 				FileOutputStream out = new FileOutputStream(imageFile);
-				finalBitmap.compress(Bitmap.CompressFormat.JPEG, 40, out);
+				finalBitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+
 				out.flush();
 				out.close();
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+
 			return null;
 		}
 
 		@Override protected void onPreExecute() {
 			super.onPreExecute();
 			dialog = ProgressDialog.show(ViewImageActivity.this, "Please wait ...", "rotating");
-			dialog.setCancelable(true);
+			dialog.setCancelable(false);
 			dialog.show();
 		}
 
 		@Override protected void onPostExecute(Void aVoid) {
 			super.onPostExecute(aVoid);
+			long longDate = System.currentTimeMillis();
 			GlideApp.with(getApplicationContext())
 					.load(imageFile)
-					.skipMemoryCache(true)
-					.diskCacheStrategy(DiskCacheStrategy.NONE)
+					.signature(new MediaStoreSignature("image/jpeg", longDate, (int) rotationAngle))
 					.into(imageView);
 			dialog.dismiss();
 		}
