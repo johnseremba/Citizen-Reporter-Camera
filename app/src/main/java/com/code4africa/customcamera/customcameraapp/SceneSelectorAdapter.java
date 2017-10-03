@@ -41,22 +41,17 @@ public class SceneSelectorAdapter extends RecyclerView.Adapter<SceneSelectorAdap
 
 	public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 		private final ImageView imageView;
-		private ImageView imageOverlay;
 		private ArrayList<Integer> scenesList;
 		private Integer position;
 
-		public ViewHolder(final View itemView) {
+		private ViewHolder(final View itemView) {
 			super(itemView);
 			imageView = (ImageView) itemView.findViewById(R.id.scene_image_view);
 			this.scenesList = scenesList;
 			imageView.setOnClickListener(this);
 		}
 
-		public ImageView getImageView() {
-			return imageView;
-		}
-
-		public void bindScene(Integer sceneID) {
+		private void bindScene(Integer sceneID) {
 			imageView.setImageResource(sceneID);
 		}
 

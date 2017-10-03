@@ -126,6 +126,7 @@ public class ViewImageActivity extends AppCompatActivity {
 
 	private class RotateBitmapTask extends AsyncTask<Float, Void, Void> {
 		ProgressDialog dialog;
+
 		@Override protected Void doInBackground(Float... rotation) {
 			Bitmap bmp = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
 			try {
