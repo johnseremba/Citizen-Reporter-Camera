@@ -66,6 +66,8 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewSwitcher;
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -202,22 +204,26 @@ public class CameraActivity extends AppCompatActivity
 			"Aqua"
 	};
 
-	private RecyclerView sceneRecyclerView;
-	private TextureView textureView;
-	private ImageSwitcher switcher1, switcher2, switcher3, switcher4, switcher5;
-	private ImageView capturePictureBtn;
-	private ImageView openGalleryBtn;
-	private ImageView swapCameraBtn;
-	private ImageView flashModeBtn;
-	private ImageView effectsBtn;
-	private ImageView overlayToggle;
-	private ImageView imgOverlay;
-	private ImageView imgToggleWB;
-	private TextView swipeText;
-	private TextView seekBarProgressText;
-	private TextView zoomCaption;
-	private SeekBar lightSeekBar;
-	private Chronometer chronometer;
+	@BindView(R.id.scene_recylcer_view) RecyclerView sceneRecyclerView;
+	@BindView(R.id.tv_camera) TextureView textureView;
+	@BindView(R.id.sw_swipe_1) ImageSwitcher switcher1;
+	@BindView(R.id.sw_swipe_2) ImageSwitcher switcher2;
+	@BindView(R.id.sw_swipe_3) ImageSwitcher switcher3;
+	@BindView(R.id.sw_swipe_4) ImageSwitcher switcher4;
+	@BindView(R.id.sw_swipe_5) ImageSwitcher switcher5;
+	@BindView(R.id.img_capture) ImageView capturePictureBtn;
+	@BindView(R.id.img_gallery) ImageView openGalleryBtn;
+	@BindView(R.id.img_switch_camera) ImageView swapCameraBtn;
+	@BindView(R.id.img_flash_btn) ImageView flashModeBtn;
+	@BindView(R.id.img_overlay_toggle) ImageView overlayToggle;
+	@BindView(R.id.img_overlay) ImageView imgOverlay;
+	@BindView(R.id.img_effects_btn) ImageView effectsBtn;
+	@BindView(R.id.img_wb_btn) ImageView imgToggleWB;
+	@BindView(R.id.txt_swipe_caption) TextView swipeText;
+	@BindView(R.id.txt_seekbar_progress) TextView seekBarProgressText;
+	@BindView(R.id.txt_zoom_caption) TextView zoomCaption;
+	@BindView(R.id.seekbar_light) SeekBar lightSeekBar;
+	@BindView(R.id.chronometer2) Chronometer chronometer;
 
 	@Override public
 	void OnClickScene(String sceneKey, Integer position) {
@@ -976,6 +982,7 @@ public class CameraActivity extends AppCompatActivity
 		}
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_camera);
+		ButterKnife.bind(this);
 
 		currentScene = INTERACTION_SCENE;
 		gestureObject = new GestureDetectorCompat(this, new LearnGesture());
@@ -1242,32 +1249,8 @@ public class CameraActivity extends AppCompatActivity
 
 	private void initializeObjects() {
 		mediaRecorder = new MediaRecorder();
-		sceneRecyclerView = (RecyclerView) findViewById(R.id.scene_recylcer_view);
 		layoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
 		sceneRecyclerView.setLayoutManager(layoutManager);
-
-		chronometer = (Chronometer) findViewById(R.id.chronometer2);
-		textureView = (TextureView) findViewById(R.id.tv_camera);
-		capturePictureBtn = (ImageView) findViewById(R.id.img_capture);
-		openGalleryBtn = (ImageView) findViewById(R.id.img_gallery);
-		swapCameraBtn = (ImageView) findViewById(R.id.img_switch_camera);
-		flashModeBtn = (ImageView) findViewById(R.id.img_flash_btn);
-		swipeText = (TextView) findViewById(R.id.txt_swipe_caption);
-
-		switcher1 = (ImageSwitcher) findViewById(R.id.sw_swipe_1);
-		switcher2 = (ImageSwitcher) findViewById(R.id.sw_swipe_2);
-		switcher3 = (ImageSwitcher) findViewById(R.id.sw_swipe_3);
-		switcher4 = (ImageSwitcher) findViewById(R.id.sw_swipe_4);
-		switcher5 = (ImageSwitcher) findViewById(R.id.sw_swipe_5);
-		imgOverlay = (ImageView) findViewById(R.id.img_overlay);
-
-		seekBarProgressText = (TextView) findViewById(R.id.txt_seekbar_progress);
-		lightSeekBar = (SeekBar) findViewById(R.id.seekbar_light);
-		zoomCaption = (TextView) findViewById(R.id.txt_zoom_caption);
-
-		imgToggleWB = (ImageView) findViewById(R.id.img_wb_btn);
-		effectsBtn = (ImageView) findViewById(R.id.img_effects_btn);
-		overlayToggle = (ImageView) findViewById(R.id.img_overlay_toggle);
 	}
 
 	private void increaseBrightness(double progressValue) {
