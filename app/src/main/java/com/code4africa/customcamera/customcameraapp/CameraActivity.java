@@ -180,13 +180,16 @@ public class CameraActivity extends AppCompatActivity
 	private Rect sensorArraySize;
 	private boolean isMeteringAFAreaSupported;
 	private static final String[] WB_SCENES =
-			{ "Off", "Auto", "Incandescent", "Fluorescent", "Warm Fluorescent", "Daylight", "Cloudy Daylight", "Twilight", "Shade" };
+			{
+					"Off", "Auto", "Incandescent", "Fluorescent", "Warm Fluorescent", "Daylight",
+					"Cloudy Daylight", "Twilight", "Shade"
+			};
 	private static final String[] COLOR_EFFECTS = {
 			"Off", "Mono", "Negative", "Solarize", "Sepia", "Posterize", "Whiteboard", "Blackboard",
 			"Aqua"
 	};
 	private HashMap<String, Integer> availableEffects = new HashMap<>();
-	private HashMap<String, Integer> awbAvailableModes= new HashMap<>();
+	private HashMap<String, Integer> awbAvailableModes = new HashMap<>();
 	private String currentCameraEffect;
 	private MeteringRectangle focusArea;
 
@@ -388,7 +391,8 @@ public class CameraActivity extends AppCompatActivity
 					}
 
 					if (awbAvailableModes.size() < 1) {
-						int[] awbModes = cameraCharacteristics.get(CameraCharacteristics.CONTROL_AWB_AVAILABLE_MODES);
+						int[] awbModes =
+								cameraCharacteristics.get(CameraCharacteristics.CONTROL_AWB_AVAILABLE_MODES);
 						if (awbModes != null) {
 							for (int mode : awbModes) {
 								awbAvailableModes.put(WB_SCENES[mode], mode);
@@ -581,7 +585,7 @@ public class CameraActivity extends AppCompatActivity
 
 	public void createImageFolder() {
 		File imageFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
-		imageFolder = new File(imageFile, "Code4Africa");
+		imageFolder = new File(imageFile, getString(R.string.app_name));
 		if (!imageFolder.exists()) {
 			imageFolder.mkdirs();
 		}
@@ -589,7 +593,7 @@ public class CameraActivity extends AppCompatActivity
 
 	public void createVideoFolder() {
 		File videoFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES);
-		videoFolder = new File(videoFile, "Code4Africa");
+		videoFolder = new File(videoFile, getString(R.string.app_name));
 		if (!videoFolder.exists()) {
 			videoFolder.mkdir();
 		}
@@ -597,14 +601,14 @@ public class CameraActivity extends AppCompatActivity
 
 	public void createVideoFileName() throws IOException {
 		String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-		String prepend = "VID_" + timestamp;
+		String prepend = "vid_" + timestamp;
 		File videoFile = File.createTempFile(prepend, ".mp4", videoFolder);
 		videoFileName = videoFile.getAbsolutePath();
 	}
 
 	public void createImageFileName() throws IOException {
 		String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-		String prepend = "IMG_" + timestamp;
+		String prepend = "img_" + timestamp;
 		File imageFile = File.createTempFile(prepend, ".jpg", imageFolder);
 		imageFileName = imageFile.getAbsolutePath();
 	}
