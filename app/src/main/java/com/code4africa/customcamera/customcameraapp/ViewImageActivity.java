@@ -15,6 +15,8 @@ import android.util.DisplayMetrics;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.signature.MediaStoreSignature;
 import java.io.File;
@@ -24,13 +26,14 @@ public class ViewImageActivity extends AppCompatActivity {
 	private static final String IMAGE_FILE_LOCATION = "image_file_location";
 	private static final String IMAGE_SAVED_PATH = "imagePath";
 	private static final String TAG = ViewImageActivity.class.getSimpleName();
-	private File imageFile;
-	private ImageView imageView;
-	private ImageView saveBtn;
-	private ImageView closeBtn;
-	private ImageView rotateClockwise;
 	private float rotationAngle;
-	private ImageView rotateCounterClockwise;
+	private File imageFile;
+
+	@BindView(R.id.img_view) ImageView imageView;
+	@BindView(R.id.img_save_btn) ImageView saveBtn;
+	@BindView(R.id.img_close_btn) ImageView closeBtn;
+	@BindView(R.id.btn_rotate_clockwise) ImageView rotateClockwise;
+	@BindView(R.id.btn_rotate_anti_clockwise) ImageView rotateCounterClockwise;
 
 	@Override
 	public void onWindowFocusChanged(boolean hasFocus) {
@@ -53,18 +56,12 @@ public class ViewImageActivity extends AppCompatActivity {
 		}
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_view_image);
+		ButterKnife.bind(this);
 
 		DisplayMetrics displayMetrics = new DisplayMetrics();
 		getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
 		int width = displayMetrics.widthPixels;
 		int height = displayMetrics.heightPixels;
-
-		imageView = (ImageView) findViewById(R.id.img_view);
-		closeBtn = (ImageView) findViewById(R.id.img_close_btn);
-		saveBtn = (ImageView) findViewById(R.id.img_save_btn);
-		rotateClockwise = (ImageView) findViewById(R.id.btn_rotate_clockwise);
-		rotateCounterClockwise = (ImageView) findViewById(R.id.btn_rotate_anti_clockwise);
-
 		imageFile = new File(
 				getIntent().getStringExtra(IMAGE_FILE_LOCATION)
 		);
