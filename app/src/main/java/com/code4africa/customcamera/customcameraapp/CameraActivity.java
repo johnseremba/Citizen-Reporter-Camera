@@ -166,7 +166,7 @@ public class CameraActivity extends AppCompatActivity
 	private Rect zoom;
 
 	private ImageView imgToggleWB;
-	private int wbMode = 0;
+	private String wbMode;
 	private boolean showOverlays = true;
 
 	private final ImageReader.OnImageAvailableListener onImageAvailableListener =
@@ -180,12 +180,13 @@ public class CameraActivity extends AppCompatActivity
 	private Rect sensorArraySize;
 	private boolean isMeteringAFAreaSupported;
 	private static final String[] WB_SCENES =
-			{ "Auto", "Incandescent", "Daylight", "Fluorescent", "Cloudy", "Twilight", "Shade" };
+			{ "Off", "Auto", "Incandescent", "Fluorescent", "Warm Fluorescent", "Daylight", "Cloudy Daylight", "Twilight", "Shade" };
 	private static final String[] COLOR_EFFECTS = {
 			"Off", "Mono", "Negative", "Solarize", "Sepia", "Posterize", "Whiteboard", "Blackboard",
 			"Aqua"
 	};
 	private HashMap<String, Integer> availableEffects = new HashMap<>();
+	private HashMap<String, Integer> awbAvailableModes= new HashMap<>();
 	private String currentCameraEffect;
 	private MeteringRectangle focusArea;
 
@@ -382,6 +383,15 @@ public class CameraActivity extends AppCompatActivity
 						if (colorModes != null) {
 							for (int mode : colorModes) {
 								availableEffects.put(COLOR_EFFECTS[mode], mode);
+							}
+						}
+					}
+
+					if (awbAvailableModes.size() < 1) {
+						int[] awbModes = cameraCharacteristics.get(CameraCharacteristics.CONTROL_AWB_AVAILABLE_MODES);
+						if (awbModes != null) {
+							for (int mode : awbModes) {
+								awbAvailableModes.put(WB_SCENES[mode], mode);
 							}
 						}
 					}
@@ -967,13 +977,22 @@ public class CameraActivity extends AppCompatActivity
 	}
 
 	private void showWBList() {
+		final String[] elements = new String[awbAvailableModes.size()];
+		int i = 1;
+		elements[0] = "Auto";
+		for (String name : awbAvailableModes.keySet()) {
+			if (name == "Auto") continue;
+			elements[i] = name;
+			i++;
+		}
+
 		AlertDialog.Builder builder = new AlertDialog.Builder(CameraActivity.this);
 		builder.setCancelable(true)
 				.setTitle("White Balance")
-				.setItems(WB_SCENES, new DialogInterface.OnClickListener() {
+				.setItems(elements, new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int index) {
-						wbMode = index;
-						setWBMode(index);
+						wbMode = elements[index];
+						setWBMode(elements[index]);
 						applySettings();
 					}
 				});
@@ -981,35 +1000,9 @@ public class CameraActivity extends AppCompatActivity
 		dialog.show();
 	}
 
-	private void setWBMode(int index) {
-		switch (index) {
-			case 0:
-				captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE,
-						CameraMetadata.CONTROL_AWB_MODE_AUTO);
-				break;
-			case 1:
-				captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE,
-						CameraMetadata.CONTROL_AWB_MODE_INCANDESCENT);
-				break;
-			case 2:
-				captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE,
-						CameraMetadata.CONTROL_AWB_MODE_DAYLIGHT);
-				break;
-			case 3:
-				captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE,
-						CameraMetadata.CONTROL_AWB_MODE_FLUORESCENT);
-				break;
-			case 4:
-				captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE,
-						CameraMetadata.CONTROL_AWB_MODE_CLOUDY_DAYLIGHT);
-				break;
-			case 5:
-				captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE,
-						CameraMetadata.CONTROL_AWB_MODE_TWILIGHT);
-				break;
-			case 6:
-				captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE,
-						CameraMetadata.CONTROL_AWB_MODE_SHADE);
+	private void setWBMode(String mode) {
+		if (mode != null) {
+			captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, awbAvailableModes.get(mode));
 		}
 	}
 
@@ -1281,7 +1274,9 @@ public class CameraActivity extends AppCompatActivity
 	}
 
 	private void setCameraEffectMode(String effect) {
-		captureRequestBuilder.set(CaptureRequest.CONTROL_EFFECT_MODE, availableEffects.get(effect));
+		if (effect != null) {
+			captureRequestBuilder.set(CaptureRequest.CONTROL_EFFECT_MODE, availableEffects.get(effect));
+		}
 	}
 
 	private void initializeObjects() {
