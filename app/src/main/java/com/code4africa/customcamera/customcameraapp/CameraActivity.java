@@ -219,7 +219,8 @@ public class CameraActivity extends AppCompatActivity
 	private SeekBar lightSeekBar;
 	private Chronometer chronometer;
 
-	@Override public void OnClickScene(String sceneKey, Integer position) {
+	@Override public
+	void OnClickScene(String sceneKey, Integer position) {
 		int imgID = overlayScenes.get(sceneKey).get(position);
 		GlideApp.with(this).load(null).placeholder(imgID).centerCrop().into(imgOverlay);
 		hideSceneSwitcher();
