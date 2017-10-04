@@ -153,7 +153,7 @@ public class CameraActivity extends AppCompatActivity
 	private boolean moreScenes = false;
 	private String currentScene;
 
-	private double progressValue = 50;
+	private double progressValue = 0;
 	private SeekBar lightSeekBar;
 	private TextView seekBarProgressText;
 	private int aeRange;
@@ -950,6 +950,8 @@ public class CameraActivity extends AppCompatActivity
 			zoomCaption.setVisibility(View.VISIBLE);
 			scale *= scaleGestureDetector.getScaleFactor();
 			zoomCaption.setText(String.format("Zoom: %s", String.valueOf((int) scale)));
+			zoomIn((int) scale);
+			applySettings();
 			return true;
 		}
 
@@ -960,13 +962,6 @@ public class CameraActivity extends AppCompatActivity
 
 		@Override public void onScaleEnd(ScaleGestureDetector scaleGestureDetector) {
 			onScaleEnd = scale;
-			if (onScaleEnd > onScaleBegin) {
-				Log.d(TAG, "Scaled up by: " + String.valueOf(onScaleEnd / onScaleBegin));
-				Log.d(TAG, "Max Zoom: " + String.valueOf(maxDigitalZoom));
-			} else {
-				Log.d(TAG, "Scaled down by: " + String.valueOf(onScaleBegin / onScaleEnd));
-			}
-			zoomIn((int) onScaleEnd);
 			zoomCaption.setVisibility(View.INVISIBLE);
 		}
 	}
