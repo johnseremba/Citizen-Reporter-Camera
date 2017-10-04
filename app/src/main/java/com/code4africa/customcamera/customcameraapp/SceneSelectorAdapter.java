@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import java.util.ArrayList;
 
 public class SceneSelectorAdapter extends RecyclerView.Adapter<SceneSelectorAdapter.ViewHolder> {
@@ -18,7 +19,7 @@ public class SceneSelectorAdapter extends RecyclerView.Adapter<SceneSelectorAdap
 		void OnClickScene(String sceneKey, Integer position);
 	}
 
-	public SceneSelectorAdapter (Activity activity, String sceneKey, ArrayList<Integer> scenesList) {
+	public SceneSelectorAdapter(Activity activity, String sceneKey, ArrayList<Integer> scenesList) {
 		this.sceneKey = sceneKey;
 		this.scenesList = scenesList;
 		this.onClickThumbListener = (OnClickThumbListener) activity;
@@ -26,7 +27,8 @@ public class SceneSelectorAdapter extends RecyclerView.Adapter<SceneSelectorAdap
 
 	@Override
 	public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-		View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_selector_view, parent, false);
+		View view = LayoutInflater.from(parent.getContext())
+				.inflate(R.layout.fragment_selector_view, parent, false);
 		return new ViewHolder(view);
 	}
 
@@ -52,12 +54,14 @@ public class SceneSelectorAdapter extends RecyclerView.Adapter<SceneSelectorAdap
 		}
 
 		private void bindScene(Integer sceneID) {
-			imageView.setImageResource(sceneID);
+			GlideApp.with(itemView)
+					.load(null)
+					.placeholder(sceneID)
+					.into(imageView);
 		}
 
 		@Override public void onClick(View view) {
 			onClickThumbListener.OnClickScene(sceneKey, position);
 		}
 	}
-
 }
