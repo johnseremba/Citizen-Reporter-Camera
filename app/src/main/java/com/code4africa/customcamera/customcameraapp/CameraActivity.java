@@ -152,7 +152,7 @@ public class CameraActivity extends AppCompatActivity
 
 	private int camLensFacing = CameraCharacteristics.LENS_FACING_BACK;
 	private int captureState = STATE_PREVIEW;
-	private int flashStatus = 0;
+	private int flashStatus;
 	private int aeRange;
 	private int totalRotation;
 
