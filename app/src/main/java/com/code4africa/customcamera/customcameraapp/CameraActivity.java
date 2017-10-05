@@ -66,6 +66,8 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewSwitcher;
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -83,10 +85,6 @@ import java.util.Objects;
 
 public class CameraActivity extends AppCompatActivity
 		implements SceneSelectorAdapter.OnClickThumbListener {
-	private static final String TAG = CameraActivity.class.getSimpleName();
-	private static final String IMAGE_FILE_LOCATION = "image_file_location";
-	private static final String IMAGE_SAVED_PATH = "imagePath";
-	private static final String VIDEO_SAVED_PATH = "videoPath";
 	private static final int REQUEST_CAMERA_PERMISSION = 1;
 	private static final int REQUEST_STORAGE_PERMISSION = 2;
 	private static final int REQUEST_AUDIO_PERMISSION = 4;
@@ -94,24 +92,76 @@ public class CameraActivity extends AppCompatActivity
 	private static final int STATE_WAIT_LOCK = 1;
 	private static final int PREVIEW_IMAGE_RESULT = 3;
 	private static final int PROGRESS_MIN = 50;
+
+	private static final String TAG = CameraActivity.class.getSimpleName();
+	private static final String IMAGE_FILE_LOCATION = "image_file_location";
+	private static final String IMAGE_SAVED_PATH = "imagePath";
+	private static final String VIDEO_SAVED_PATH = "videoPath";
 	private static final String PORTRAIT_SCENE = "Portrait";
 	private static final String CANDID_SCENE = "Candid";
 	private static final String INTERACTION_SCENE = "Interaction";
 	private static final String ENVIRONMENT_SCENE = "Environment";
 	private static final String SIGNATURE_SCENE = "Signature";
-	private int captureState = STATE_PREVIEW;
-	private TextureView textureView;
-	private ImageView capturePictureBtn;
-	private ImageView openGalleryBtn;
-	private ImageView swapCameraBtn;
-	private ImageView flashModeBtn;
-	private ImageView effectsBtn;
-	private ImageView overlayToggle;
-	private TextView swipeText;
+
 	private CameraDevice cameraDevice;
+	private CameraCaptureSession previewCaptureSession;
+	private CameraManager cameraManager;
+	private CaptureRequest.Builder captureRequestBuilder;
+	private ImageReader imageReader;
+	private MediaRecorder mediaRecorder;
+	private MeteringRectangle focusArea;
+
+	private File imageFolder;
+	private File videoFolder;
+
+	private Size imageSize;
+	private Size videoSize;
+	private Size previewSize;
+
 	private String cameraID;
+	private String imageFileName;
+	private String videoFileName;
+	private String currentCameraEffect;
+	private String cameraPreviewResult;
+	private String currentScene;
+	private String wbMode;
+
+	private GestureDetectorCompat gestureObject;
+	private ScaleGestureDetector scaleGestureDetector;
+
+	private Rect activePixesAfter;
+	private Rect sensorArraySize;
+	private Rect zoom;
+
+	private Integer selectedScene = 2;
+	private Integer prevScene = 2;
+
+	private ArrayList<Integer> portrait, signature, interaction, candid, environment;
+	private HashMap<String, ArrayList<Integer>> overlayScenes;
+	private HashMap<String, Integer> availableEffects = new HashMap<>();
+	private HashMap<String, Integer> awbAvailableModes = new HashMap<>();
+
 	private HandlerThread backgroundHandlerThread;
 	private Handler backgroundHandler;
+	private LinearLayoutManager layoutManager;
+	private SceneSelectorAdapter sceneSelectorAdapter;
+
+	private double progressValue = 0;
+	private float maxDigitalZoom;
+	private float scale = 10f;
+
+	private int camLensFacing = CameraCharacteristics.LENS_FACING_BACK;
+	private int captureState = STATE_PREVIEW;
+	private int flashStatus;
+	private int aeRange;
+	private int totalRotation;
+
+	private boolean isRecording = false;
+	private boolean moreScenes = false;
+	private boolean showOverlays = true;
+	private boolean manualFocusEngaged = false;
+	private boolean isMeteringAFAreaSupported;
+
 	private static SparseIntArray ORIENTATIONS = new SparseIntArray();
 
 	static {
@@ -121,54 +171,6 @@ public class CameraActivity extends AppCompatActivity
 		ORIENTATIONS.append(Surface.ROTATION_270, 270);
 	}
 
-	private CaptureRequest.Builder captureRequestBuilder;
-	private File imageFolder;
-	private File videoFolder;
-	private String imageFileName;
-	private String videoFileName;
-	private Size imageSize;
-	private Size videoSize;
-	private Size previewSize;
-	private ImageReader imageReader;
-	private MediaRecorder mediaRecorder;
-	private CameraCaptureSession previewCaptureSession;
-	private int totalRotation;
-
-	private ImageSwitcher switcher1, switcher2, switcher3, switcher4, switcher5;
-	private ImageView imgOverlay;
-	private HashMap<String, ArrayList<Integer>> overlayScenes;
-	private ArrayList<Integer> portrait, signature, interaction, candid, environment;
-	private GestureDetectorCompat gestureObject;
-	private Integer selectedScene = 2;
-	private Integer prevScene = 2;
-	private int camLensFacing = CameraCharacteristics.LENS_FACING_BACK;
-	private boolean isRecording = false;
-	private Chronometer chronometer;
-	private String cameraPreviewResult;
-	private int flashStatus = 0;
-
-	private RecyclerView sceneRecyclerView;
-	private LinearLayoutManager layoutManager;
-	private SceneSelectorAdapter sceneSelectorAdapter;
-	private boolean moreScenes = false;
-	private String currentScene;
-
-	private double progressValue = 0;
-	private SeekBar lightSeekBar;
-	private TextView seekBarProgressText;
-	private int aeRange;
-	private CameraManager cameraManager;
-	private float maxDigitalZoom;
-	private ScaleGestureDetector scaleGestureDetector;
-	private float scale = 10f;
-	private TextView zoomCaption;
-	private Rect activePixesAfter;
-	private Rect zoom;
-
-	private ImageView imgToggleWB;
-	private String wbMode;
-	private boolean showOverlays = true;
-
 	private final ImageReader.OnImageAvailableListener onImageAvailableListener =
 			new ImageReader.OnImageAvailableListener() {
 				@Override
@@ -176,64 +178,57 @@ public class CameraActivity extends AppCompatActivity
 					backgroundHandler.post(new ImageSaver(reader.acquireLatestImage()));
 				}
 			};
-	private boolean manualFocusEngaged = false;
-	private Rect sensorArraySize;
-	private boolean isMeteringAFAreaSupported;
+
 	private static final String[] WB_SCENES =
 			{
-					"Off", "Auto", "Incandescent", "Fluorescent", "Warm Fluorescent", "Daylight",
-					"Cloudy Daylight", "Twilight", "Shade"
+					"Off",
+					"Auto",
+					"Incandescent",
+					"Fluorescent",
+					"Warm Fluorescent",
+					"Daylight",
+					"Cloudy Daylight",
+					"Twilight",
+					"Shade"
 			};
+
 	private static final String[] COLOR_EFFECTS = {
-			"Off", "Mono", "Negative", "Solarize", "Sepia", "Posterize", "Whiteboard", "Blackboard",
+			"Off",
+			"Mono",
+			"Negative",
+			"Solarize",
+			"Sepia",
+			"Posterize",
+			"Whiteboard",
+			"Blackboard",
 			"Aqua"
 	};
-	private HashMap<String, Integer> availableEffects = new HashMap<>();
-	private HashMap<String, Integer> awbAvailableModes = new HashMap<>();
-	private String currentCameraEffect;
-	private MeteringRectangle focusArea;
+
+	@BindView(R.id.scene_recylcer_view) RecyclerView sceneRecyclerView;
+	@BindView(R.id.tv_camera) TextureView textureView;
+	@BindView(R.id.sw_swipe_1) ImageSwitcher switcher1;
+	@BindView(R.id.sw_swipe_2) ImageSwitcher switcher2;
+	@BindView(R.id.sw_swipe_3) ImageSwitcher switcher3;
+	@BindView(R.id.sw_swipe_4) ImageSwitcher switcher4;
+	@BindView(R.id.sw_swipe_5) ImageSwitcher switcher5;
+	@BindView(R.id.img_capture) ImageView capturePictureBtn;
+	@BindView(R.id.img_gallery) ImageView openGalleryBtn;
+	@BindView(R.id.img_switch_camera) ImageView swapCameraBtn;
+	@BindView(R.id.img_flash_btn) ImageView flashModeBtn;
+	@BindView(R.id.img_overlay_toggle) ImageView overlayToggle;
+	@BindView(R.id.img_overlay) ImageView imgOverlay;
+	@BindView(R.id.img_effects_btn) ImageView effectsBtn;
+	@BindView(R.id.img_wb_btn) ImageView imgToggleWB;
+	@BindView(R.id.txt_swipe_caption) TextView swipeText;
+	@BindView(R.id.txt_seekbar_progress) TextView seekBarProgressText;
+	@BindView(R.id.txt_zoom_caption) TextView zoomCaption;
+	@BindView(R.id.seekbar_light) SeekBar lightSeekBar;
+	@BindView(R.id.chronometer2) Chronometer chronometer;
 
 	@Override public void OnClickScene(String sceneKey, Integer position) {
 		int imgID = overlayScenes.get(sceneKey).get(position);
 		GlideApp.with(this).load(null).placeholder(imgID).centerCrop().into(imgOverlay);
 		hideSceneSwitcher();
-	}
-
-	private class ImageSaver implements Runnable {
-		private final Image image;
-
-		private ImageSaver(Image image) {
-			this.image = image;
-		}
-
-		@Override public void run() {
-			ByteBuffer byteBuffer = image.getPlanes()[0].getBuffer();
-			byte[] bytes = new byte[byteBuffer.remaining()];
-			byteBuffer.get(bytes);
-
-			FileOutputStream fileOutputStream = null;
-			try {
-				fileOutputStream = new FileOutputStream(imageFileName);
-				fileOutputStream.write(bytes);
-			} catch (IOException e) {
-				e.printStackTrace();
-			} finally {
-				image.close();
-
-				Intent mediaStoreUpdateIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-				mediaStoreUpdateIntent.setData(Uri.fromFile(new File(imageFileName)));
-				sendBroadcast(mediaStoreUpdateIntent);
-
-				if (fileOutputStream != null) {
-					try {
-						fileOutputStream.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-				openImage();
-			}
-		}
 	}
 
 	private CameraCaptureSession.CaptureCallback previewCaptureCallback =
@@ -947,39 +942,6 @@ public class CameraActivity extends AppCompatActivity
 		increaseBrightness(progressValue);
 	}
 
-	private class ScaleListener implements ScaleGestureDetector.OnScaleGestureListener {
-		float onScaleBegin = 0;
-		float onScaleEnd = 0;
-
-		@Override public boolean onScale(ScaleGestureDetector scaleGestureDetector) {
-			if (scale >= maxDigitalZoom) {
-				scale = maxDigitalZoom;
-				onScaleBegin = 0;
-				onScaleEnd = 0;
-			} else if (scale < 1) {
-				scale = 1f;
-				onScaleBegin = 0;
-				onScaleEnd = 0;
-			}
-			zoomCaption.setVisibility(View.VISIBLE);
-			scale *= scaleGestureDetector.getScaleFactor();
-			zoomCaption.setText(String.format("Zoom: %s", String.valueOf((int) scale)));
-			zoomIn((int) scale);
-			applySettings();
-			return true;
-		}
-
-		@Override public boolean onScaleBegin(ScaleGestureDetector scaleGestureDetector) {
-			onScaleBegin = scale;
-			return true;
-		}
-
-		@Override public void onScaleEnd(ScaleGestureDetector scaleGestureDetector) {
-			onScaleEnd = scale;
-			zoomCaption.setVisibility(View.INVISIBLE);
-		}
-	}
-
 	private void showWBList() {
 		final String[] elements = new String[awbAvailableModes.size()];
 		int i = 1;
@@ -1019,6 +981,7 @@ public class CameraActivity extends AppCompatActivity
 		}
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_camera);
+		ButterKnife.bind(this);
 
 		currentScene = INTERACTION_SCENE;
 		gestureObject = new GestureDetectorCompat(this, new LearnGesture());
@@ -1285,32 +1248,8 @@ public class CameraActivity extends AppCompatActivity
 
 	private void initializeObjects() {
 		mediaRecorder = new MediaRecorder();
-		sceneRecyclerView = (RecyclerView) findViewById(R.id.scene_recylcer_view);
 		layoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
 		sceneRecyclerView.setLayoutManager(layoutManager);
-
-		chronometer = (Chronometer) findViewById(R.id.chronometer2);
-		textureView = (TextureView) findViewById(R.id.tv_camera);
-		capturePictureBtn = (ImageView) findViewById(R.id.img_capture);
-		openGalleryBtn = (ImageView) findViewById(R.id.img_gallery);
-		swapCameraBtn = (ImageView) findViewById(R.id.img_switch_camera);
-		flashModeBtn = (ImageView) findViewById(R.id.img_flash_btn);
-		swipeText = (TextView) findViewById(R.id.txt_swipe_caption);
-
-		switcher1 = (ImageSwitcher) findViewById(R.id.sw_swipe_1);
-		switcher2 = (ImageSwitcher) findViewById(R.id.sw_swipe_2);
-		switcher3 = (ImageSwitcher) findViewById(R.id.sw_swipe_3);
-		switcher4 = (ImageSwitcher) findViewById(R.id.sw_swipe_4);
-		switcher5 = (ImageSwitcher) findViewById(R.id.sw_swipe_5);
-		imgOverlay = (ImageView) findViewById(R.id.img_overlay);
-
-		seekBarProgressText = (TextView) findViewById(R.id.txt_seekbar_progress);
-		lightSeekBar = (SeekBar) findViewById(R.id.seekbar_light);
-		zoomCaption = (TextView) findViewById(R.id.txt_zoom_caption);
-
-		imgToggleWB = (ImageView) findViewById(R.id.img_wb_btn);
-		effectsBtn = (ImageView) findViewById(R.id.img_effects_btn);
-		overlayToggle = (ImageView) findViewById(R.id.img_overlay_toggle);
 	}
 
 	private void increaseBrightness(double progressValue) {
@@ -1461,6 +1400,141 @@ public class CameraActivity extends AppCompatActivity
 		}
 	}
 
+	public void swipeScenes(Integer nextScene, Integer prevScene) {
+		final int UN_SELECTED = R.drawable.ic_circular;
+		final int SELECTED = R.drawable.ic_selected_circular;
+		switch (prevScene) {
+			case 0:
+				switcher1.setImageResource(UN_SELECTED);
+				break;
+			case 1:
+				switcher2.setImageResource(UN_SELECTED);
+				break;
+			case 2:
+				switcher3.setImageResource(UN_SELECTED);
+				break;
+			case 3:
+				switcher4.setImageResource(UN_SELECTED);
+				break;
+			case 4:
+				switcher5.setImageResource(UN_SELECTED);
+				break;
+			default:
+				selectedScene = 0;
+				switcher1.setImageResource(UN_SELECTED);
+				break;
+		}
+		switch (nextScene) {
+			case 0:
+				switcher1.setImageResource(SELECTED);
+				loadOverlayImage(PORTRAIT_SCENE);
+				break;
+			case 1:
+				switcher2.setImageResource(SELECTED);
+				loadOverlayImage(SIGNATURE_SCENE);
+				break;
+			case 2:
+				switcher3.setImageResource(SELECTED);
+				loadOverlayImage(INTERACTION_SCENE);
+				break;
+			case 3:
+				switcher4.setImageResource(SELECTED);
+				loadOverlayImage(CANDID_SCENE);
+				break;
+			case 4:
+				switcher5.setImageResource(SELECTED);
+				loadOverlayImage(ENVIRONMENT_SCENE);
+				break;
+			default:
+				selectedScene = 0;
+				switcher1.setImageResource(SELECTED);
+				loadOverlayImage(PORTRAIT_SCENE);
+				break;
+		}
+	}
+
+	private void loadOverlayImage(String scene) {
+		int imgID = overlayScenes.get(scene).get(0);
+		currentScene = scene;
+		swipeText.setText(scene);
+		GlideApp.with(this)
+				.load(null)
+				.placeholder(imgID)
+				.centerCrop()
+				.transition(DrawableTransitionOptions.withCrossFade())
+				.into(imgOverlay);
+	}
+
+	private class ImageSaver implements Runnable {
+		private final Image image;
+
+		private ImageSaver(Image image) {
+			this.image = image;
+		}
+
+		@Override public void run() {
+			ByteBuffer byteBuffer = image.getPlanes()[0].getBuffer();
+			byte[] bytes = new byte[byteBuffer.remaining()];
+			byteBuffer.get(bytes);
+
+			FileOutputStream fileOutputStream = null;
+			try {
+				fileOutputStream = new FileOutputStream(imageFileName);
+				fileOutputStream.write(bytes);
+			} catch (IOException e) {
+				e.printStackTrace();
+			} finally {
+				image.close();
+
+				Intent mediaStoreUpdateIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+				mediaStoreUpdateIntent.setData(Uri.fromFile(new File(imageFileName)));
+				sendBroadcast(mediaStoreUpdateIntent);
+
+				if (fileOutputStream != null) {
+					try {
+						fileOutputStream.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+				openImage();
+			}
+		}
+	}
+
+	private class ScaleListener implements ScaleGestureDetector.OnScaleGestureListener {
+		float onScaleBegin = 0;
+		float onScaleEnd = 0;
+
+		@Override public boolean onScale(ScaleGestureDetector scaleGestureDetector) {
+			if (scale >= maxDigitalZoom) {
+				scale = maxDigitalZoom;
+				onScaleBegin = 0;
+				onScaleEnd = 0;
+			} else if (scale < 1) {
+				scale = 1f;
+				onScaleBegin = 0;
+				onScaleEnd = 0;
+			}
+			zoomCaption.setVisibility(View.VISIBLE);
+			scale *= scaleGestureDetector.getScaleFactor();
+			zoomCaption.setText(String.format("Zoom: %s", String.valueOf((int) scale)));
+			zoomIn((int) scale);
+			applySettings();
+			return true;
+		}
+
+		@Override public boolean onScaleBegin(ScaleGestureDetector scaleGestureDetector) {
+			onScaleBegin = scale;
+			return true;
+		}
+
+		@Override public void onScaleEnd(ScaleGestureDetector scaleGestureDetector) {
+			onScaleEnd = scale;
+			zoomCaption.setVisibility(View.INVISIBLE);
+		}
+	}
+
 	public class LearnGesture extends GestureDetector.SimpleOnGestureListener {
 		@Override
 		public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
@@ -1565,70 +1639,5 @@ public class CameraActivity extends AppCompatActivity
 			manualFocusEngaged = true;
 			return true;
 		}
-	}
-
-	public void swipeScenes(Integer nextScene, Integer prevScene) {
-		final int UN_SELECTED = R.drawable.ic_circular;
-		final int SELECTED = R.drawable.ic_selected_circular;
-		switch (prevScene) {
-			case 0:
-				switcher1.setImageResource(UN_SELECTED);
-				break;
-			case 1:
-				switcher2.setImageResource(UN_SELECTED);
-				break;
-			case 2:
-				switcher3.setImageResource(UN_SELECTED);
-				break;
-			case 3:
-				switcher4.setImageResource(UN_SELECTED);
-				break;
-			case 4:
-				switcher5.setImageResource(UN_SELECTED);
-				break;
-			default:
-				selectedScene = 0;
-				switcher1.setImageResource(UN_SELECTED);
-				break;
-		}
-		switch (nextScene) {
-			case 0:
-				switcher1.setImageResource(SELECTED);
-				loadOverlayImage(PORTRAIT_SCENE);
-				break;
-			case 1:
-				switcher2.setImageResource(SELECTED);
-				loadOverlayImage(SIGNATURE_SCENE);
-				break;
-			case 2:
-				switcher3.setImageResource(SELECTED);
-				loadOverlayImage(INTERACTION_SCENE);
-				break;
-			case 3:
-				switcher4.setImageResource(SELECTED);
-				loadOverlayImage(CANDID_SCENE);
-				break;
-			case 4:
-				switcher5.setImageResource(SELECTED);
-				loadOverlayImage(ENVIRONMENT_SCENE);
-				break;
-			default:
-				selectedScene = 0;
-				switcher1.setImageResource(SELECTED);
-				loadOverlayImage(PORTRAIT_SCENE);
-				break;
-		}
-	}
-
-	private void loadOverlayImage(String scene) {
-		int imgID = overlayScenes.get(scene).get(0);
-		currentScene = scene;
-		swipeText.setText(scene);
-		GlideApp.with(this)
-				.load(null)
-				.placeholder(imgID)
-				.centerCrop()
-				.transition(DrawableTransitionOptions.withCrossFade())
-				.into(imgOverlay);
 	}
 }

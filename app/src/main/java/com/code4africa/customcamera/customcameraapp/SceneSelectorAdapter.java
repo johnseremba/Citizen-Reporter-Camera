@@ -6,22 +6,23 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import java.util.ArrayList;
 
 public class SceneSelectorAdapter extends RecyclerView.Adapter<SceneSelectorAdapter.ViewHolder> {
 	private String sceneKey;
 	private ArrayList<Integer> scenesList;
-	private static final String TAG = SceneSelectorAdapter.class.getSimpleName();
 	private OnClickThumbListener onClickThumbListener;
 
 	public interface OnClickThumbListener {
 		void OnClickScene(String sceneKey, Integer position);
 	}
 
-	public SceneSelectorAdapter(Activity activity, String sceneKey, ArrayList<Integer> scenesList) {
+	public SceneSelectorAdapter(Activity activity, String sceneKey, ArrayList<Integer> sceneList) {
 		this.sceneKey = sceneKey;
-		this.scenesList = scenesList;
+		this.scenesList = sceneList;
 		this.onClickThumbListener = (OnClickThumbListener) activity;
 	}
 
@@ -42,14 +43,12 @@ public class SceneSelectorAdapter extends RecyclerView.Adapter<SceneSelectorAdap
 	}
 
 	public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-		private final ImageView imageView;
-		private ArrayList<Integer> scenesList;
+		@BindView(R.id.scene_image_view) ImageView imageView;
 		private Integer position;
 
 		private ViewHolder(final View itemView) {
 			super(itemView);
-			imageView = (ImageView) itemView.findViewById(R.id.scene_image_view);
-			this.scenesList = scenesList;
+			ButterKnife.bind(this, itemView);
 			imageView.setOnClickListener(this);
 		}
 
