@@ -63,6 +63,8 @@ public class CameraActivityInitialState {
 				add(R.id.img_effects_btn);
 				add(R.id.img_wb_btn);
 				add(R.id.seekbar_light);
+				add(R.id.txt_zoom_caption);
+				add(R.id.txt_seekbar_progress);
 			}
 		};
 		testIsGone(goneList);

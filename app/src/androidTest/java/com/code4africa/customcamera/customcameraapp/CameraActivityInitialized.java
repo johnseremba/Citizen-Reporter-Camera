@@ -66,6 +66,9 @@ public class CameraActivityInitialized {
 				add(R.id.sw_swipe_3);
 				add(R.id.sw_swipe_4);
 				add(R.id.sw_swipe_5);
+				add(R.id.txt_zoom_caption);
+				add(R.id.txt_seekbar_progress);
+				add(R.id.img_overlay);
 			}
 		};
 
