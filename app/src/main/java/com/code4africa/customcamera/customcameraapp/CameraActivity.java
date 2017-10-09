@@ -1205,6 +1205,7 @@ public class CameraActivity extends AppCompatActivity
 
 	private void hideOthers() {
 		seekBarProgressText.setVisibility(View.GONE);
+		lightSeekBar.setVisibility(View.GONE);
 		zoomCaption.setVisibility(View.GONE);
 		flashModeBtn.setVisibility(View.GONE);
 		openGalleryBtn.setVisibility(View.GONE);
@@ -1231,6 +1232,8 @@ public class CameraActivity extends AppCompatActivity
 		capturePictureBtn.setVisibility(View.VISIBLE);
 		icon_black_background.setVisibility(View.VISIBLE);
 		swipeText.setVisibility(View.VISIBLE);
+		lightSeekBar.setVisibility(View.VISIBLE);
+
 		imgOverlay.setVisibility(View.GONE);
 		hideOverlayDetails();
 		showSpecialEffects();
@@ -1326,12 +1329,11 @@ public class CameraActivity extends AppCompatActivity
 	}
 
 	private void hideSceneIcons() {
-		switcher1.setVisibility(View.INVISIBLE);
-		switcher2.setVisibility(View.INVISIBLE);
-		switcher3.setVisibility(View.INVISIBLE);
-		switcher4.setVisibility(View.INVISIBLE);
-		switcher5.setVisibility(View.INVISIBLE);
-		lightSeekBar.setVisibility(View.INVISIBLE);
+		switcher1.setVisibility(View.GONE);
+		switcher2.setVisibility(View.GONE);
+		switcher3.setVisibility(View.GONE);
+		switcher4.setVisibility(View.GONE);
+		switcher5.setVisibility(View.GONE);
 	}
 
 	private void showSceneIcons() {
@@ -1340,7 +1342,6 @@ public class CameraActivity extends AppCompatActivity
 		switcher3.setVisibility(View.VISIBLE);
 		switcher4.setVisibility(View.VISIBLE);
 		switcher5.setVisibility(View.VISIBLE);
-		lightSeekBar.setVisibility(View.VISIBLE);
 	}
 
 	private void initializeScenes() {
