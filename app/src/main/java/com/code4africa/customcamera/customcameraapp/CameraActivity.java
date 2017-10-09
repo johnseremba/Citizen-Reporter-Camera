@@ -1141,7 +1141,7 @@ public class CameraActivity extends AppCompatActivity
 					sound.play(MediaActionSound.STOP_VIDEO_RECORDING);
 
 					chronometer.stop();
-					chronometer.setVisibility(View.INVISIBLE);
+					chronometer.setVisibility(View.GONE);
 
 					isRecording = false;
 					GlideApp.with(CameraActivity.this)
