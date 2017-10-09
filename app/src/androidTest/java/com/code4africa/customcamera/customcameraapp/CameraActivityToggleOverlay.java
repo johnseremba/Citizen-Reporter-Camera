@@ -1,22 +1,29 @@
 package com.code4africa.customcamera.customcameraapp;
 
+import android.support.test.espresso.contrib.RecyclerViewActions;
+import android.support.test.espresso.matcher.ViewMatchers;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 import android.test.suitebuilder.annotation.LargeTest;
+import android.widget.ImageView;
 import java.util.ArrayList;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import static android.support.test.espresso.Espresso.onData;
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
+import static android.support.test.espresso.action.ViewActions.longClick;
 import static android.support.test.espresso.action.ViewActions.swipeLeft;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static android.support.test.espresso.matcher.ViewMatchers.withEffectiveVisibility;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
 
 @LargeTest
 @RunWith(AndroidJUnit4.class)
@@ -32,8 +39,7 @@ public class CameraActivityToggleOverlay {
 		onView(withId(R.id.tv_camera)).perform(click());
 
 		// Toggle to show overlay pictures
-		onView(withId(R.id.img_overlay_toggle))
-				.perform(click());
+		onView(withId(R.id.img_overlay_toggle)).perform(click());
 
 		ArrayList<Integer> visibleObjects = new ArrayList<Integer>(){
 			{
@@ -78,6 +84,15 @@ public class CameraActivityToggleOverlay {
 		swipeToChangeScenes(scenes);
 	}
 
+	@Test
+	public void testDefaultScene() {
+		// initialize Camera
+		onView(withId(R.id.tv_camera)).perform(click());
+		onView(withId(R.id.img_overlay_toggle)).perform(click());
+		onView(withId(R.id.txt_swipe_caption))
+				.check(matches(withText("Interaction")));
+	}
+
 	public void checkIsDisplayed(ArrayList<Integer> list) {
 		for (Integer id : list) {
 			onView(withId(id))
@@ -93,6 +108,17 @@ public class CameraActivityToggleOverlay {
 					.check(matches(withText(sceneCaption)));
 			onView(withId(R.id.img_overlay))
 					.check(matches(isDisplayed()));
+			checkChildViews();
 		}
+	}
+
+	public void checkChildViews() {
+		// Show child scenes
+		onView(withId(R.id.tv_camera)).perform(longClick());
+		onView(withId(R.id.scene_recylcer_view)).check(matches(isDisplayed()));
+		onView(withId(R.id.scene_recylcer_view))
+				.perform(RecyclerViewActions.actionOnItemAtPosition(0, click()));
+		onView(withId(R.id.scene_recylcer_view))
+				.check(matches(withEffectiveVisibility(ViewMatchers.Visibility.GONE)));
 	}
 }
