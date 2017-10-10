@@ -5,7 +5,9 @@ import android.support.test.espresso.matcher.ViewMatchers;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 import android.test.suitebuilder.annotation.LargeTest;
+import android.view.View;
 import java.util.ArrayList;
+import org.hamcrest.Matcher;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -18,6 +20,7 @@ import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withEffectiveVisibility;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
+import static org.hamcrest.CoreMatchers.not;
 
 @LargeTest
 @RunWith(AndroidJUnit4.class)
@@ -83,8 +86,17 @@ public class CameraActivityToggleOverlay {
 		// initialize Camera
 		onView(withId(R.id.tv_camera)).perform(click());
 		onView(withId(R.id.img_overlay_toggle)).perform(click());
-		onView(withId(R.id.txt_swipe_caption))
-				.check(matches(withText("Interaction")));
+		onView(withId(R.id.txt_swipe_caption)).check(matches(withText("Interaction")));
+		onView(withId(R.id.img_overlay)).check(matches(withDrawable(R.drawable.interaction_001)));
+
+		onView(withId(R.id.tv_camera)).perform(longClick());
+		onView(withId(R.id.scene_recylcer_view)).check(matches(isDisplayed()));
+		onView(withId(R.id.scene_recylcer_view))
+				.perform(RecyclerViewActions.actionOnItemAtPosition(1, click()));
+		onView(withId(R.id.scene_recylcer_view))
+				.check(matches(withEffectiveVisibility(ViewMatchers.Visibility.GONE)));
+		onView(withId(R.id.img_overlay))
+				.check(matches(withDrawable(R.drawable.interaction_002)));
 	}
 
 	@Test
@@ -152,6 +164,8 @@ public class CameraActivityToggleOverlay {
 					.check(matches(withText(sceneCaption)));
 			onView(withId(R.id.img_overlay))
 					.check(matches(isDisplayed()));
+			onView(withId(R.id.img_overlay))
+					.check(matches(not(noDrawable())));
 			checkChildViews();
 		}
 	}
@@ -164,5 +178,15 @@ public class CameraActivityToggleOverlay {
 				.perform(RecyclerViewActions.actionOnItemAtPosition(0, click()));
 		onView(withId(R.id.scene_recylcer_view))
 				.check(matches(withEffectiveVisibility(ViewMatchers.Visibility.GONE)));
+		onView(withId(R.id.img_overlay))
+				.check(matches(not(noDrawable())));
+	}
+
+	public static Matcher<View> withDrawable(final int resourceID) {
+		return new DrawableMatcher(resourceID);
+	}
+
+	public static Matcher<View> noDrawable() {
+		return  new DrawableMatcher(-1);
 	}
 }
