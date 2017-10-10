@@ -1675,4 +1675,12 @@ public class CameraActivity extends AppCompatActivity
 			return true;
 		}
 	}
+
+	public boolean checkWhiteBalanceStatus(String mode) {
+		return Objects.equals(wbMode, mode);
+	}
+
+	public boolean checkCurrentColorEffect(String effect) {
+		return Objects.equals(currentCameraEffect, effect);
+	}
 }
