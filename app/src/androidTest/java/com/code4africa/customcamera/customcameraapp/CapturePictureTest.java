@@ -50,4 +50,5 @@ public class CapturePictureTest {
 		onView(withId(R.id.img_capture)).perform(click());
 		onView(withId(R.id.img_capture)).check(matches(isDisplayed()));
 	}
+
 }
