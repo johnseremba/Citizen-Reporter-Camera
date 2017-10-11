@@ -30,6 +30,7 @@
 
   <string name="msg_deletion_failure">Problem deleting picture</string>
   <string name="constant_image_path">imagePath</string>
+  <string name="constant_video_path">videoPath</string>
   <string name="constant_file_location">image_file_location</string>
 </resources>
 

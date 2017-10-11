@@ -77,6 +77,7 @@ import java.util.Objects;
 
 public class CameraActivity extends AppCompatActivity
 		implements SceneSelectorAdapter.OnClickThumbListener {
+	private static final String TAG = CameraActivity.class.getSimpleName();
 	private static final int REQUEST_CAMERA_PERMISSION = 1;
 	private static final int REQUEST_STORAGE_PERMISSION = 2;
 	private static final int REQUEST_AUDIO_PERMISSION = 4;
@@ -85,10 +86,9 @@ public class CameraActivity extends AppCompatActivity
 	private static final int PREVIEW_IMAGE_RESULT = 3;
 	private static final int PROGRESS_MIN = 50;
 
-	private static final String TAG = CameraActivity.class.getSimpleName();
-	private static final String IMAGE_FILE_LOCATION = "image_file_location";
-	private static final String IMAGE_SAVED_PATH = "imagePath";
-	private static final String VIDEO_SAVED_PATH = "videoPath";
+	private static String IMAGE_FILE_LOCATION;
+	private static String IMAGE_SAVED_PATH;
+	private static String VIDEO_SAVED_PATH;
 
 	private CameraDevice cameraDevice;
 	private CameraCaptureSession previewCaptureSession;
@@ -1261,6 +1261,10 @@ public class CameraActivity extends AppCompatActivity
 	}
 
 	private void initializeObjects() {
+		IMAGE_FILE_LOCATION = getString(R.string.constant_file_location);
+		IMAGE_SAVED_PATH = getString(R.string.constant_image_path);
+		VIDEO_SAVED_PATH = getString(R.string.constant_video_path);
+
 		portraitScene = getString(R.string.portrait);
 		candidScene = getString(R.string.candid);
 		interactionScene = getString(R.string.interaction);
