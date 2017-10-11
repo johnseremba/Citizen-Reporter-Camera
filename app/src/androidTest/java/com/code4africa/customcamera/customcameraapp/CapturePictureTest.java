@@ -30,7 +30,7 @@ public class CapturePictureTest {
 			new ActivityTestRule<CameraActivity>(CameraActivity.class);
 
 	@Before
-	public void grantCameraPermision() {
+	public void grantCameraPermission() {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 			getInstrumentation().getUiAutomation().executeShellCommand(
 					"pm grant " + getTargetContext().getPackageName()
@@ -48,7 +48,6 @@ public class CapturePictureTest {
 		onView(withId(R.id.tv_camera)).perform(click());
 		onView(withId(R.id.img_capture)).check(matches(isDisplayed()));
 		onView(withId(R.id.img_capture)).perform(click());
-		onView(withId(R.id.img_capture)).check(matches(isDisplayed()));
 	}
 
 }

@@ -151,14 +151,12 @@ public class CameraActivity extends AppCompatActivity
 	private boolean initialized	= false;
 
 	private static SparseIntArray ORIENTATIONS = new SparseIntArray();
-
 	static {
 		ORIENTATIONS.append(Surface.ROTATION_0, 0);
 		ORIENTATIONS.append(Surface.ROTATION_90, 90);
 		ORIENTATIONS.append(Surface.ROTATION_180, 180);
 		ORIENTATIONS.append(Surface.ROTATION_270, 270);
 	}
-
 	private final ImageReader.OnImageAvailableListener onImageAvailableListener =
 			new ImageReader.OnImageAvailableListener() {
 				@Override
