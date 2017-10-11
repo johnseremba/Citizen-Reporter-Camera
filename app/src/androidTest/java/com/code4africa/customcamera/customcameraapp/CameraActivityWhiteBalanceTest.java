@@ -1,5 +1,6 @@
 package com.code4africa.customcamera.customcameraapp;
 
+import android.content.res.Resources;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 import android.test.suitebuilder.annotation.LargeTest;
@@ -29,25 +30,31 @@ public class CameraActivityWhiteBalanceTest {
 
 	@Test
 	public void whiteBalanceTest() {
+		final Resources resources = mCameraActivity.getActivity().getResources();
 		onView(withId(R.id.tv_camera)).perform(click());
 		onView(withId(R.id.img_wb_btn))
 				.check(matches(isDisplayed()))
 				.perform(click());
-		onView(withText("White Balance")).check(matches(isDisplayed()));
-		onData(allOf(is(instanceOf(String.class)), is("Auto"))).perform(click());
+		onView(withText(resources.getString(R.string.wb_title))).check(matches(isDisplayed()));
+		onData(allOf(is(instanceOf(String.class)), is(resources.getString(R.string.wb_auto)))).perform(
+				click());
 		CameraActivity cameraActivity = mCameraActivity.getActivity();
-		assertTrue(cameraActivity.checkWhiteBalanceStatus("Auto"));
+		assertTrue(cameraActivity.checkWhiteBalanceStatus(resources.getString(R.string.wb_auto)));
 	}
 
 	@Test
 	public void colorEffectsTest() {
+		final Resources resources = mCameraActivity.getActivity().getResources();
 		onView(withId(R.id.tv_camera)).perform(click());
 		onView(withId(R.id.img_effects_btn))
 				.check(matches(isDisplayed()))
 				.perform(click());
-		onView(withText("Color Filters")).check(matches(isDisplayed()));
-		onData(allOf(is(instanceOf(String.class)), is("Off"))).perform(click());
+		onView(withText(resources.getString(R.string.color_effects_title))).check(
+				matches(isDisplayed()));
+		onData(allOf(is(instanceOf(String.class)), is(resources.getString(R.string.color_effects_off))))
+				.perform(click());
 		CameraActivity cameraActivity = mCameraActivity.getActivity();
-		assertTrue(cameraActivity.checkCurrentColorEffect("Off"));
+		assertTrue(
+				cameraActivity.checkCurrentColorEffect(resources.getString(R.string.color_effects_off)));
 	}
 }

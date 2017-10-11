@@ -76,5 +76,4 @@ public class CameraActivityInitialState {
 					.check(matches(withEffectiveVisibility(ViewMatchers.Visibility.GONE)));
 		}
 	}
-
 }

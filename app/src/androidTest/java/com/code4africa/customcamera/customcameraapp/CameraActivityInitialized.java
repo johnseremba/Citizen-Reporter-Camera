@@ -40,9 +40,7 @@ public class CameraActivityInitialized {
 
 	@Test
 	public void cameraIconsDisplayTest() {
-		onView(withId(R.id.tv_camera))
-				.perform(click());
-
+		onView(withId(R.id.tv_camera)).perform(click());
 		ArrayList<Integer> displayedList = new ArrayList<Integer>() {
 			{
 				add(R.id.img_capture);
@@ -57,7 +55,6 @@ public class CameraActivityInitialized {
 				add(R.id.img_btn_bg);
 			}
 		};
-
 		ArrayList<Integer> goneList = new ArrayList<Integer>() {
 			{
 				add(R.id.txt_swipe_caption);
@@ -71,7 +68,6 @@ public class CameraActivityInitialized {
 				add(R.id.img_overlay);
 			}
 		};
-
 		checkIsDisplayed(displayedList);
 		checkIsGone(goneList);
 	}

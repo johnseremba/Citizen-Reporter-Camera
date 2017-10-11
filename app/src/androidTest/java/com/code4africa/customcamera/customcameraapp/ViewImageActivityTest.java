@@ -16,7 +16,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static android.app.PendingIntent.getActivity;
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.Espresso.pressBack;
 import static android.support.test.espresso.action.ViewActions.click;
@@ -39,7 +38,7 @@ import static org.hamcrest.core.IsNot.not;
 @LargeTest
 @RunWith(AndroidJUnit4.class)
 public class ViewImageActivityTest {
-	private static final String IMAGE_FILE_LOCATION = "image_file_location";
+	private String uri;
 
 	@Rule
 	public ActivityTestRule<CameraActivity> mCameraActivity =
@@ -51,13 +50,13 @@ public class ViewImageActivityTest {
 	@Before
 	public void setupMockImage() {
 		Resources resources = mCameraActivity.getActivity().getResources();
-		String uri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://"
+		uri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://"
 				+ resources.getResourcePackageName(R.mipmap.ic_launcher) + "/"
 				+ resources.getResourceTypeName(R.mipmap.ic_launcher) + "/"
 				+ resources.getResourceEntryName(R.mipmap.ic_launcher)
 		).toString();
 		Intent resultData = new Intent();
-		resultData.putExtra(IMAGE_FILE_LOCATION, uri);
+		resultData.putExtra(resources.getString(R.string.constant_file_location), uri);
 		mViewImageActivity.launchActivity(resultData);
 	}
 
@@ -90,8 +89,9 @@ public class ViewImageActivityTest {
 
 	@Test
 	public void testCloseImageView() {
+		final Resources resources = mViewImageActivity.getActivity().getResources();
 		onView(withId(R.id.img_close_btn)).check(matches(isDisplayed())).perform(click());
-		onView(withText("Problem deleting picture"))
+		onView(withText(resources.getString(R.string.msg_deletion_failure)))
 				.inRoot(withDecorView(not(is(mViewImageActivity.getActivity().getWindow().getDecorView()))))
 				.check(matches(isDisplayed()));
 		pressBack();
@@ -100,24 +100,16 @@ public class ViewImageActivityTest {
 
 	@Test
 	public void testSaveImage() {
+		final Resources resources = mViewImageActivity.getActivity().getResources();
 		onView(withId(R.id.img_save_btn)).check(matches(isDisplayed())).perform(click());
-
-		Resources resources = mCameraActivity.getActivity().getResources();
-		String uri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://"
-				+ resources.getResourcePackageName(R.mipmap.ic_launcher) + "/"
-				+ resources.getResourceTypeName(R.mipmap.ic_launcher) + "/"
-				+ resources.getResourceEntryName(R.mipmap.ic_launcher)
-		).toString();
-
 		Intent resultData = new Intent();
-		String url = uri;
-		resultData.putExtra("imagePath", url);
+		resultData.putExtra(resources.getString(R.string.constant_image_path), uri);
 		Instrumentation.ActivityResult result =
 				new Instrumentation.ActivityResult(Activity.RESULT_OK, resultData);
-
 		Intents.init();
 		mCameraActivity.launchActivity(new Intent());
 		intending(hasComponent(CameraActivity.class.getName())).respondWith(result);
+		intended(hasComponent(CameraActivity.class.getName()));
 		Intents.release();
 	}
 

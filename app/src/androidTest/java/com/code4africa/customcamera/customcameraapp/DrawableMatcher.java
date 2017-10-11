@@ -15,8 +15,6 @@ import org.hamcrest.TypeSafeMatcher;
 
 public class DrawableMatcher extends TypeSafeMatcher {
 	private final int EXPECTED_ID;
-	private final int EMPTY = -1;
-	private final int ANY = -2;
 	private String resourceName;
 
 	public DrawableMatcher(int expectedID) {
@@ -29,9 +27,11 @@ public class DrawableMatcher extends TypeSafeMatcher {
 			return false;
 		}
 		ImageView imageView = (ImageView) item;
+		int EMPTY = -1;
 		if (EXPECTED_ID == EMPTY) {
 			return imageView.getDrawable() == null;
 		}
+		int ANY = -2;
 		if (EXPECTED_ID == ANY) {
 			return imageView.getDrawable() != null;
 		}

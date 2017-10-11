@@ -1,6 +1,5 @@
 package com.code4africa.customcamera.customcameraapp;
 
-import android.content.Intent;
 import android.os.Build;
 import android.support.test.filters.LargeTest;
 import android.support.test.rule.ActivityTestRule;
@@ -27,7 +26,7 @@ import static android.support.test.espresso.matcher.ViewMatchers.withId;
 public class CapturePictureTest {
 	@Rule
 	public ActivityTestRule<CameraActivity> mCameraActivity =
-			new ActivityTestRule<CameraActivity>(CameraActivity.class);
+			new ActivityTestRule<>(CameraActivity.class);
 
 	@Before
 	public void grantCameraPermission() {
@@ -49,5 +48,4 @@ public class CapturePictureTest {
 		onView(withId(R.id.img_capture)).check(matches(isDisplayed()));
 		onView(withId(R.id.img_capture)).perform(click());
 	}
-
 }
