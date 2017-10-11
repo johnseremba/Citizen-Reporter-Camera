@@ -89,11 +89,6 @@ public class CameraActivity extends AppCompatActivity
 	private static final String IMAGE_FILE_LOCATION = "image_file_location";
 	private static final String IMAGE_SAVED_PATH = "imagePath";
 	private static final String VIDEO_SAVED_PATH = "videoPath";
-	private static final String PORTRAIT_SCENE = "Portrait";
-	private static final String CANDID_SCENE = "Candid";
-	private static final String INTERACTION_SCENE = "Interaction";
-	private static final String ENVIRONMENT_SCENE = "Environment";
-	private static final String SIGNATURE_SCENE = "Signature";
 
 	private CameraDevice cameraDevice;
 	private CameraCaptureSession previewCaptureSession;
@@ -153,6 +148,7 @@ public class CameraActivity extends AppCompatActivity
 	private boolean showOverlays = true;
 	private boolean manualFocusEngaged = false;
 	private boolean isMeteringAFAreaSupported;
+	private boolean initialized	= false;
 
 	private static SparseIntArray ORIENTATIONS = new SparseIntArray();
 
@@ -171,30 +167,13 @@ public class CameraActivity extends AppCompatActivity
 				}
 			};
 
-	private static final String[] WB_SCENES =
-			{
-					"Off",
-					"Auto",
-					"Incandescent",
-					"Fluorescent",
-					"Warm Fluorescent",
-					"Daylight",
-					"Cloudy Daylight",
-					"Twilight",
-					"Shade"
-			};
-
-	private static final String[] COLOR_EFFECTS = {
-			"Off",
-			"Mono",
-			"Negative",
-			"Solarize",
-			"Sepia",
-			"Posterize",
-			"Whiteboard",
-			"Blackboard",
-			"Aqua"
-	};
+	private static String[] colorEffects;
+	private static String[] wbScenes;
+	private static String portraitScene;
+	private static String candidScene;
+	private static String interactionScene;
+	private static String environmentScene;
+	private static String signatureScene;
 
 	@BindView(R.id.scene_recylcer_view) RecyclerView sceneRecyclerView;
 	@BindView(R.id.tv_camera) TextureView textureView;
@@ -217,7 +196,6 @@ public class CameraActivity extends AppCompatActivity
 	@BindView(R.id.txt_zoom_caption) TextView zoomCaption;
 	@BindView(R.id.seekbar_light) SeekBar lightSeekBar;
 	@BindView(R.id.chronometer2) Chronometer chronometer;
-	private boolean initialized	= false;
 
 	@Override public void OnClickScene(String sceneKey, Integer position) {
 		int imgID = overlayScenes.get(sceneKey).get(position);
@@ -374,7 +352,7 @@ public class CameraActivity extends AppCompatActivity
 								cameraCharacteristics.get(CameraCharacteristics.CONTROL_AVAILABLE_EFFECTS);
 						if (colorModes != null) {
 							for (int mode : colorModes) {
-								availableEffects.put(COLOR_EFFECTS[mode], mode);
+								availableEffects.put(colorEffects[mode], mode);
 							}
 						}
 					}
@@ -384,7 +362,7 @@ public class CameraActivity extends AppCompatActivity
 								cameraCharacteristics.get(CameraCharacteristics.CONTROL_AWB_AVAILABLE_MODES);
 						if (awbModes != null) {
 							for (int mode : awbModes) {
-								awbAvailableModes.put(WB_SCENES[mode], mode);
+								awbAvailableModes.put(wbScenes[mode], mode);
 							}
 						}
 					}
@@ -939,16 +917,16 @@ public class CameraActivity extends AppCompatActivity
 	private void showWBList() {
 		final String[] elements = new String[awbAvailableModes.size()];
 		int i = 1;
-		elements[0] = "Auto";
+		elements[0] = getString(R.string.wb_auto);
 		for (String name : awbAvailableModes.keySet()) {
-			if (name == "Auto") continue;
+			if (Objects.equals(name,  getString(R.string.wb_auto))) continue;
 			elements[i] = name;
 			i++;
 		}
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(CameraActivity.this);
 		builder.setCancelable(true)
-				.setTitle("White Balance")
+				.setTitle(getString(R.string.wb_title))
 				.setItems(elements, new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int index) {
 						wbMode = elements[index];
@@ -977,7 +955,6 @@ public class CameraActivity extends AppCompatActivity
 		setContentView(R.layout.activity_camera);
 		ButterKnife.bind(this);
 
-		currentScene = INTERACTION_SCENE;
 		gestureObject = new GestureDetectorCompat(this, new LearnGesture());
 		scaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener());
 		initializeObjects();
@@ -1048,7 +1025,7 @@ public class CameraActivity extends AppCompatActivity
 			@Override public void onClick(View view) {
 				prevScene = selectedScene;
 				selectedScene = 0;
-				setSceneAdapter(PORTRAIT_SCENE);
+				setSceneAdapter(portraitScene);
 				prevScene = 0;
 			}
 		});
@@ -1057,7 +1034,7 @@ public class CameraActivity extends AppCompatActivity
 			@Override public void onClick(View view) {
 				prevScene = selectedScene;
 				selectedScene = 1;
-				setSceneAdapter(SIGNATURE_SCENE);
+				setSceneAdapter(signatureScene);
 				prevScene = 1;
 			}
 		});
@@ -1066,7 +1043,7 @@ public class CameraActivity extends AppCompatActivity
 			@Override public void onClick(View view) {
 				prevScene = selectedScene;
 				selectedScene = 2;
-				setSceneAdapter(INTERACTION_SCENE);
+				setSceneAdapter(interactionScene);
 				prevScene = 2;
 			}
 		});
@@ -1075,7 +1052,7 @@ public class CameraActivity extends AppCompatActivity
 			@Override public void onClick(View view) {
 				prevScene = selectedScene;
 				selectedScene = 3;
-				setSceneAdapter(CANDID_SCENE);
+				setSceneAdapter(candidScene);
 				prevScene = 3;
 			}
 		});
@@ -1084,7 +1061,7 @@ public class CameraActivity extends AppCompatActivity
 			@Override public void onClick(View view) {
 				prevScene = selectedScene;
 				selectedScene = 4;
-				setSceneAdapter(ENVIRONMENT_SCENE);
+				setSceneAdapter(environmentScene);
 				prevScene = 4;
 			}
 		});
@@ -1258,16 +1235,16 @@ public class CameraActivity extends AppCompatActivity
 	private void showColorEffectsList() {
 		final String[] elements = new String[availableEffects.size()];
 		int i = 1;
-		elements[0] = "Off";
+		elements[0] = getString(R.string.color_effects_off);
 		for (String name : availableEffects.keySet()) {
-			if (!Objects.equals(name, "Off")) {
+			if (!Objects.equals(name, getString(R.string.color_effects_off))) {
 				elements[i] = name;
 				i++;
 			}
 		}
 		AlertDialog.Builder builder = new AlertDialog.Builder(CameraActivity.this);
 		builder.setCancelable(true)
-				.setTitle("Color Filters")
+				.setTitle(getString(R.string.color_effects_title))
 				.setItems(elements, new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int index) {
 						currentCameraEffect = elements[index];
@@ -1286,6 +1263,34 @@ public class CameraActivity extends AppCompatActivity
 	}
 
 	private void initializeObjects() {
+		portraitScene = getString(R.string.portrait);
+		candidScene = getString(R.string.candid);
+		interactionScene = getString(R.string.interaction);
+		environmentScene = getString(R.string.environment);
+		signatureScene = getString(R.string.signature);
+		colorEffects = new String[]{
+				getString(R.string.color_effects_off),
+				getString(R.string.color_effects_mono),
+				getString(R.string.color_effects_negative),
+				getString(R.string.color_effects_solarize),
+				getString(R.string.color_effects_sepia),
+				getString(R.string.color_effects_posterize),
+				getString(R.string.color_effects_whiteboard),
+				getString(R.string.color_effects_blackboard),
+				getString(R.string.color_effects_aqua)
+		};
+		wbScenes = new String[] {
+				getString(R.string.wb_off),
+				getString(R.string.wb_auto),
+				getString(R.string.wb_incandescent),
+				getString(R.string.wb_fluorescent),
+				getString(R.string.wb_warm_fluorescent),
+				getString(R.string.wb_day_light),
+				getString(R.string.wb_cloudy_light),
+				getString(R.string.wb_twilight),
+				getString(R.string.wb_shade)
+		};
+		currentScene = interactionScene;
 		mediaRecorder = new MediaRecorder();
 		layoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
 		sceneRecyclerView.setLayoutManager(layoutManager);
@@ -1393,11 +1398,11 @@ public class CameraActivity extends AppCompatActivity
 
 		overlayScenes = new HashMap<String, ArrayList<Integer>>() {
 			{
-				put(PORTRAIT_SCENE, portrait);
-				put(SIGNATURE_SCENE, signature);
-				put(INTERACTION_SCENE, interaction);
-				put(CANDID_SCENE, candid);
-				put(ENVIRONMENT_SCENE, environment);
+				put(portraitScene, portrait);
+				put(signatureScene, signature);
+				put(interactionScene, interaction);
+				put(candidScene, candid);
+				put(environmentScene, environment);
 			}
 		};
 	}
@@ -1457,28 +1462,28 @@ public class CameraActivity extends AppCompatActivity
 		switch (nextScene) {
 			case 0:
 				switcher1.setImageResource(SELECTED);
-				loadOverlayImage(PORTRAIT_SCENE);
+				loadOverlayImage(portraitScene);
 				break;
 			case 1:
 				switcher2.setImageResource(SELECTED);
-				loadOverlayImage(SIGNATURE_SCENE);
+				loadOverlayImage(signatureScene);
 				break;
 			case 2:
 				switcher3.setImageResource(SELECTED);
-				loadOverlayImage(INTERACTION_SCENE);
+				loadOverlayImage(interactionScene);
 				break;
 			case 3:
 				switcher4.setImageResource(SELECTED);
-				loadOverlayImage(CANDID_SCENE);
+				loadOverlayImage(candidScene);
 				break;
 			case 4:
 				switcher5.setImageResource(SELECTED);
-				loadOverlayImage(ENVIRONMENT_SCENE);
+				loadOverlayImage(environmentScene);
 				break;
 			default:
 				selectedScene = 0;
 				switcher1.setImageResource(SELECTED);
-				loadOverlayImage(PORTRAIT_SCENE);
+				loadOverlayImage(portraitScene);
 				break;
 		}
 	}

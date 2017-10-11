@@ -8,6 +8,7 @@
 
   <string name="wb_title">White Balance</string>
   <string name="wb_off">Off</string>
+  <string name="wb_auto">Auto</string>
   <string name="wb_incandescent">Incandescent</string>
   <string name="wb_fluorescent">Fluorescent</string>
   <string name="wb_warm_fluorescent">Warm Fluorescent</string>
