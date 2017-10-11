@@ -28,5 +28,6 @@
   <string name="color_effects_blackboard">Blackboard</string>
   <string name="color_effects_aqua">Aqua</string>
 
+  <string name="msg_deletion_failure">Problem deleting picture</string>
 </resources>
 

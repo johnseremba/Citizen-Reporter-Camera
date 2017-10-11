@@ -82,7 +82,7 @@ public class ViewImageActivity extends AppCompatActivity {
 					setResult(Activity.RESULT_CANCELED);
 					ViewImageActivity.super.finish();
 				} else {
-					Toast.makeText(getApplicationContext(), "Problem deleting picture", Toast.LENGTH_SHORT)
+					Toast.makeText(getApplicationContext(), getString(R.string.msg_deletion_failure), Toast.LENGTH_SHORT)
 							.show();
 				}
 			}

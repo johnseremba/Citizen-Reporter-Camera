@@ -1,9 +1,12 @@
 package com.code4africa.customcamera.customcameraapp;
 
+import android.app.Activity;
+import android.app.Instrumentation;
 import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.net.Uri;
+import android.support.test.espresso.intent.Intents;
 import android.support.test.filters.LargeTest;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
@@ -18,6 +21,9 @@ import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.Espresso.pressBack;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
+import static android.support.test.espresso.intent.Intents.intended;
+import static android.support.test.espresso.intent.Intents.intending;
+import static android.support.test.espresso.intent.matcher.IntentMatchers.hasComponent;
 import static android.support.test.espresso.matcher.RootMatchers.withDecorView;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
@@ -90,6 +96,29 @@ public class ViewImageActivityTest {
 				.check(matches(isDisplayed()));
 		pressBack();
 		onView(withId(R.id.tv_camera)).check(matches(isDisplayed()));
+	}
+
+	@Test
+	public void testSaveImage() {
+		onView(withId(R.id.img_save_btn)).check(matches(isDisplayed())).perform(click());
+
+		Resources resources = mCameraActivity.getActivity().getResources();
+		String uri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://"
+				+ resources.getResourcePackageName(R.mipmap.ic_launcher) + "/"
+				+ resources.getResourceTypeName(R.mipmap.ic_launcher) + "/"
+				+ resources.getResourceEntryName(R.mipmap.ic_launcher)
+		).toString();
+
+		Intent resultData = new Intent();
+		String url = uri;
+		resultData.putExtra("imagePath", url);
+		Instrumentation.ActivityResult result =
+				new Instrumentation.ActivityResult(Activity.RESULT_OK, resultData);
+
+		Intents.init();
+		mCameraActivity.launchActivity(new Intent());
+		intending(hasComponent(CameraActivity.class.getName())).respondWith(result);
+		Intents.release();
 	}
 
 	public void checkIsDisplayed(ArrayList<Integer> list) {
