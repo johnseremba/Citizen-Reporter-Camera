@@ -23,8 +23,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 
 public class ViewImageActivity extends AppCompatActivity {
-	private static final String IMAGE_FILE_LOCATION = "image_file_location";
-	private static final String IMAGE_SAVED_PATH = "imagePath";
 	private static final String TAG = ViewImageActivity.class.getSimpleName();
 	private float rotationAngle;
 	private File imageFile;
@@ -54,6 +52,8 @@ public class ViewImageActivity extends AppCompatActivity {
 					new StrictMode.VmPolicy.Builder().detectActivityLeaks().penaltyLog().build();
 			StrictMode.setVmPolicy(vmPolicy);
 		}
+		final String IMAGE_FILE_LOCATION = getString(R.string.constant_file_location);
+		final String IMAGE_SAVED_PATH = getString(R.string.constant_image_path);
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_view_image);
 		ButterKnife.bind(this);
@@ -82,7 +82,7 @@ public class ViewImageActivity extends AppCompatActivity {
 					setResult(Activity.RESULT_CANCELED);
 					ViewImageActivity.super.finish();
 				} else {
-					Toast.makeText(getApplicationContext(), "Problem deleting picture", Toast.LENGTH_SHORT)
+					Toast.makeText(getApplicationContext(), getString(R.string.msg_deletion_failure), Toast.LENGTH_SHORT)
 							.show();
 				}
 			}
@@ -159,5 +159,9 @@ public class ViewImageActivity extends AppCompatActivity {
 	@Override
 	protected void onPostCreate(Bundle savedInstanceState) {
 		super.onPostCreate(savedInstanceState);
+	}
+
+	public boolean checkRotation(float angle) {
+		return rotationAngle == angle;
 	}
 }

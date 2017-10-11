@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="portrait">Portrait</string>
+  <string name="interaction">Interaction</string>
+  <string name="signature">Signature</string>
+  <string name="environment">Environment</string>
+  <string name="candid">Candid</string>
+
+  <string name="wb_title">White Balance</string>
+  <string name="wb_off">Off</string>
+  <string name="wb_auto">Auto</string>
+  <string name="wb_incandescent">Incandescent</string>
+  <string name="wb_fluorescent">Fluorescent</string>
+  <string name="wb_warm_fluorescent">Warm Fluorescent</string>
+  <string name="wb_day_light">Daylight</string>
+  <string name="wb_cloudy_light">Cloudy Daylight</string>
+  <string name="wb_twilight">Twilight</string>
+  <string name="wb_shade">Shade</string>
+
+  <string name="color_effects_title">Color Filters</string>
+  <string name="color_effects_off">Off</string>
+  <string name="color_effects_mono">Mono</string>
+  <string name="color_effects_negative">Negative</string>
+  <string name="color_effects_solarize">Solarize</string>
+  <string name="color_effects_sepia">Sepia</string>
+  <string name="color_effects_posterize">Posterize</string>
+  <string name="color_effects_whiteboard">Whiteboard</string>
+  <string name="color_effects_blackboard">Blackboard</string>
+  <string name="color_effects_aqua">Aqua</string>
+
+  <string name="msg_deletion_failure">Problem deleting picture</string>
+  <string name="constant_image_path">imagePath</string>
+  <string name="constant_video_path">videoPath</string>
+  <string name="constant_file_location">image_file_location</string>
+</resources>
+
