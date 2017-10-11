@@ -160,4 +160,8 @@ public class ViewImageActivity extends AppCompatActivity {
 	protected void onPostCreate(Bundle savedInstanceState) {
 		super.onPostCreate(savedInstanceState);
 	}
+
+	public boolean checkRotation(float angle) {
+		return rotationAngle == angle;
+	}
 }
